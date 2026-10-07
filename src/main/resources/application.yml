@@ -1,0 +1,87 @@
+# 메인블로그 설정 (T004)
+# 숫자 규칙은 모두 설정값으로 두고 환경변수로 바꿀 수 있게 한다(D-68). 값의 근거는 specs/001-member-auth/data-model.md "설정값".
+# 비밀 값(DB 비밀번호, JWT_SECRET 등)은 기본값을 두지 않는다. 없으면 시작에 실패한다.
+
+spring:
+  application:
+    name: mainblog
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    open-in-view: false
+    hibernate:
+      # 스키마 원천은 Crowfoot 문서 654(R-02). 엔티티가 DB와 다르면 시작에 실패한다.
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: Asia/Seoul
+  jackson:
+    time-zone: Asia/Seoul
+  mail:
+    # Gmail SMTP 587 STARTTLS (D-10, D-69)
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+  servlet:
+    multipart:
+      # 프로필 사진 장당 3MB (6.3, FR-043)
+      max-file-size: ${MEMBER_PROFILE_IMAGE_MAX_SIZE:3MB}
+      max-request-size: ${MEMBER_PROFILE_IMAGE_MAX_SIZE:3MB}
+
+auth:
+  jwt-secret: ${JWT_SECRET}
+  code-hash-secret: ${CODE_HASH_SECRET}
+  access-token-ttl: ${AUTH_ACCESS_TOKEN_TTL:15m}        # D-97
+  remember-me-ttl: ${AUTH_REMEMBER_ME_TTL:14d}          # D-61, 로그인 시각부터 고정(D-97)
+  idle-timeout: ${AUTH_IDLE_TIMEOUT:30m}                # D-61
+  extend-interval: ${AUTH_EXTEND_INTERVAL:5m}           # D-97, 글쓰기 화면 연장 주기
+  login:
+    captcha-after: ${AUTH_LOGIN_CAPTCHA_AFTER:3}        # SEC-13, D-97
+    lock-after: ${AUTH_LOGIN_LOCK_AFTER:5}              # SEC-03
+    lock-duration: ${AUTH_LOGIN_LOCK_DURATION:5m}       # SEC-03
+  rate-limit:
+    login:
+      limit: ${AUTH_RATE_LIMIT_LOGIN:20}                # D-97, IP당
+      window: ${AUTH_RATE_LIMIT_LOGIN_WINDOW:10m}
+    find-email:
+      limit: ${AUTH_RATE_LIMIT_FIND_EMAIL:5}            # USR-08, IP당
+      window: ${AUTH_RATE_LIMIT_FIND_EMAIL_WINDOW:10m}
+  signup:
+    code-ttl: ${AUTH_SIGNUP_CODE_TTL:10m}               # USR-02
+    verified-ttl: ${AUTH_SIGNUP_VERIFIED_TTL:30m}       # D-97
+  code:
+    resend-interval: ${AUTH_CODE_RESEND_INTERVAL:1m}    # USR-02, D-97
+    max-fail: ${AUTH_CODE_MAX_FAIL:5}                   # USR-02, SEC-05
+  reset:
+    code-ttl: ${AUTH_RESET_CODE_TTL:30m}                # SEC-05
+  find-email:
+    token-ttl: ${AUTH_FIND_EMAIL_TOKEN_TTL:10m}         # USR-08
+  turnstile:
+    site-key: ${TURNSTILE_SITE_KEY:}
+    secret-key: ${TURNSTILE_SECRET_KEY:}
+    verify-url: https://challenges.cloudflare.com/turnstile/v0/siteverify
+
+member:
+  withdrawal:
+    retention: ${MEMBER_WITHDRAWAL_RETENTION:30d}       # 4.5, 탈퇴 닉네임 30일(D-97)
+  profile-image:
+    max-size: ${MEMBER_PROFILE_IMAGE_MAX_SIZE:3MB}      # 6.3
+  nickname:
+    reserved: ${MEMBER_NICKNAME_RESERVED:관리자,admin,운영자,탈퇴한 회원}   # FR-011, D-97
+
+file-storage:
+  root: ${FILE_STORAGE_ROOT:./uploads}                  # D-75

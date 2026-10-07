@@ -25,11 +25,11 @@ description: "001 회원 가입·로그인·계정 관리 구현 작업 목록"
 
 **목적**: 프로젝트를 만들고 기본 설정을 둔다.
 
-- [ ] T001 Spring Boot 3.5.x / Java 21 Gradle 단일 모듈 프로젝트를 만든다: `settings.gradle`(rootProject.name = 'mainblog'), `build.gradle`(spring-boot-starter-web, -security, -data-jpa, -validation, -mail, mysql-connector-j, jjwt-api/impl/jackson 0.12.x, shedlock-spring, shedlock-provider-jdbc-template; 테스트: spring-boot-starter-test, spring-security-test, testcontainers mysql/junit-jupiter, greenmail-junit5), `gradlew` 래퍼, `src/main/java/com/mainblog/MainBlogApplication.java` (research R-01)
-- [ ] T002 [P] `.gitignore`에 `build/`, `.gradle/`, `.env`, `uploads/`를 추가하고 `.env.example`에 quickstart.md "준비"의 환경변수 목록(DB_URL, DB_USERNAME, DB_PASSWORD, JWT_SECRET, CODE_HASH_SECRET, MAIL_HOST, MAIL_PORT, MAIL_USERNAME, MAIL_PASSWORD, TURNSTILE_SITE_KEY, TURNSTILE_SECRET_KEY, FILE_STORAGE_ROOT)을 값 없이 적는다
-- [ ] T003 [P] Crowfoot 문서 654를 export_ddl로 내보내 `docs/04-design/schema.sql`로 저장하고(login_failures 포함 35개 테이블), 맨 위에 "원천은 Crowfoot 문서 654, 손으로 고치지 않음" 주석을 단다. ShedLock용 `shedlock` 테이블 DDL을 `src/test/resources/shedlock.sql`과 `docs/04-design/shedlock.sql`에 따로 둔다 (research R-02, R-13)
-- [ ] T004 `src/main/resources/application.yml`을 만든다: datasource(환경변수), `spring.jpa.hibernate.ddl-auto=validate`, `spring.jpa.open-in-view=false`, `spring.jackson.time-zone=Asia/Seoul`, 메일(Gmail SMTP 587 STARTTLS, 환경변수), multipart 최대 3MB, 그리고 data-model.md "설정값" 표의 17개 키를 기본값과 함께 `${ENV:기본값}` 형식으로 적는다(예: `auth.rate-limit.login: ${AUTH_RATE_LIMIT_LOGIN:20}`) (D-68)
-- [ ] T005 [P] 개발 DB(cf_u33_d1)의 `users.nickname` 정렬 규칙을 확인해(`SHOW FULL COLUMNS FROM users`) 대소문자를 무시하는지 결과를 `specs/001-member-auth/research.md` R-10 아래에 적는다. 대소문자를 구분하면 사용자에게 알리고 멈춘다 (R-10)
+- [X] T001 Spring Boot 3.5.x / Java 21 Gradle 단일 모듈 프로젝트를 만든다: `settings.gradle`(rootProject.name = 'mainblog'), `build.gradle`(spring-boot-starter-web, -security, -data-jpa, -validation, -mail, mysql-connector-j, jjwt-api/impl/jackson 0.12.x, shedlock-spring, shedlock-provider-jdbc-template; 테스트: spring-boot-starter-test, spring-security-test, testcontainers mysql/junit-jupiter, greenmail-junit5), `gradlew` 래퍼, `src/main/java/com/mainblog/MainBlogApplication.java` (research R-01)
+- [X] T002 [P] `.gitignore`에 `build/`, `.gradle/`, `.env`, `uploads/`를 추가하고 `.env.example`에 quickstart.md "준비"의 환경변수 목록(DB_URL, DB_USERNAME, DB_PASSWORD, JWT_SECRET, CODE_HASH_SECRET, MAIL_HOST, MAIL_PORT, MAIL_USERNAME, MAIL_PASSWORD, TURNSTILE_SITE_KEY, TURNSTILE_SECRET_KEY, FILE_STORAGE_ROOT)을 값 없이 적는다
+- [X] T003 [P] Crowfoot 문서 654를 export_ddl로 내보내 `docs/04-design/schema.sql`로 저장하고(login_failures 포함 35개 테이블), 맨 위에 "원천은 Crowfoot 문서 654, 손으로 고치지 않음" 주석을 단다. ShedLock용 `shedlock` 테이블 DDL을 `src/test/resources/shedlock.sql`과 `docs/04-design/shedlock.sql`에 따로 둔다 (research R-02, R-13)
+- [X] T004 `src/main/resources/application.yml`을 만든다: datasource(환경변수), `spring.jpa.hibernate.ddl-auto=validate`, `spring.jpa.open-in-view=false`, `spring.jackson.time-zone=Asia/Seoul`, 메일(Gmail SMTP 587 STARTTLS, 환경변수), multipart 최대 3MB, 그리고 data-model.md "설정값" 표의 17개 키를 기본값과 함께 `${ENV:기본값}` 형식으로 적는다(예: `auth.rate-limit.login: ${AUTH_RATE_LIMIT_LOGIN:20}`) (D-68)
+- [X] T005 [P] 개발 DB(cf_u33_d1)의 `users.nickname` 정렬 규칙을 확인해(`SHOW FULL COLUMNS FROM users`) 대소문자를 무시하는지 결과를 `specs/001-member-auth/research.md` R-10 아래에 적는다. 대소문자를 구분하면 사용자에게 알리고 멈춘다 (R-10)
 
 ---
 
