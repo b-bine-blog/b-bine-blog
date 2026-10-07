@@ -1,0 +1,534 @@
+openapi: 3.0.3
+info:
+  title: 메인블로그 회원 API (001-member-auth)
+  version: 0.1.0
+  description: |
+    회원 가입·로그인·계정 관리 API. 근거는 specs/001-member-auth/spec.md의 FR 번호.
+
+    공통 규칙
+    - 상태를 바꾸는 요청(POST·PUT·PATCH·DELETE)은 `X-XSRF-TOKEN` 헤더가 있어야 한다(SEC-10). 공통 api.js가 붙인다.
+    - 사용자가 직접 한 행동의 요청은 `X-User-Activity: 1` 헤더를 붙인다. 알림 폴링은 붙이지 않는다(FR-024, research R-04).
+    - 로그인 정보는 HttpOnly·Secure 쿠키 `AT`(Access Token 15분), `RT`(Refresh Token)로만 오간다. 응답 본문에 토큰을 넣지 않는다(FR-026).
+    - 오류 응답은 모두 `Error` 형식이다.
+    - 인증번호 발송 요청은 가입 여부·다시 보내기 1분 제한과 관계없이 항상 같은 202 응답을 준다.
+      1분 안에 다시 요청하면 응답은 같고 메일만 보내지 않는다. 화면은 60초 동안 버튼을 막는다(FR-005, FR-006, FR-030, FR-031, D-28).
+servers:
+  - url: /
+tags:
+  - name: signup
+  - name: login
+  - name: password-reset
+  - name: find-email
+  - name: me
+  - name: withdrawal
+
+paths:
+  /api/auth/signup/email-code:
+    post:
+      tags: [signup]
+      summary: 가입 ①단계 인증번호 발송 (FR-003, FR-005, FR-006)
+      description: 가입되지 않은 이메일이면 6자리 인증번호, 가입된 이메일이면 "이미 가입된 이메일입니다" 안내 메일. 응답은 같다.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EmailRequest' }
+      responses:
+        '202': { $ref: '#/components/responses/Accepted' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+
+  /api/auth/signup/email-code/verify:
+    post:
+      tags: [signup]
+      summary: 가입 인증번호 확인 (FR-004, FR-007)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CodeVerifyRequest' }
+      responses:
+        '200':
+          description: 인증 완료. 30분 안에 가입을 끝내야 한다.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  verifiedUntil: { type: string, format: date-time }
+        '400':
+          description: CODE_MISMATCH(남은 횟수 포함), CODE_INVALID(5번 틀림·만료·재발송으로 무효·요청 없음)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /api/members/nickname-availability:
+    get:
+      tags: [signup, me]
+      summary: 닉네임 사용 가능 여부 (FR-010, FR-011)
+      parameters:
+        - name: nickname
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  available: { type: boolean }
+                  reason:
+                    type: string
+                    enum: [DUPLICATE, RESERVED, INVALID_FORMAT]
+                    nullable: true
+
+  /api/auth/signup:
+    post:
+      tags: [signup]
+      summary: 가입 완료 (FR-001, FR-002, FR-007~FR-014)
+      description: 서버가 인증 완료 여부(30분 이내)를 다시 확인한다. 이메일·닉네임 중복은 동시 요청에서도 DB UNIQUE로 막는다(SC-009).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SignupRequest' }
+      responses:
+        '201':
+          description: 가입됨. 로그인은 따로 한다.
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '403':
+          description: EMAIL_NOT_VERIFIED (인증 안 함·30분 지남)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '409':
+          description: NICKNAME_DUPLICATE, SIGNUP_UNAVAILABLE(같은 이메일 가입이 먼저 끝남)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /api/auth/login:
+    post:
+      tags: [login]
+      summary: 로그인 (FR-018, FR-020~FR-023, D-97)
+      description: |
+        실패 문구는 없는 이메일과 틀린 비밀번호를 구별하지 않는다.
+        같은 이메일로 3번 실패한 뒤에는 captchaToken이 있어야 처리한다. 5번째 실패에 5분 잠금.
+        성공하면 Set-Cookie로 AT, RT를 내려준다. rememberMe=false면 Max-Age 없는 쿠키.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+      responses:
+        '200':
+          description: 로그인됨
+          headers:
+            Set-Cookie: { schema: { type: string } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SessionMember' }
+        '400':
+          description: CAPTCHA_REQUIRED, CAPTCHA_FAILED
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoginError' }
+        '401':
+          description: INVALID_CREDENTIALS "이메일 또는 비밀번호가 맞지 않습니다"
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoginError' }
+        '423':
+          description: LOCKED (5분 잠금 중. 가입 여부와 무관하게 같은 응답)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoginError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /api/auth/refresh:
+    post:
+      tags: [login]
+      summary: Access Token 다시 받기 (FR-023, FR-026)
+      description: RT 쿠키로 새 AT·RT를 받는다(RT 회전). 30분 무활동(유지 미체크)이나 14일(체크)이 지났으면 401.
+      responses:
+        '204': { description: 새 쿠키 발급 }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+
+  /api/auth/extend:
+    post:
+      tags: [login]
+      summary: 로그인 연장 (FR-025)
+      description: 글쓰기 화면이 입력이 있을 때 5분마다, 또는 "로그인을 연장할까요?" 창에서 보낸다. 활동 시각을 갱신한다.
+      responses:
+        '204': { description: 연장됨 }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+
+  /api/auth/logout:
+    post:
+      tags: [login]
+      summary: 로그아웃 (FR-029)
+      description: 이 기기의 RT를 폐기하고 AT·RT 쿠키를 지운다. 로그인 상태가 아니어도 204.
+      responses:
+        '204': { description: 로그아웃됨 }
+
+  /api/auth/session:
+    get:
+      tags: [login]
+      summary: 현재 로그인 상태 (상단 메뉴용, FR-019)
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SessionMember' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+
+  /api/auth/password-reset/code:
+    post:
+      tags: [password-reset]
+      summary: 재설정 인증번호 발송 (FR-030, FR-031)
+      description: 가입된 ACTIVE 이메일에만 메일을 보낸다. 응답은 항상 같다.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EmailRequest' }
+      responses:
+        '202': { $ref: '#/components/responses/Accepted' }
+
+  /api/auth/password-reset/verify:
+    post:
+      tags: [password-reset]
+      summary: 재설정 인증번호 확인 (쓰지 않음) (FR-031, FR-032)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CodeVerifyRequest' }
+      responses:
+        '200': { description: 맞음. 같은 화면에서 새 비밀번호 입력 }
+        '400':
+          description: CODE_MISMATCH, CODE_INVALID
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /api/auth/password-reset:
+    post:
+      tags: [password-reset]
+      summary: 새 비밀번호 저장 (FR-032, FR-033)
+      description: 인증번호를 다시 확인하고 1회용으로 쓴다. 모든 기기의 RT를 폐기하고 로그인 실패 기록을 지운다.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PasswordResetRequest' }
+      responses:
+        '204': { description: 바뀜 }
+        '400': { $ref: '#/components/responses/ValidationError' }
+
+  /api/auth/find-email:
+    post:
+      tags: [find-email]
+      summary: 이메일 찾기 (FR-034~FR-036, FR-039)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, phone]
+              properties:
+                name: { type: string }
+                phone: { type: string, description: 하이픈·공백 허용, 숫자만 비교 }
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accounts:
+                    type: array
+                    description: 비어 있으면 화면이 "일치하는 회원 정보가 없습니다"를 보여준다. 탈퇴 계정 제외.
+                    items:
+                      type: object
+                      properties:
+                        maskedEmail: { type: string, example: 'ab***@gmail.com' }
+                        joinedOn: { type: string, format: date, example: '2026-10-02' }
+                        resetToken: { type: string, description: 10분 유효 임시 토큰(FR-038) }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /api/auth/find-email/reset-code:
+    post:
+      tags: [find-email]
+      summary: 이메일 찾기 결과에서 재설정 인증번호 발송 (FR-037, FR-038)
+      description: 회원 번호가 아니라 resetToken으로 받는다. 이후 절차는 /api/auth/password-reset/* 와 같고 email 대신 resetToken을 쓴다.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [resetToken]
+              properties:
+                resetToken: { type: string }
+      responses:
+        '202': { $ref: '#/components/responses/Accepted' }
+        '410':
+          description: TOKEN_EXPIRED (10분 지남·없음) — 이메일 찾기를 다시 한다
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /api/members/me:
+    get:
+      tags: [me]
+      summary: 내 정보 (가리지 않음, FR-040)
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MyInfo' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+    patch:
+      tags: [me]
+      summary: 닉네임·전화번호 수정 (FR-041, FR-042)
+      description: 이메일과 이름 필드는 받지 않는다(보내면 400).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                nickname: { type: string }
+                phone: { type: string }
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MyInfo' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '409':
+          description: NICKNAME_DUPLICATE
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /api/members/me/password:
+    put:
+      tags: [me]
+      summary: 비밀번호 변경 (FR-044, D-97)
+      description: 현재 비밀번호 확인. 다른 기기의 RT는 모두 폐기하고, 이 기기에는 새 AT·RT를 발급해 로그인을 유지한다.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [currentPassword, newPassword, newPasswordConfirm]
+              properties:
+                currentPassword: { type: string }
+                newPassword: { type: string }
+                newPasswordConfirm: { type: string }
+      responses:
+        '204':
+          description: 바뀜, 새 쿠키 발급
+          headers:
+            Set-Cookie: { schema: { type: string } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '403':
+          description: CURRENT_PASSWORD_MISMATCH
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /api/members/me/profile-image:
+    put:
+      tags: [me]
+      summary: 프로필 사진 올리기 (FR-043)
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary, description: 1장, 3MB 이하, jpg·jpeg·png·gif·webp }
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  profileImageUrl: { type: string }
+        '400':
+          description: FILE_TOO_LARGE, FILE_TYPE_NOT_ALLOWED (확장자·MIME·시그니처 불일치 포함)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+    delete:
+      tags: [me]
+      summary: 프로필 사진 지우기
+      responses:
+        '204': { description: 지움 }
+
+  /api/members/me/withdrawal:
+    get:
+      tags: [withdrawal]
+      summary: 탈퇴 가능 여부와 운영 중인 블로그 (FR-046)
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  canWithdraw: { type: boolean }
+                  ownedBlogs:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        blogId: { type: integer, format: int64 }
+                        name: { type: string }
+                        address: { type: string }
+                        status: { type: string, enum: [ACTIVE, CLOSING] }
+                        closeScheduledAt: { type: string, format: date-time, nullable: true }
+    post:
+      tags: [withdrawal]
+      summary: 탈퇴 (FR-045~FR-048)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              properties:
+                password: { type: string }
+      responses:
+        '204': { description: 탈퇴됨. 모든 RT 폐기, 쿠키 삭제 }
+        '403':
+          description: PASSWORD_MISMATCH
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '409':
+          description: OWNS_BLOGS (블로그장인 블로그가 있음, 폐쇄 예정 포함)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+components:
+  schemas:
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: string, example: INVALID_CREDENTIALS }
+        message: { type: string }
+        fieldErrors:
+          type: array
+          items:
+            type: object
+            properties:
+              field: { type: string }
+              code: { type: string }
+    LoginError:
+      allOf:
+        - $ref: '#/components/schemas/Error'
+        - type: object
+          properties:
+            captchaRequired: { type: boolean }
+            retryAfterSeconds: { type: integer, nullable: true }
+    EmailRequest:
+      type: object
+      required: [email]
+      properties:
+        email: { type: string, format: email }
+    CodeVerifyRequest:
+      type: object
+      required: [code]
+      properties:
+        email: { type: string, format: email, description: 비밀번호 찾기·가입 }
+        resetToken: { type: string, description: 이메일 찾기에서 온 경우 email 대신 }
+        code: { type: string, pattern: '^\d{6}$' }
+    SignupRequest:
+      type: object
+      required: [email, password, name, nickname, phone, agreeTerms, agreePrivacy]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, description: '8~15자, 영문·숫자·특수문자(ASCII 32종) 모두 포함' }
+        name: { type: string, description: '앞뒤 공백 제거 후 2~20자, 한글·영문·공백' }
+        nickname: { type: string, description: '2~12자 한글·영문·숫자, 예약어 포함 불가' }
+        phone: { type: string, description: '숫자만 남겨 010으로 시작하는 11자리' }
+        agreeTerms: { type: boolean, enum: [true] }
+        agreePrivacy: { type: boolean, enum: [true] }
+    LoginRequest:
+      type: object
+      required: [email, password, rememberMe]
+      properties:
+        email: { type: string }
+        password: { type: string }
+        rememberMe: { type: boolean }
+        captchaToken: { type: string, nullable: true, description: Turnstile 응답 토큰 }
+    PasswordResetRequest:
+      type: object
+      required: [code, newPassword, newPasswordConfirm]
+      properties:
+        email: { type: string, format: email }
+        resetToken: { type: string }
+        code: { type: string, pattern: '^\d{6}$' }
+        newPassword: { type: string }
+        newPasswordConfirm: { type: string }
+    SessionMember:
+      type: object
+      description: 상단 메뉴에 필요한 최소 정보. 역할은 블로그마다 따로 조회한다(헌장 II).
+      properties:
+        memberId: { type: integer, format: int64 }
+        nickname: { type: string }
+        profileImageUrl: { type: string, nullable: true }
+        admin: { type: boolean }
+    MyInfo:
+      type: object
+      description: 본인에게만 가리지 않고 보여준다(4.4). 비밀번호 필드 없음.
+      properties:
+        email: { type: string }
+        name: { type: string }
+        nickname: { type: string }
+        phone: { type: string }
+        profileImageUrl: { type: string, nullable: true }
+        bio: { type: string, nullable: true }
+        joinedOn: { type: string, format: date }
+  responses:
+    Accepted:
+      description: 화면 문구 "인증번호를 보냈습니다" / "입력한 이메일로 안내를 보냈습니다". 본문 없음.
+    ValidationError:
+      description: VALIDATION_FAILED. fieldErrors에 항목별 사유
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Unauthenticated:
+      description: UNAUTHENTICATED
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    RateLimited:
+      description: RATE_LIMITED (같은 IP 요청 제한)
+      headers:
+        Retry-After: { schema: { type: integer } }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
