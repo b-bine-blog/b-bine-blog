@@ -40,7 +40,7 @@
 ### V. 명세와 결정이 코드보다 먼저
 
 - 기능은 `specs/` 명세에 있는 요구사항 ID(USR, BLG, SOC, BRD, ADM, SEC, SCL)를 근거로 만든다. 명세에 없는 동작은 만들지 않는다.
-- 숫자와 규칙은 `docs/02-policies/`의 확정 값을 그대로 쓴다. 보류 항목(6.4 금칙어 등)은 임의로 정하지 않고 `[NEEDS CLARIFICATION]`으로 남긴다.
+- 숫자와 규칙은 `docs/02-policies/`의 확정 값을 그대로 쓴다. 보류 항목은 임의로 정하지 않고 `[NEEDS CLARIFICATION]`으로 남긴다.
 - 결정을 바꾸면 `docs/03-decisions/`에 새 D-번호를 추가하고, 이전 결정의 상태를 `변경됨 → D-xx`로 고친 뒤 명세를 갱신한다.
 
 ### VI. 단순하게 시작
