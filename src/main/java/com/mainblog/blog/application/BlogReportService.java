@@ -8,8 +8,7 @@ import com.mainblog.blog.domain.SuspendPeriod;
 import com.mainblog.common.error.BusinessException;
 import com.mainblog.common.error.ErrorCode;
 import com.mainblog.common.error.InvalidInputException;
-import com.mainblog.common.notification.NotificationType;
-import com.mainblog.common.notification.NotificationWriter;
+import com.mainblog.social.application.ReportResultNotifier;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Clock;
@@ -38,17 +37,17 @@ public class BlogReportService {
     private final BlogRepository blogRepository;
     private final BlogPermissionService permissionService;
     private final SanctionService sanctionService;
-    private final NotificationWriter notifications;
+    private final ReportResultNotifier resultNotifier;
     private final JdbcTemplate jdbc;
     private final Clock clock;
 
     public BlogReportService(BlogRepository blogRepository, BlogPermissionService permissionService,
-                             SanctionService sanctionService, NotificationWriter notifications, JdbcTemplate jdbc,
+                             SanctionService sanctionService, ReportResultNotifier resultNotifier, JdbcTemplate jdbc,
                              Clock clock) {
         this.blogRepository = blogRepository;
         this.permissionService = permissionService;
         this.sanctionService = sanctionService;
-        this.notifications = notifications;
+        this.resultNotifier = resultNotifier;
         this.jdbc = jdbc;
         this.clock = clock;
     }
@@ -97,19 +96,8 @@ public class BlogReportService {
         LocalDateTime now = LocalDateTime.now(clock);
         jdbc.update("UPDATE reports SET status = 'DONE', result = ?, handled_by = ?, handled_at = ? WHERE id = ?",
                 result, actorId, now, reportId);
-        notifications.write(report.reporterId(), NotificationType.REPORT_RESOLVED, "BLOG", blogId, null,
-                "'" + blog.getName() + "' 블로그에 한 신고가 처리되었습니다. 결과: " + label(result),
-                "REPORT_RESOLVED:" + reportId);
+        resultNotifier.resolved(reportId); // 신고자에게 결과 알림(003 T036, 005 관리자 처리와 같은 부품)
         return jdbc.query(SELECT + " WHERE r.id = ?", this::map, reportId).get(0);
-    }
-
-    private static String label(String result) {
-        return switch (result) {
-            case "WARNING" -> "경고";
-            case "SUSPEND" -> "정지";
-            case "KICK" -> "강제 퇴장";
-            default -> "문제 없음";
-        };
     }
 
     private ReportView map(ResultSet rs, int i) throws SQLException {

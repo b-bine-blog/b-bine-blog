@@ -68,10 +68,24 @@
         : '/blog/' + encodeURIComponent(address) + '/posts/' + post.id + '/edit';
     }
     $('delete').hidden = !post.canDelete;
+    renderReport();
     $('post').hidden = false;
     $('comments').hidden = isNotice;
     $('comment-form').hidden = !post.canComment;
     $('comment-login').hidden = !!me || isNotice;
+  }
+
+  // 신고(003 T037, SOC-06): 로그인한 일반 회원이 남의 글·작성자·댓글만. 공지는 신고 대상이 아니다.
+  // 접수처는 서버가 정하고, 블로그 안 작성자 신고는 blogId를 함께 보낸다(블로그장이면 메인 관리자에게 간다).
+  function canReport(author) {
+    return !!(me && me.memberId && !me.admin && !isNotice && author && author.id && author.id !== me.memberId);
+  }
+
+  function renderReport() {
+    if (!$('report')) { return; }
+    var ok = canReport(post.author);
+    $('report').hidden = !ok;
+    $('report-author').hidden = !(ok && post.author.state === 'ACTIVE');
   }
 
   function renderLike() {
@@ -173,6 +187,11 @@
           .then(function () { loadComments(commentPage); }, function (err) { board.say($('message'), err.message, true); });
       }));
     }
+    if (canReport(c.author) && window.report) {
+      actions.appendChild(action('신고', function () {
+        report.open({ targetType: 'COMMENT', targetId: c.id, blogId: post.blog && post.blog.id, label: '댓글' });
+      }));
+    }
     li.appendChild(actions);
     return li;
   }
@@ -220,6 +239,16 @@
         loadComments(commentPage);
       }, function (err) { board.say($('message'), err.message, true); });
   });
+
+  if ($('report')) {
+    $('report').addEventListener('click', function () {
+      report.open({ targetType: 'POST', targetId: post.id, blogId: post.blog && post.blog.id, label: '글' });
+    });
+    $('report-author').addEventListener('click', function () {
+      report.open({ targetType: 'USER', targetId: post.author.id, blogId: post.blog && post.blog.id,
+        label: post.author.nickname + '님' });
+    });
+  }
 
   api.get('/api/auth/session').then(function (s) { me = s; }, function () { me = null; })
     .then(prepare).then(load);
