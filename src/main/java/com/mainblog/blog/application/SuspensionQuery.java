@@ -31,6 +31,13 @@ public class SuspensionQuery {
                 blogId, userId, now));
     }
 
+    /** 그 블로그에서 최근 count-window(1년) 안에 시작한 정지 수. 도중에 해제된 정지도 센다(FR-053, D-95, D-98 #21). */
+    public int countInWindow(long blogId, long userId, LocalDateTime since) {
+        Integer n = jdbc.queryForObject("SELECT COUNT(*) FROM blog_sanctions WHERE blog_id = ? AND user_id = ? "
+                + "AND sanction_type = 'SUSPEND' AND starts_at > ?", Integer.class, blogId, userId, since);
+        return n == null ? 0 : n;
+    }
+
     /** endsAt이 null이면 영구 정지. */
     public record ActiveSuspension(long sanctionId, LocalDateTime endsAt, String reason) {}
 }

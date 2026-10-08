@@ -240,7 +240,7 @@ description: "002 블로그 생성·참여·운영 구현 작업 목록"
 
 ### 테스트
 
-- [ ] T059 [P] [US7] `src/test/java/com/mainblog/blog/SanctionIntegrationTest.java`를 만든다
+- [X] T059 [P] [US7] `src/test/java/com/mainblog/blog/SanctionIntegrationTest.java`를 만든다
   - US7 시나리오 1~4와 6~8을 다룬다.
   - 정지 기간은 4가지만 받는다.
   - 정지 중 열람은 403 BLOG_SUSPENDED여야 하고, 다른 블로그는 열람할 수 있어야 한다.
@@ -249,22 +249,22 @@ description: "002 블로그 생성·참여·운영 구현 작업 목록"
   - 강퇴하면 블랙리스트에 해시로 오르고 원문이 없어야 한다.
   - 탈퇴 후 재가입한 사람과 같은 전화번호를 쓰는 다른 이메일 회원은 막혀야 한다.
   - 부블로그장 제재는 블로그장만 할 수 있어야 한다.
-- [ ] T060 [P] [US7] `src/test/java/com/mainblog/blog/BlogReportIntegrationTest.java`를 만든다. US7 시나리오 5를 다룬다: route=BLOG 신고만 목록에 나오고, 처리 4가지 결과와 신고자 알림, 이미 처리한 신고는 409
+- [X] T060 [P] [US7] `src/test/java/com/mainblog/blog/BlogReportIntegrationTest.java`를 만든다. US7 시나리오 5를 다룬다: route=BLOG 신고만 목록에 나오고, 처리 4가지 결과와 신고자 알림, 이미 처리한 신고는 409
 
 ### 구현
 
-- [ ] T061 [US7] `src/main/java/com/mainblog/blog/application/SanctionService.java`를 만든다 (FR-048~FR-051, FR-053~FR-056, research R-10)
+- [X] T061 [US7] `src/main/java/com/mainblog/blog/application/SanctionService.java`를 만든다 (FR-048~FR-051, FR-053~FR-056, research R-10)
   - 대상 확인: 블로그장은 대상이 될 수 없고, 부블로그장은 블로그장만 제재할 수 있다.
   - 경고·정지·해제를 처리한다.
   - 강퇴는 멤버 행 삭제, author_left, member_count, 블랙리스트 등록, 받은 위임 취소를 한 트랜잭션에서 한다.
   - 정지 횟수를 계산한다.
   - 끌 수 없는 알림을 보낸다.
-- [ ] T062 [US7] `src/main/java/com/mainblog/blog/api/SanctionController.java`에 `POST`·`GET /api/blogs/{blogId}/members/{userId}/sanctions`를 만든다
-- [ ] T063 [US7] `src/main/java/com/mainblog/blog/application/BlogReportService.java`와 `src/main/java/com/mainblog/blog/api/BlogReportController.java`를 만든다. 대상은 `GET /api/blogs/{blogId}/reports`와 `POST .../{reportId}/resolution`이다 (FR-052, research R-11)
+- [X] T062 [US7] `src/main/java/com/mainblog/blog/api/SanctionController.java`에 `POST`·`GET /api/blogs/{blogId}/members/{userId}/sanctions`를 만든다
+- [X] T063 [US7] `src/main/java/com/mainblog/blog/application/BlogReportService.java`와 `src/main/java/com/mainblog/blog/api/BlogReportController.java`를 만든다. 대상은 `GET /api/blogs/{blogId}/reports`와 `POST .../{reportId}/resolution`이다 (FR-052, research R-11)
   - 대상 회원은 target_type으로 찾는다.
   - SanctionService를 부르고 report_id를 연결한다.
   - 신고자에게 알림을 보낸다.
-- [ ] T064 [US7] `src/main/java/com/mainblog/blog/application/BlacklistService.java`를 만든다: `isBlacklisted(blogId, user)`, `list`. `GET /api/blogs/{blogId}/blacklist`를 만든다. 응답에는 등록일·강퇴 사유·강퇴한 사람 닉네임·해제 여부만 넣는다 (FR-057~FR-059)
+- [X] T064 [US7] `src/main/java/com/mainblog/blog/application/BlacklistService.java`를 만든다: `isBlacklisted(blogId, user)`, `list`. `GET /api/blogs/{blogId}/blacklist`를 만든다. 응답에는 등록일·강퇴 사유·강퇴한 사람 닉네임·해제 여부만 넣는다 (FR-057~FR-059)
 - [ ] T065 [P] [US7] 운영 화면 `src/main/resources/static/blog/manage.html`, `js/blog-manage.js`를 만든다. 탭은 참여 신청, 멤버(제재 버튼, 정지 기간 4가지 선택), 신고, 블랙리스트이고, 권한에 따라 탭을 보이거나 숨긴다. 서버가 최종 판단한다
 
 ---
