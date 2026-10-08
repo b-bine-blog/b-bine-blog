@@ -1,0 +1,273 @@
+---
+description: "005 메인 관리자·제재 구현 작업 목록"
+---
+
+# 작업 목록 (Tasks): 메인 관리자와 제재
+
+**입력**: `specs/005-admin-moderation/`의 설계 문서
+
+**선행 문서**: [plan.md](plan.md), [spec.md](spec.md), [research.md](research.md), [data-model.md](data-model.md), [contracts/admin-api.yaml](contracts/admin-api.yaml), [quickstart.md](quickstart.md)
+
+**테스트**: 성공 기준(SC-001~SC-010)이 경계값으로 정해져 있다. 경고 3번째, 1년, 30일, 알림 정확히 3번, 동시 10번, 원문 노출 0건이다. 그래서 스토리마다 테스트 작업을 두고 테스트를 먼저 쓴다.
+
+**구성**: 사용자 스토리(US1~US7)별로 묶었다. 001·002·004의 부품을 그대로 쓴다.
+- 테스트: `IntegrationTestBase`, `BlogTestBase`, `BoardTestBase`, `MutableClock`
+- 블로그: `BlogClosingService`, `OwnerSuccessionService`, `BlogAccessPolicy`, `SuspensionQuery`
+- 공통: `EmailMasker`, `PhoneMasker`, `NotificationWriter`, `RateLimiter`, `DailyCleanupJob`
+
+**DB 변경**: `comments.deleted_by`, `owner_warnings.reason` 두 칸은 사용자 승인 뒤 T057에서 넣는다. T001~T056은 승인 전에 할 수 있다(plan "구현 전에 할 일").
+
+## 형식: `[ID] [P?] [Story] 설명`
+
+- **[P]**: 동시에 해도 되는 작업(다른 파일, 끝나지 않은 작업에 의존하지 않음)
+- **[Story]**: 이 작업이 속한 사용자 스토리(US1~US7)
+- 경로 약속: 소스 `src/main/java/com/mainblog/`, 테스트 `src/test/java/com/mainblog/`, 화면 `src/main/resources/static/`
+- 커밋 메시지에 작업 ID와 요구사항 ID를 적는다. 예: `T030 블로그장 경고 (ADM-07, D-103 #12)`
+
+---
+
+## 1단계: 준비 (Setup)
+
+- [ ] T001 `application.yml`에 data-model "설정값"의 `admin.*`를 `${ENV:기본값}`으로 더한다 (D-68)
+- [ ] T002 [P] `common/config/AdminProperties.java`를 `@ConfigurationProperties("admin")`로 만든다
+- [ ] T003 [P] `common/error/ErrorCode`에 `OWNER_CHANGED`, `ALREADY_HIDDEN`, `NOT_HIDDEN`, `NOT_RESTORABLE`, `BLOG_ALREADY_CLOSED`(모두 409)를 더한다 (research R-14)
+- [ ] T004 [P] `common/notification/NotificationType`에 `OWNER_WARNED`, `OWNER_REVOKED`, `BLOG_HIDDEN`, `POST_HIDDEN`, `POST_RESTORED`(모두 OPERATION, 끌 수 없음)를 더한다 (data-model 알림 종류)
+- [ ] T005 [P] `admin/application/ActionType.java`(research R-06의 16가지)와 `TargetType.java`를 만든다
+
+---
+
+## 2단계: 기반 (Foundational)
+
+**⚠️ 중요**: 이 단계를 끝내기 전에는 어떤 사용자 스토리도 시작하지 않는다.
+
+- [ ] T006 `auth/security/JwtAuthenticationFilter`가 DB에서 읽은 role이 ADMIN이면 `ADMIN` 권한을 붙인다. `common/config/SecurityConfig`에 다음을 더한다 (FR-001~FR-003, SEC-11, research R-02)
+  - `/api/admin/**` `hasAuthority("ADMIN")`
+  - `AccessDeniedHandler`: 403 `ADMIN_ONLY` JSON. CSRF 거부는 지금처럼 403
+- [ ] T007 [P] `admin/application/AdminGuard.java`(DB role 확인, `ADMIN_ONLY`)와 `AdminGuardTest`를 만든다
+- [ ] T008 [P] `admin/application/AdminActionLog.java`(조치와 같은 트랜잭션에서 `admin_actions` 쓰기, memo 500자 자르기)와 `AdminPaging.java`(10·20·50, 기본 20)를 만든다 (FR-039, research R-06)
+- [ ] T009 화면 틀을 만든다 (D-103 #1, research R-03)
+  - `admin/api/AdminPageController.java`: `GET /admin`, `/admin/**`에서 role 확인 뒤 `src/main/resources/admin/index.html`. 비로그인은 로그인 화면, 관리자가 아니면 404
+  - `admin/index.html`: 탭 6개 틀
+  - `static/js/admin-common.js`: 세션 확인, 탭, 표/카드 그리기를 모두 textContent로
+  - `css/base.css`: 관리자 표·탭, 좁은 화면은 카드
+- [ ] T010 [P] `static/js/layout.js`: 세션 `admin`이 true면 "관리자" 링크를 보이고 "블로그 만들기·내 블로그"를 숨긴다 (D-90)
+- [ ] T011 `src/test/java/com/mainblog/admin/AdminTestBase.java`를 `BoardTestBase` 확장으로 만든다. 관리자 로그인, 관리자 신고 행 직접 넣기(003 없이), 경고 행 넣기, 활동 기록 읽기 도우미를 둔다 (research R-16)
+- [ ] T012 [P] `admin/AdminAccessIntegrationTest`: 아래를 확인한다 (SC-002, FR-002)
+  - `/admin`: 비로그인 → 로그인 화면, 회원·블로그장 404, 관리자 200
+  - `/api/admin/stats`: 비회원 401, 회원 403 `ADMIN_ONLY`(본문에 회원 정보 없음)
+  - 관리자 role을 USER로 바꾸면 다음 요청부터 403
+
+**체크포인트**: 관리자만 들어오는 틀 완료.
+
+---
+
+## 3단계: 사용자 스토리 1 - 관리자 전용 접근과 회원 조회 (P1) 🎯 MVP
+
+**독립 테스트**: 관리자로 회원을 찾고 상세·"전체 보기"를 확인하고, 다른 계정으로 같은 요청이 거부되는지 본다.
+
+- [ ] T013 [P] [US1] `admin/AdminMemberIntegrationTest` (US1-1~5, SC-003, D-103 #2~#5)
+  - 검색: 닉네임 일부, 이메일 전체(대소문자 무시), 이메일 일부는 0건, 탈퇴 회원·관리자 계정 제외, size 10·20·50·30(400)
+  - 상세: `abcdef@gmail.com` → `ab***@gmail.com`, `ab@x.com` → `a***@x.com`, `010-****-5678`, 이름 보임, 응답에 원문·비밀번호 칸 없음, 비공개 블로그 포함 운영·참여 블로그와 역할, 블로그별 경고 이력. 탈퇴 회원은 404
+  - "전체 보기": 원문, `PRIVACY_VIEW` 1건(관리자·시각·대상), `Cache-Control: no-store`, 31번째 429 `RATE_LIMITED`, CSRF 없으면 403
+- [ ] T014 [P] [US1] `admin/AdminBlogActivityDeniedTest`: 관리자의 블로그 만들기·참여 신청·글쓰기·댓글·좋아요가 403 `ADMIN_NOT_ALLOWED`, 공지 쓰기는 성공. 003 팔로우 API가 있으면 팔로우도 403 (US1-8, FR-004, SC-008)
+- [ ] T015 [US1] `admin/application/AdminMemberService.java`를 만든다. 검색(LIKE 이스케이프), 상세(`EmailMasker`·`PhoneMasker`), 전체 보기(`RateLimiter` + `AdminActionLog` 같은 트랜잭션) (FR-005~FR-009)
+- [ ] T016 [US1] `admin/api/AdminMemberController.java`를 만든다. `GET /api/admin/members`, `GET /api/admin/members/{userId}`, `POST /api/admin/members/{userId}/privacy-view` (contracts)
+- [ ] T017 [US1] 화면 `static/js/admin-members.js`: 회원 탭을 만든다. 검색 종류 선택, 목록, 상세 패널, "전체 보기" 버튼은 그 상세에서만 원문 표시. 상세를 다시 열면 API를 새로 불러 다시 가린다 (D-103 #5)
+
+**체크포인트**: 관리자 회원 조회 동작.
+
+---
+
+## 4단계: 사용자 스토리 2 - 블로그 조회·숨김·강제 폐쇄 (P1)
+
+- [ ] T018 [P] [US2] `admin/AdminBlogQueryIntegrationTest` (US2-1, D-103 #6)
+  - 이름·주소·블로그장 닉네임으로 찾는다. 공개·일부 공개·비공개 모두 나온다
+  - 상태: 운영 중·폐쇄 예정·폐쇄됨(30일 정리 전만)·숨김, status로 거르기
+  - 멤버 4·글 12: 삭제 글은 빼고 숨긴 글은 센다
+  - 상세: 부블로그장 목록, 대기 중 위임 요청, 지금 블로그장 경고 수
+- [ ] T019 [P] [US2] `admin/AdminBlogHideIntegrationTest` (US2-2, FR-012, D-103 #7)
+  - 숨기면 메인 목록·블로그 검색·피드·통합 검색·태그에서 빠진다
+  - 비회원·다른 회원·구독자·공유 링크 쿠키·관리자 일반 화면은 404. 블로그장·멤버는 보고 글을 쓴다
+  - 블로그장만 `BLOG_HIDDEN` 1건, 멤버는 0건. `BLOG_HIDE` 기록. 다시 숨기면 409 `ALREADY_HIDDEN`
+  - 해제하면 다시 보이고 `BLOG_UNHIDE` 기록, 알림 없음. 숨김이 아닌데 해제하면 409 `NOT_HIDDEN`
+  - 폐쇄된 블로그는 409 `BLOG_ALREADY_CLOSED`
+- [ ] T020 [P] [US2] `admin/AdminForceCloseIntegrationTest` (US2-3~6, FR-013, FR-014, D-94, D-103 #8)
+  - 10월 2일 15:00(MutableClock)에 폐쇄하면 10월 9일 04:00으로 예약된다
+  - 블로그장을 뺀 멤버·구독자에게 즉시·10/6 04:00·10/8 04:00에 한 번씩 알림, 중복 0
+  - 10월 9일 04:00에 폐쇄되고 글이 안 보인다(30일 정리는 002 테스트로 갈음)
+  - 블로그장 철회는 성공 + 철회 알림, 관리자가 철회 API를 부르면 403
+  - 이미 폐쇄 예정이면 시각 그대로, 알림 다시 없음, `close_reason = ADMIN`, `keptExisting: true`
+  - 폐쇄된 블로그는 409. `BLOG_FORCE_CLOSE` 기록
+- [ ] T021 [US2] `blog/application/BlogAccessPolicy.canView`: 숨김이고 멤버가 아니면 false로 바꾼다. 002 `VisibilityIntegrationTest`에 숨김 사례를 더한다 (FR-012, D-103 #7)
+- [ ] T022 [US2] `blog/application/BlogClosingService.markAdminClose(blogId)`를 더한다. 폐쇄 예정이면 `close_reason`만 ADMIN으로 바꾸고 시각·알림은 그대로 둔다 (D-103 #8)
+- [ ] T023 [US2] `admin/application/AdminBlogService.java`를 만든다. 검색·상세(JdbcTemplate), 숨김·해제(+ `BLOG_HIDDEN` 알림), 강제 폐쇄(`closeBySystem(ADMIN)` 또는 `markAdminClose`), 기록 (FR-011~FR-013)
+- [ ] T024 [US2] `admin/api/AdminBlogController.java`를 만든다. `GET /api/admin/blogs`, `GET /api/admin/blogs/{blogId}`, `PUT·DELETE /api/admin/blogs/{blogId}/hidden`, `POST /api/admin/blogs/{blogId}/force-close` (contracts)
+- [ ] T025 [US2] 화면 `static/js/admin-blogs.js`: 블로그 탭을 만든다. 검색·상태 거르기, 목록, 상세, 숨김·해제·강제 폐쇄 버튼과 확인 창("7일 뒤 04:00에 폐쇄됩니다")
+
+**체크포인트**: 관리자가 블로그를 찾고 숨기고 폐쇄할 수 있다(사용자가 말한 "블로그를 관리할 수 없음" 해결).
+
+---
+
+## 5단계: 사용자 스토리 3 - 블로그장 경고와 강퇴(권한 박탈) (P2)
+
+- [ ] T026 [P] [US3] `admin/OwnerWarningIntegrationTest` (US3-1·2·10·11, FR-020, FR-021, D-95, D-103 #12·#13)
+  - 사유: 빈 값·501자는 400
+  - 첫 경고: `OWNER_WARNED`에 사유와 "3번 중 1번"이 들어가고 신고자는 없다. `OWNER_WARNING` 기록
+  - 세 번째 경고에 박탈된다
+  - 1년 지난 경고는 세지 않는다. 블로그 A·C는 따로 센다
+  - 새 블로그장은 0부터, 전 블로그장이 다시 블로그장이 되면 자기 경고를 다시 센다
+  - `ownerId`가 지금 블로그장이 아니면 409 `OWNER_CHANGED`. 폐쇄된 블로그는 409
+- [ ] T027 [P] [US3] `admin/OwnerRevocationIntegrationTest` (US3-3~9, FR-022~FR-029, D-17, D-54, D-103 #14~#17)
+  - 바로 강퇴: 경고 0이어도 박탈. S1(10/1)·S2(10/3) 중 S1이 수락 없이 블로그장, 전 블로그장은 MEMBER, `OWNER_REVOKED` 알림
+  - S1이 공개 블로그 3개를 운영해도 넘어간다(D-103 #16)
+  - 부블로그장 없음: 10/2 15:00 강퇴 → 10/9 04:00 예약. 문구 "블로그장 권한 박탈로 인한 폐쇄 조치". 박탈된 P를 뺀 멤버·구독자에게 3번씩, 중복 0. 폐쇄 전까지 글쓰기·댓글이 되고 아무도 철회할 수 없다
+  - 블로그장이 폐쇄를 누른 블로그
+    - 부블로그장 있음: 위임되고 폐쇄 예정 유지, 새 블로그장은 철회할 수 있다
+    - 부블로그장 없음: 시각 유지, 알림 다시 없음
+  - 대기 중 위임 요청은 `AUTO_CANCELED`, 받는 멤버에게 `DELEGATION_CANCELED` 1건
+  - 새 블로그장이 전 블로그장을 002 제재로 정지할 수 있다
+  - 관리자용 멤버 경고·정지·강제 퇴장 API가 없다(FR-010)
+  - 기록: `OWNER_KICK` + `AUTO_DELEGATE` 또는 `CLOSE_SCHEDULE`
+- [ ] T028 [P] [US3] `admin/OwnerConcurrencyTest`: 경고 2번인 블로그장에게 관리자 둘이 동시에 경고 10번을 보낸다. 박탈 1건(`owner_revocations` 1행), 위임 또는 폐쇄 예약 1번, 나머지는 409 `OWNER_CHANGED` (SC-005, FR-028)
+- [ ] T029 [US3] `admin/application/OwnerRevocationService.java`를 만든다. 블로그 행 잠금 안에서 아래를 한 번에 한다 (research R-09, data-model 박탈 순서)
+  - 위임 요청 자동 취소 + 알림
+  - `OwnerSuccessionService.revokeOwner`
+  - `owner_revocations`, `OWNER_REVOKED` 알림, 기록
+  - `BlogClosingService`: `closeBySystem`에 뺄 회원(박탈된 사람)을 넘긴다. 3일 전·1일 전 대상 쿼리에서 `owner_revocations`(이 블로그·이 폐쇄 예정 시각)의 user_id를 뺀다 (US3-5)
+- [ ] T030 [US3] `admin/application/OwnerWarningService.java`를 만든다. 잠금 → `ownerId` 확인 → 사유 검사 → `owner_warnings` → 1년 안 경고 수 → 알림 → 3번이면 `OwnerRevocationService.revoke(WARNING_3)` (FR-020, FR-021)
+- [ ] T031 [US3] `admin/api/AdminOwnerController.java`를 만든다. `GET·POST /api/admin/blogs/{blogId}/owner-warnings`, `POST /api/admin/blogs/{blogId}/owner-revocation` (contracts)
+- [ ] T032 [US3] 블로그 상세 화면(`admin-blogs.js`)에 경고(사유 입력, "지금 n번") 버튼과 바로 강퇴 버튼, 확인 창, 경고 이력을 붙인다
+
+---
+
+## 6단계: 사용자 스토리 4 - 블로그·블로그장 신고 처리 (P2)
+
+- [ ] T033 [P] [US4] `admin/AdminReportIntegrationTest` (US4-1~8, FR-030~FR-034, D-93, D-102 #15·#16, D-103 #18)
+  - 신고함
+    - `route = 'ADMIN'` 4종(블로그·블로그장·블로그장 글·메인 프로필)만 나온다. 멤버 글 신고(BLOG)는 없고, 블로그장 신고함에는 ADMIN 신고가 없다
+    - 대기 중은 오래된 순, 처리됨은 최근 순
+  - 상세: `target_snapshot`, 신고자 닉네임, 탈퇴 신고자는 "탈퇴한 회원"
+  - 처리 결과
+    - NONE: 조치 없음
+    - OWNER_WARNING: 사유 필수, 경고 수 +1, 3번째에 박탈
+    - OWNER_KICK: 박탈
+    - BLOG_CLOSE: 폐쇄(이미 폐쇄 예정이면 사유만)
+  - 처리 대상
+    - 블로그장이 바뀌었으면 409 `OWNER_CHANGED`
+    - `blog_id` NULL 신고는 NONE만(나머지 400)
+  - 한 번만: 다시 처리하면 409 `REPORT_ALREADY_HANDLED`, 동시 두 처리는 하나만 성공
+  - 알림: `REPORT_RESOLVED`. 신고자가 `report_result`를 껐으면 0건(처리·기록은 남음)
+  - 신고 5건이 쌓여도 자동 조치 없음
+  - 기록: `REPORT_HANDLE`, 조치 행과 `owner_warnings.report_id`
+- [ ] T034 [US4] `admin/application/AdminReportService.java`를 만든다. 목록·상세, 처리(블로그 행 → 신고 행 잠금, R-08·R-09 서비스 호출, 알림, 기록) (research R-10)
+- [ ] T035 [US4] `admin/api/AdminReportController.java`를 만든다. `GET /api/admin/reports`, `GET /api/admin/reports/{reportId}`, `POST /api/admin/reports/{reportId}/resolution` (contracts)
+- [ ] T036 [US4] 화면 `static/js/admin-reports.js`: 신고 탭을 만든다. 대기·처리 탭, 상세(당시 내용 textContent), 결과 선택·사유 입력·확인 창
+
+---
+
+## 7단계: 사용자 스토리 5 - 게시글·댓글 숨김·삭제와 복구 (P2)
+
+- [ ] T037 [P] [US5] `admin/AdminPostModerationIntegrationTest` (US5-1~4, FR-015~FR-019, D-103 #9~#11)
+  - 숨김
+    - 목록·검색·피드에서 빠진다
+    - 작성자 상세는 `hiddenByAdmin: true`이고 수정·댓글·좋아요는 막힌다. 블로그장·비회원은 404
+    - `POST_HIDDEN` 1건, 30일 정리 뒤에도 남는다
+    - 해제하면 다시 보이고 알림은 없다
+  - 삭제: `POST_DELETED`, 사진 안 보임. 004 경로(`DELETE /api/posts/{id}`)로 지워도 `POST_DELETE` 기록
+  - 관리자 수정은 403
+  - 복구
+    - 10/1 삭제 → 10/20 복구: 보이고 사진도 보임, `POST_RESTORED`
+    - 숨긴 채 지운 글은 HIDDEN으로 돌아간다
+    - 작성자가 지운 글은 409 `NOT_RESTORABLE`
+    - 10/31 04:00 정리 뒤에는 404
+    - 폐쇄 블로그 글은 409
+    - 복구 뒤 다시 지우면 알림이 다시 간다
+  - 관리자 글 목록·상세: 비공개·숨김 블로그 글도 보이고 `deletedBy`·`restorable`이 있다
+- [ ] T038 [P] [US5] `admin/AdminCommentModerationIntegrationTest` (US5-5, D-103 #9·#11)
+  - 댓글 숨김·해제·삭제는 작성자 알림 0건, 활동 기록이 남는다
+  - 답글이 남은 최상위 댓글을 숨기면 `hidden: true` 자리가 남고 답글은 보인다
+  - 관리자가 지운 댓글 복구는 성공, 작성자가 지운 댓글은 409, 30일 뒤는 404
+- [ ] T039 [US5] `admin/application/AdminPostModerationService.java`를 만든다. 목록·상세·숨김·해제·삭제·복구, 알림, 기록 (research R-11)
+- [ ] T040 [US5] `admin/application/AdminCommentModerationService.java`를 만든다. 목록·숨김·해제·삭제·복구, 기록. 누가 지웠는지는 칸 추가 전에는 `admin_actions`의 `COMMENT_DELETE`로 판단한다
+- [ ] T041 [US5] 004 글 쪽을 고친다 (D-103 #10)
+  - `board/application/PostQueryService`·`PostPolicy`: HIDDEN 글은 작성자에게만 `hiddenByAdmin`으로 보이고, 수정·댓글·좋아요·공유는 막는다
+  - `PostService.delete`: 관리자면 `AdminPostModerationService`로 보낸다. `POST_DELETED` 키에 삭제 시각을 넣는다
+  - `specs/004-board/contracts/board-api.yaml`의 `PostDetail`에 `hiddenByAdmin`을 더한다
+  - 004 테스트에서 깨지는 것을 맞춘다
+- [ ] T042 [US5] 004 댓글 쪽을 고친다
+  - `board/application/CommentService`: HIDDEN 댓글은 빼고, 답글이 남은 HIDDEN 최상위 댓글은 `hidden: true` 자리로 둔다
+  - `board-api.yaml` 댓글 스키마에 `hidden`을 더한다
+- [ ] T043 [US5] `admin/api/AdminContentController.java`를 만든다. `GET /api/admin/posts`, `GET·DELETE /api/admin/posts/{postId}`, `PUT·DELETE /api/admin/posts/{postId}/hidden`, `POST /api/admin/posts/{postId}/restore`, `GET /api/admin/comments`, `DELETE /api/admin/comments/{commentId}`, `PUT·DELETE /api/admin/comments/{commentId}/hidden`, `POST /api/admin/comments/{commentId}/restore` (contracts)
+- [ ] T044 [US5] 화면을 만든다
+  - `static/js/admin-content.js`: 글·댓글 탭. 블로그·상태 거르기, 본문은 글자로만, 숨김·삭제·복구 버튼
+  - `static/js/board-post.js`: "관리자가 숨긴 글" 표시와 "관리자가 숨긴 댓글입니다" 자리
+
+---
+
+## 8단계: 사용자 스토리 6 - 관리자 활동 기록과 운영 기록 1년 보관 (P2)
+
+- [ ] T045 [P] [US6] `admin/AdminActionLogIntegrationTest` (US6-1, FR-039, SC-004, D-103 #20)
+  - 16가지 조치마다 관리자·시각·종류·대상이 맞는 행 1개
+  - 목록: 종류·관리자·대상·기간으로 거르기, 관리자 닉네임, 탈퇴 대상은 "탈퇴한 회원", 지워진 대상은 "삭제된 대상"
+  - 고치기·지우기 경로가 없다
+  - 조치가 실패해 되돌려지면 기록도 없다
+- [ ] T046 [P] [US6] `admin/AdminDailyTasksIntegrationTest` (US6-2~4, FR-038, D-103 #19)
+  - 31일 뒤 04:00: 활동·경고·박탈·신고·멤버 정지 기록이 그대로다
+  - 366일 뒤: 모두 지워진다
+  - 남는 것: 효력 있는 영구 정지, 블랙리스트가 가리키는 강제 퇴장
+  - 지운 신고를 가리키던 남은 행의 `report_id`는 NULL
+  - 탈퇴 30일 뒤 개인정보가 지워진 회원의 기록도 남는다("탈퇴한 회원")
+- [ ] T047 [US6] `admin/application/AdminActionQueryService.java`와 `admin/api/AdminActionController.java`(`GET /api/admin/actions`)를 만든다
+- [ ] T048 [US6] `admin/application/AdminDailyTasks.java`(research R-13 순서, 단계마다 트랜잭션)를 만들고 `batch/DailyCleanupJob`에 단계와 로그를 더한다 (SCL-03)
+- [ ] T049 [US6] 화면 `static/js/admin-actions.js`: 활동 기록 탭을 만든다. 거르기와 목록
+
+---
+
+## 9단계: 사용자 스토리 7 - 운영 통계 (P3)
+
+- [ ] T050 [P] [US7] `admin/AdminStatsIntegrationTest` (US7-1~3, FR-040, D-103 #21)
+  - 10/1 회원 3명, 10/2 회원 5명과 관리자 1명 가입
+  - 회원 수 8 → 1명 탈퇴하면 7이고 10/2 가입 수는 그대로 5
+  - 블로그 4(숨김 포함, 폐쇄 제외)
+  - 10/2 글 7(그중 삭제·숨김도 셈, 공지 제외)
+  - 30일 0 채우기, `admin.stats.daily-days` 바꾸면 개수가 바뀐다
+  - 회원이 부르면 403
+- [ ] T051 [US7] `admin/application/AdminStatsService.java`와 `admin/api/AdminStatsController.java`(`GET /api/admin/stats`)를 만든다
+- [ ] T052 [US7] 화면 `static/js/admin-stats.js`: 통계 탭을 만든다. 숫자 카드 2개, 일별 표
+
+---
+
+## 10단계: 다듬기 (Polish)
+
+- [ ] T053 [P] `contract/OpenApiConformanceTest`에 `ADMIN_CONTRACT = specs/005-admin-moderation/contracts/admin-api.yaml`의 경로·메서드 대조를 더하고, "계약에 없는 API 없음" 검사에도 넣는다(T041·T042로 바뀐 board-api.yaml 포함)
+- [ ] T054 [P] `admin/AdminSecurityTest` (SC-002, SC-003, FR-003, FR-007, FR-009)
+  - 계약의 모든 `/api/admin/**` 경로·메서드를 아래 계정으로 부른다
+    - 비회원: 401
+    - 회원·블로그 멤버·블로그장·부블로그장: 403 `ADMIN_ONLY`, 본문에 회원 정보 없음
+    - 권한 회수된 관리자: 403
+  - 상태를 바꾸는 요청에 CSRF가 없으면 403
+  - "전체 보기" 응답을 뺀 관리자 응답 전체와 로그에 이메일·전화번호 원문, 비밀번호 칸이 0건
+  - "전체 보기"마다 `PRIVACY_VIEW` 1건
+  - `admin/index.html`은 static에서 직접 받을 수 없다
+- [ ] T055 [P] `perf/AdminResponseTimeTest`: 회원 10,000명, 블로그 1,000개, 신고 5,000건으로 회원 검색·블로그 검색·신고함이 2초 안이다 (SC-001)
+- [ ] T056 [P] 관리자 화면 6개 탭을 360px·1280px에서 확인한다. 가로 스크롤이 없고 `api.js` 5초 중단 안내가 나와야 한다 (SC-010, D-48)
+- [ ] T057 **(DB 변경 승인 뒤)** Crowfoot 문서 654에 `comments.deleted_by`, `owner_warnings.reason`을 더한다. `admin_actions.action_type` 설명도 고친다(research R-15). `plan_migration` → 사용자 승인 → `apply_migration` → `export_ddl`로 `docs/04-design/schema.sql`을 갱신한다. 그다음 아래를 고치고 T038·T026에 사례를 더한다
+  - 004 `CommentService.delete`가 `deleted_by`를 채운다
+  - 댓글 복구 판단을 `deleted_by <> author_id`로 바꾼다
+  - 경고가 `reason`을 저장하고 경고 이력에 보인다
+- [ ] T058 003 plan·구현과 맞춘다. 신고 행 모양(`reports` 칸, 사유 값)과 알림 이름(`OWNER_WARNED` 등)이 다르면 data-model·계약·`NotificationType`을 고친다. 003 신고 버튼으로 만든 신고가 관리자 신고함에 들어오는지 본다 (research R-16)
+- [ ] T059 `local/seed.sql`에 관리자 신고 예시(블로그·블로그장·블로그장 글), 숨긴 글, 블로그장 경고 1건을 더하고 `SeedSqlTest`를 맞춘다
+- [ ] T060 quickstart.md "확인 결과"를 채우고 README의 기능 목록을 갱신한다
+
+---
+
+## 의존 관계와 실행 순서
+
+- 1단계 → 2단계 → US1(MVP) → US2.
+- US3은 US2 뒤다(블로그 상세 화면, 강제 폐쇄 서비스).
+- US4는 US2·US3 뒤다(처리 결과가 폐쇄·경고·강퇴를 부름).
+- US5는 2단계 뒤에 US2~US4와 따로 해도 된다.
+- US6의 T045는 다른 스토리의 조치가 다 있어야 하므로 US2~US5 뒤에 한다. T046·T048은 2단계 뒤 언제든 된다.
+- US7은 2단계 뒤 언제든 된다.
+- 10단계는 모든 스토리 뒤. T057은 사용자 승인이 난 뒤에만 한다.
+- 같은 파일을 고치는 작업은 차례로 한다: `admin-blogs.js`(T025·T032), `BlogClosingService`(T022·T029), `board-api.yaml`(T041·T042), `DailyCleanupJob`(T048).
