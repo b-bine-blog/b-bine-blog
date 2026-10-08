@@ -41,8 +41,8 @@ spring:
     multipart:
       # 프로필 사진 장당 3MB (6.3, FR-043)
       max-file-size: ${MEMBER_PROFILE_IMAGE_MAX_SIZE:3MB}
-      # 요청 전체는 파일 + multipart 경계 여유
-      max-request-size: ${MEMBER_PROFILE_IMAGE_MAX_REQUEST_SIZE:4MB}
+      # 요청 전체: 글 이미지 한 번에 10MB(004 FR-031) + multipart 경계 여유. 프로필·대표 이미지는 서비스가 3MB로 따로 막는다
+      max-request-size: ${BOARD_MULTIPART_MAX_REQUEST_SIZE:11MB}
 
 auth:
   jwt-secret: ${JWT_SECRET}
@@ -126,6 +126,53 @@ blog:
   sanction:
     count-window: ${BLOG_SANCTION_COUNT_WINDOW:365d}    # D-95
     kick-suggest-count: ${BLOG_SANCTION_KICK_SUGGEST_COUNT:3}   # BLG-13, D-46
+
+board:
+  # 004 게시판 설정값 (specs/004-board/data-model.md "설정값", D-68)
+  post:
+    title-max-length: ${BOARD_POST_TITLE_MAX_LENGTH:30}          # FR-003
+    content-max-length: ${BOARD_POST_CONTENT_MAX_LENGTH:5000}    # FR-003, D-92(마크다운 원문 글자 수)
+  list:
+    page-sizes: ${BOARD_LIST_PAGE_SIZES:10,20,30}                # FR-017, 첫 값이 기본
+  category:
+    max-count: ${BOARD_CATEGORY_MAX_COUNT:30}                    # D-100 #8
+    name-max-length: ${BOARD_CATEGORY_NAME_MAX_LENGTH:30}        # D-100 #8
+  tag:
+    max-count: ${BOARD_TAG_MAX_COUNT:10}                         # FR-024
+  image:
+    max-size: ${BOARD_IMAGE_MAX_SIZE:3MB}                        # FR-031 장당
+    max-request-size: ${BOARD_IMAGE_MAX_REQUEST_SIZE:10MB}       # FR-031 한 번에
+    max-per-post: ${BOARD_IMAGE_MAX_PER_POST:10}                 # FR-031
+    max-pixels: ${BOARD_IMAGE_MAX_PIXELS:25000000}
+    orphan-after: ${BOARD_IMAGE_ORPHAN_AFTER:1d}                 # D-100 #4
+    purge-after: ${BOARD_IMAGE_PURGE_AFTER:30d}                  # D-100 #4, 4.5
+  purge-after: ${BOARD_PURGE_AFTER:30d}                          # FR-013 삭제 글·댓글 보관
+  comment:
+    max-length: ${BOARD_COMMENT_MAX_LENGTH:500}                  # FR-037
+    page-size: ${BOARD_COMMENT_PAGE_SIZE:20}                     # research R-08
+  like:
+    rate-limit: ${BOARD_LIKE_RATE_LIMIT:30}                      # D-100 #12, 회원당
+    rate-window: ${BOARD_LIKE_RATE_WINDOW:1m}
+  view:
+    guest-cookie-max-age: ${BOARD_VIEW_GUEST_COOKIE_MAX_AGE:365d}   # D-100 #20
+    ip-limit: ${BOARD_VIEW_IP_LIMIT:60}                          # D-100 #21
+    ip-window: ${BOARD_VIEW_IP_WINDOW:1m}
+    bot-user-agents: ${BOARD_VIEW_BOT_USER_AGENTS:bot,crawler,spider,slurp,preview}   # D-100 #21
+    retention: ${BOARD_VIEW_RETENTION:7d}                        # research R-10(가정)
+  search:
+    min-length: ${BOARD_SEARCH_MIN_LENGTH:2}                     # FR-054
+    max-length: ${BOARD_SEARCH_MAX_LENGTH:20}                    # FR-054
+    recent-max: ${BOARD_SEARCH_RECENT_MAX:10}                    # FR-059
+    blog-preview-size: ${BOARD_SEARCH_BLOG_PREVIEW_SIZE:5}       # research R-13(가정)
+  feed:
+    recent-days: ${BOARD_FEED_RECENT_DAYS:30}                    # D-100 #18
+    page-size: ${BOARD_FEED_PAGE_SIZE:20}                        # D-100 #18
+  og:
+    summary-length: ${BOARD_OG_SUMMARY_LENGTH:100}               # D-100 #14
+    default-image: ${BOARD_OG_DEFAULT_IMAGE:/img/og-default.png} # D-100 #15
+
+app:
+  base-url: ${APP_BASE_URL:http://localhost:8080}                # og 절대 주소(004 research R-12)
 
 blacklist:
   # 블랙리스트 HMAC 키(research R-09). 기본값 없음. 한 번 정하면 바꾸지 않는다.

@@ -38,7 +38,7 @@
 - **한도**:
   - 장당 3MB(`board.image.max-size`)
   - 한 번에 보내는 용량 10MB(`board.image.max-request-size`)
-  - `spring.servlet.multipart.max-request-size`는 10MB에 multipart 여유를 더한 11MB로 올리고, 넘으면 413을 `FILE_TOO_LARGE`로 바꾼다
+  - `spring.servlet.multipart.max-request-size`는 10MB에 multipart 여유를 더한 11MB로 올리고, 넘으면 001·002와 같이 400 `FILE_TOO_LARGE`로 응답한다(구현 때 기존 처리에 맞춤)
   - 한 글에 10장(`board.image.max-per-post`)
 - **글과 연결**:
   - 글을 저장·수정할 때 본문 마크다운에서 `/files/{이름}` 이미지 주소를 모은다.

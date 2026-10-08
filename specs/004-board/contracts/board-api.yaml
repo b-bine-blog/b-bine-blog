@@ -176,9 +176,8 @@ paths:
                 files: { type: array, maxItems: 10, items: { type: string, format: binary } }
       responses:
         '201': { description: 올라감, content: { application/json: { schema: { $ref: '#/components/schemas/UploadedImages' } } } }
-        '400': { description: FILE_TYPE_NOT_ALLOWED, POST_IMAGE_LIMIT, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '400': { description: FILE_TYPE_NOT_ALLOWED, POST_IMAGE_LIMIT, FILE_TOO_LARGE(장당 3MB 또는 요청 10MB 초과. 001·002와 같이 400), content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
         '403': { $ref: '#/components/responses/Forbidden' }
-        '413': { description: FILE_TOO_LARGE(장당 3MB 또는 요청 10MB 초과), content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
 
   /api/posts/{postId}/comments:
     parameters: [ { $ref: '#/components/parameters/PostId' } ]
@@ -372,9 +371,8 @@ paths:
                 files: { type: array, maxItems: 10, items: { type: string, format: binary } }
       responses:
         '201': { description: 올라감, content: { application/json: { schema: { $ref: '#/components/schemas/UploadedImages' } } } }
-        '400': { description: FILE_TYPE_NOT_ALLOWED, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '400': { description: FILE_TYPE_NOT_ALLOWED, FILE_TOO_LARGE, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
         '403': { description: ADMIN_ONLY, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
-        '413': { description: FILE_TOO_LARGE, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
 
 components:
   parameters:

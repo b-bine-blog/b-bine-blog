@@ -23,11 +23,11 @@ description: "004 게시판 구현 작업 목록"
 
 ## 1단계: 준비 (Setup)
 
-- [ ] T001 `build.gradle`에 `org.commonmark:commonmark:0.24.0`, `commonmark-ext-gfm-tables:0.24.0`, `commonmark-ext-gfm-strikethrough:0.24.0`, `org.jsoup:jsoup:1.18.1`을 더한다 (research R-01)
-- [ ] T002 `application.yml`에 data-model "설정값"의 `board.*`, `app.base-url`을 `${ENV:기본값}`으로 더하고 `spring.servlet.multipart.max-request-size`를 11MB로 올린다 (D-68)
-- [ ] T003 [P] `common/config/BoardProperties.java`, `AppProperties.java`를 `@ConfigurationProperties`로 만든다
-- [ ] T004 [P] `static/vendor/toastui/`에 Toast UI Editor 3.2.2 배포 파일(js·css)과 LICENSE를 넣는다. `static/img/og-default.png`(1200×630)를 만든다 (R-02, D-100 #15)
-- [ ] T005 [P] `.env.example`, `local/start.sh`, `local/start.bat`에 `APP_BASE_URL`을 더한다
+- [X] T001 `build.gradle`에 `org.commonmark:commonmark:0.24.0`, `commonmark-ext-gfm-tables:0.24.0`, `commonmark-ext-gfm-strikethrough:0.24.0`, `org.jsoup:jsoup:1.18.1`을 더한다 (research R-01)
+- [X] T002 `application.yml`에 data-model "설정값"의 `board.*`, `app.base-url`을 `${ENV:기본값}`으로 더하고 `spring.servlet.multipart.max-request-size`를 11MB로 올린다 (D-68)
+- [X] T003 [P] `common/config/BoardProperties.java`, `AppProperties.java`를 `@ConfigurationProperties`로 만든다
+- [X] T004 [P] `static/vendor/toastui/`에 Toast UI Editor 3.2.2 배포 파일(js·css)과 LICENSE를 넣는다. `static/img/og-default.png`(1200×630)를 만든다 (R-02, D-100 #15)
+- [X] T005 [P] `.env.example`, `local/start.sh`, `local/start.bat`에 `APP_BASE_URL`을 더한다
 
 ---
 
@@ -37,9 +37,9 @@ description: "004 게시판 구현 작업 목록"
 
 - [ ] T006 [P] `common/markdown/MarkdownRenderer.java`(commonmark → jsoup Safelist)와 `MarkdownRendererTest`(XSS 사례 모음: script, onerror, javascript: 링크, data: 이미지, iframe, style, 표·코드·취소선 유지)를 만든다 (FR-005, SC-002, R-01)
 - [ ] T007 [P] `common/markdown/MarkdownText.java`(글자만 뽑은 요약 n자, 첫 이미지 주소, `/files/` 이미지 이름 목록)와 테스트를 만든다 (D-100 #7·#14, R-03)
-- [ ] T008 [P] `board/domain/Post.java`(+Repository, enum `BoardType`, `PostStatus`), `Category.java`, `Comment.java`(+`CommentStatus`), `PostImage.java`(images, `@SQLRestriction("owner_type = 'POST'")`) 엔티티를 스키마에 맞춘다. `post_tags`, `post_likes`, `post_views`, `recent_searches`는 JdbcTemplate로 다룬다
+- [ ] T008 [P] `board/domain/Post.java`(+Repository, enum `BoardType`, `PostStatus`), `Category.java`, `Comment.java`(+`CommentStatus`), `PostImage.java`(images, `@SQLRestriction("owner_type = 'POST'")`) 의 열과 상태값을 스키마에 맞춘다. 게시판 테이블은 엔티티 없이 모두 JdbcTemplate로 다룬다(구현 때 단순화, 002 `members` 조회와 같은 방식)
 - [ ] T009 [P] `common/notification/NotificationType`에 `POST_COMMENT`(COMMENT, post_comment), `COMMENT_REPLY`(COMMENT, comment_reply), `POST_LIKE`(LIKE, post_like), `POST_DELETED`(OPERATION, 없음), `NOTICE`(OPERATION, notice)를 더한다 (data-model 알림 종류)
-- [ ] T010 [P] `common/error/ErrorCode`에 `POST_NOT_FOUND`, `POST_FORBIDDEN`, `POST_IMAGE_LIMIT`, `CATEGORY_NOT_FOUND`, `CATEGORY_DUPLICATE`, `CATEGORY_LIMIT_EXCEEDED`, `COMMENT_NOT_FOUND`, `COMMENT_FORBIDDEN`, `COMMENT_NOT_ALLOWED`, `LIKE_NOT_ALLOWED`, `SEARCH_KEYWORD_INVALID`, `ADMIN_ONLY`를 더한다. multipart 크기 초과를 413 `FILE_TOO_LARGE`로 바꾼다
+- [ ] T010 [P] `common/error/ErrorCode`에 `POST_NOT_FOUND`, `POST_FORBIDDEN`, `POST_IMAGE_LIMIT`, `CATEGORY_NOT_FOUND`, `CATEGORY_DUPLICATE`, `CATEGORY_LIMIT_EXCEEDED`, `COMMENT_NOT_FOUND`, `COMMENT_FORBIDDEN`, `COMMENT_NOT_ALLOWED`, `LIKE_NOT_ALLOWED`, `SEARCH_KEYWORD_INVALID`, `ADMIN_ONLY`를 더한다. 크기 초과는 001·002와 같이 400 `FILE_TOO_LARGE`로 둔다(계약도 400으로 맞춤)
 - [ ] T011 `board/application/PostVisibility.java`(공개 피드·검색용 SQL 조건, 차단 조건, 구독 탭 조건)와 `AuthorView.java`(ACTIVE·LEFT_BLOG·WITHDRAWN 표시)를 만든다 (R-04, R-05)
 - [ ] T012 `board/application/PostPolicy.java`(쓰기·수정·삭제·댓글·좋아요 가능 여부, 블로그 열람·정지 확인을 002 서비스로)와 단위 테스트를 만든다 (FR-002, FR-008~FR-010, D-90, D-100 #1)
 - [ ] T013 `src/test/java/com/mainblog/board/BoardTestBase.java`에 글·카테고리·댓글·차단·구독 데이터 만들기 도우미를 둔다(002 `BlogTestBase` 확장)
@@ -87,7 +87,7 @@ description: "004 게시판 구현 작업 목록"
 
 ## 6단계: 사용자 스토리 4 - 이미지 첨부 (P2)
 
-- [ ] T032 [P] [US4] `board/PostImageIntegrationTest`: 2.9MB 다섯 형식 성공, 3MB 초과 413, svg·pdf·zip·확장자만 바꾼 exe 400, 한 요청 11장 400, 10MB 초과 413, GPS EXIF가 저장 파일에 없음, `../../etc/passwd.jpg`가 UUID 이름, 비멤버 403, 글 저장 때 11번째 이미지 400, 남이 올린 이미지 이름은 연결 안 됨, 수정 때 빠진 이미지 owner_id NULL (US4, SC-003)
+- [ ] T032 [P] [US4] `board/PostImageIntegrationTest`: 2.9MB 다섯 형식 성공, 3MB 초과 400, svg·pdf·zip·확장자만 바꾼 exe 400, 한 요청 11장 400, 10MB 초과 400, GPS EXIF가 저장 파일에 없음, `../../etc/passwd.jpg`가 UUID 이름, 비멤버 403, 글 저장 때 11번째 이미지 400, 남이 올린 이미지 이름은 연결 안 됨, 수정 때 빠진 이미지 owner_id NULL (US4, SC-003)
 - [ ] T033 [US4] `board/application/PostImageService.java`(업로드, 연결, 해제)와 `board/api/PostImageController.java`(`POST /api/blogs/{blogId}/images`)를 만든다
 - [ ] T034 [US4] 글쓰기 화면에 Toast UI `addImageBlobHook` 업로드를 붙인다
 
