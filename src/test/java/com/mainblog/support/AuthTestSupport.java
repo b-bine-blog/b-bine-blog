@@ -26,6 +26,26 @@ public final class AuthTestSupport {
         return builder.cookie(new Cookie("XSRF-TOKEN", CSRF)).header("X-XSRF-TOKEN", CSRF);
     }
 
+    public static String loginJson(String email, String password, boolean rememberMe, String captchaToken) {
+        return "{\"email\":\"%s\",\"password\":\"%s\",\"rememberMe\":%s%s}".formatted(email, password,
+                rememberMe, captchaToken == null ? "" : ",\"captchaToken\":\"" + captchaToken + "\"");
+    }
+
+    /** 응답의 Set-Cookie에서 쿠키 값. */
+    public static String cookieValue(org.springframework.mock.web.MockHttpServletResponse response, String name) {
+        for (String header : response.getHeaders("Set-Cookie")) {
+            if (header.startsWith(name + "=")) {
+                return header.substring(name.length() + 1, header.indexOf(';'));
+            }
+        }
+        return null;
+    }
+
+    public static String setCookieHeader(org.springframework.mock.web.MockHttpServletResponse response, String name) {
+        return response.getHeaders("Set-Cookie").stream().filter(h -> h.startsWith(name + "=")).findFirst()
+                .orElse(null);
+    }
+
     public static String signupJson(String email, String nickname) {
         return """
                 {"email":"%s","password":"Abcd123!","name":"홍길동","nickname":"%s","phone":"010-1234-5678",

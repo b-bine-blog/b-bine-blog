@@ -39,6 +39,9 @@
     }
     if (options.activity) {
       headers['X-User-Activity'] = '1';
+      if (global.session) {
+        global.session.markActivity();
+      }
     }
     var payload;
     if (body instanceof FormData) {

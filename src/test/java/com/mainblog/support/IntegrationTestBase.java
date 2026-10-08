@@ -74,6 +74,35 @@ public abstract class IntegrationTestBase {
     @Autowired
     protected JdbcTemplate jdbc;
 
+    @Autowired
+    protected org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+
+    private static final java.util.concurrent.atomic.AtomicInteger IP_SEQ = new java.util.concurrent.atomic.AtomicInteger();
+
+    /** 테스트마다 다른 IP를 써서 메모리 요청 제한(R-06)이 다른 테스트에 번지지 않게 한다. */
+    protected static String nextIp() {
+        int n = IP_SEQ.incrementAndGet();
+        return "10." + ((n >> 16) & 255) + "." + ((n >> 8) & 255) + "." + (n & 255);
+    }
+
+    /** 가입 절차 없이 ACTIVE 회원을 만든다. 회원 번호를 돌려준다. */
+    protected long createUser(String email, String password, String nickname) {
+        org.springframework.jdbc.support.GeneratedKeyHolder keys = new org.springframework.jdbc.support.GeneratedKeyHolder();
+        String hash = passwordEncoder.encode(password);
+        jdbc.update(con -> {
+            java.sql.PreparedStatement ps = con.prepareStatement(
+                    "INSERT INTO users (email, password_hash, name, nickname, phone, role, status, created_at) "
+                            + "VALUES (?, ?, '홍길동', ?, '01012345678', 'USER', 'ACTIVE', ?)",
+                    java.sql.Statement.RETURN_GENERATED_KEYS);
+            ps.setString(1, email);
+            ps.setString(2, hash);
+            ps.setString(3, nickname);
+            ps.setObject(4, BASE_TIME);
+            return ps;
+        }, keys);
+        return keys.getKey().longValue();
+    }
+
     @BeforeEach
     void resetClockAndData() {
         clock.setTo(BASE_TIME);

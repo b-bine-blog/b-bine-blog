@@ -53,6 +53,11 @@
       return;
     }
     api.get('/api/auth/session')
-      .then(function (me) { renderHeader(me); }, function () { renderHeader(null); });
+      .then(function (me) {
+        renderHeader(me);
+        if (window.session) {
+          window.session.start();
+        }
+      }, function () { renderHeader(null); });
   });
 })();

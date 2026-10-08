@@ -24,7 +24,7 @@
 
 - **결정**:
   - Access Token: JWT(HS256, jjwt 0.12), 15분(D-97). 내용은 회원 번호(`sub`)와 만료 시각만 담는다(FR-027, 헌장 II). 쿠키 `AT`.
-  - Refresh Token: 32바이트 무작위 값. DB에는 SHA-256 해시만 저장(`refresh_tokens.token_hash`). 쿠키 `RT`, 경로 `/api/auth`.
+  - Refresh Token: 32바이트 무작위 값. DB에는 SHA-256 해시만 저장(`refresh_tokens.token_hash`). 쿠키 `RT`, 경로 `/`. (처음에는 `/api/auth`로 정했으나, R-04의 활동 필터가 `/api/auth` 밖의 요청에서도 그 기기의 RT를 알아야 해서 `/`로 바꿈. HttpOnly라 스크립트는 읽지 못한다. 2026-10-08 구현 중)
   - 쿠키는 모두 `HttpOnly; Secure; SameSite=Lax; Path=/`.
   - "로그인 유지" 미체크: 쿠키에 Max-Age를 주지 않아(세션 쿠키) 브라우저를 닫으면 사라진다. `refresh_tokens.expires_at`은 로그인 + 14일로 두되, 갱신 때 `last_active_at + 30분`이 지났으면 거부한다.
   - "로그인 유지" 체크: 쿠키 Max-Age 14일, `expires_at` = 로그인 시각 + 14일 고정(D-97). 갱신해도 늘지 않는다.

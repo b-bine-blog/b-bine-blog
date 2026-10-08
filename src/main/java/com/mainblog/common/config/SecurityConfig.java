@@ -1,6 +1,11 @@
 package com.mainblog.common.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mainblog.auth.application.TokenService;
+import com.mainblog.auth.security.ActivityTrackingFilter;
+import com.mainblog.auth.security.JwtAuthenticationFilter;
+import com.mainblog.auth.security.JwtProvider;
+import com.mainblog.member.domain.UserRepository;
 import com.mainblog.common.error.ErrorCode;
 import com.mainblog.common.error.ErrorResponse;
 import org.springframework.context.annotation.Bean;
@@ -14,6 +19,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy;
@@ -31,8 +37,9 @@ public class SecurityConfig {
             + "frame-src https://challenges.cloudflare.com";
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationEntryPoint entryPoint)
-            throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationEntryPoint entryPoint,
+                                                   JwtProvider jwtProvider, UserRepository userRepository,
+                                                   TokenService tokenService) throws Exception {
         // api.js가 쿠키 값을 그대로 헤더에 담으므로 XOR 마스킹 없는 처리기를 쓴다.
         // 요청 속성 이름을 비워 토큰을 매 요청 바로 읽게 해, 모든 응답에 XSRF-TOKEN 쿠키가 실린다.
         CsrfTokenRequestAttributeHandler csrfHandler = new CsrfTokenRequestAttributeHandler();
@@ -54,9 +61,13 @@ public class SecurityConfig {
                         .httpStrictTransportSecurity(hsts -> hsts.includeSubDomains(true).maxAgeInSeconds(31536000))
                         .referrerPolicy(r -> r.policy(ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)))
                 .exceptionHandling(e -> e.authenticationEntryPoint(entryPoint))
+                .addFilterBefore(new JwtAuthenticationFilter(jwtProvider, userRepository),
+                        UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(new ActivityTrackingFilter(tokenService), JwtAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/members/nickname-availability").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/public-config").permitAll()
                         .requestMatchers("/api/members/me/**").authenticated()
                         .requestMatchers("/api/**").authenticated()
                         // 정적 화면(D-66). 화면이 부르는 API에서 권한을 확인한다.

@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>로그인 - 메인블로그</title>
+  <link rel="stylesheet" href="/css/base.css">
+</head>
+<body>
+  <main>
+    <h1>로그인</h1>
+    <form id="login-form" novalidate>
+      <label for="email">이메일</label>
+      <input type="email" id="email" autocomplete="username" maxlength="255" required>
+      <label for="password">비밀번호</label>
+      <input type="password" id="password" autocomplete="current-password" maxlength="100" required>
+      <label><input type="checkbox" id="remember-me"> 로그인 유지</label>
+      <!-- 3번 실패한 뒤에만 보인다(FR-022) -->
+      <div id="captcha" hidden></div>
+      <button type="submit" id="submit">로그인</button>
+      <p class="message message--error" id="message"></p>
+    </form>
+    <p>
+      <a href="/find-email.html">이메일 찾기</a> ·
+      <a href="/find-password.html">비밀번호 찾기</a> ·
+      <a href="/signup.html">회원가입</a>
+    </p>
+  </main>
+  <script src="/js/api.js"></script>
+  <script src="/js/session.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/login.js"></script>
+</body>
+</html>

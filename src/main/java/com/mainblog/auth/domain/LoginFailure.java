@@ -7,7 +7,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import java.time.Duration;
 import java.time.LocalDateTime;
 
 /**
@@ -35,20 +34,6 @@ public class LoginFailure extends BaseTimeEntity {
     private LocalDateTime lastFailedAt;
 
     protected LoginFailure() {
-    }
-
-    public LoginFailure(String email, LocalDateTime now) {
-        this.email = email;
-        this.lastFailedAt = now;
-    }
-
-    /** 실패 1회 기록. lockAfter번째 실패면 그 시각 + lockDuration까지 잠근다(FR-020). */
-    public void recordFailure(LocalDateTime now, int lockAfter, Duration lockDuration) {
-        this.failCount++;
-        this.lastFailedAt = now;
-        if (failCount >= lockAfter) {
-            this.lockedUntil = now.plus(lockDuration);
-        }
     }
 
     public boolean isLocked(LocalDateTime now) {

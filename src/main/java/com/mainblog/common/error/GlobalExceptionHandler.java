@@ -2,6 +2,7 @@ package com.mainblog.common.error;
 
 import jakarta.validation.ConstraintViolationException;
 import java.util.List;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -17,7 +18,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ErrorResponse> handleBusiness(BusinessException e) {
         ErrorCode code = e.errorCode();
-        return ResponseEntity.status(code.status()).body(ErrorResponse.of(code, e.extras()));
+        ResponseEntity.BodyBuilder builder = ResponseEntity.status(code.status());
+        Object retryAfter = e.extras().get("retryAfterSeconds");
+        if (code == ErrorCode.RATE_LIMITED && retryAfter != null) {
+            builder.header(HttpHeaders.RETRY_AFTER, String.valueOf(retryAfter));
+        }
+        return builder.body(ErrorResponse.of(code, e.extras()));
     }
 
     /** Bean Validation 오류 → 400 VALIDATION_FAILED, 항목별 사유는 fieldErrors. */
