@@ -35,7 +35,14 @@ public enum NotificationType {
 
     // 003 소셜 (specs/003-social-notification/data-model.md "알림 종류"). 화면의 팔로우·구독 탭은 FOLLOW·SUBSCRIBE를 함께 보여준다
     NEW_FOLLOWER("FOLLOW", "new_follower", true),
-    BLOG_SUBSCRIBED("SUBSCRIBE", "blog_subscribed", true);
+    BLOG_SUBSCRIBED("SUBSCRIBE", "blog_subscribed", true),
+
+    // 005 관리자 조치 (specs/005-admin-moderation/data-model.md "알림 종류"). 모두 운영 탭이고 끌 수 없다
+    OWNER_WARNED("OPERATION", null),
+    OWNER_REVOKED("OPERATION", null),
+    BLOG_HIDDEN("OPERATION", null),
+    POST_HIDDEN("OPERATION", null),
+    POST_RESTORED("OPERATION", null);
 
     private final String tab;
     private final String settingColumn;

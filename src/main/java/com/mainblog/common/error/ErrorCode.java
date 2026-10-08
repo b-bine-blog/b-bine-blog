@@ -68,7 +68,14 @@ public enum ErrorCode {
     // 003 소셜·알림 (contracts/social-api.yaml)
     SELF_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "자기 자신에게는 할 수 없습니다."),
     FOLLOW_NOT_ALLOWED(HttpStatus.FORBIDDEN, "이 회원을 팔로우할 수 없습니다."),
-    REPORT_TOO_SOON(HttpStatus.CONFLICT, "같은 대상은 2주에 한 번만 신고할 수 있습니다.");
+    REPORT_TOO_SOON(HttpStatus.CONFLICT, "같은 대상은 2주에 한 번만 신고할 수 있습니다."),
+
+    // 005 관리자·제재 (contracts/admin-api.yaml, research R-14)
+    OWNER_CHANGED(HttpStatus.CONFLICT, "블로그장이 바뀌었습니다. 화면을 새로 불러 다시 확인해 주세요."),
+    ALREADY_HIDDEN(HttpStatus.CONFLICT, "이미 숨겼거나 숨길 수 없는 상태입니다."),
+    NOT_HIDDEN(HttpStatus.CONFLICT, "숨긴 상태가 아닙니다."),
+    NOT_RESTORABLE(HttpStatus.CONFLICT, "복구할 수 없습니다. 지운 상태가 아니거나 작성자가 직접 지웠습니다."),
+    BLOG_ALREADY_CLOSED(HttpStatus.CONFLICT, "이미 폐쇄된 블로그입니다.");
 
     private final HttpStatus status;
     private final String message;

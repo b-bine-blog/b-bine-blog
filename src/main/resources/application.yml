@@ -199,6 +199,27 @@ notification:
     default-days: ${NOTIFICATION_RETENTION_DEFAULT_DAYS:30}     # 4.5, FR-056
     short-days: ${NOTIFICATION_RETENTION_SHORT_DAYS:7}          # 6.7, FR-057
 
+admin:
+  # 005 관리자·제재 설정값 (specs/005-admin-moderation/data-model.md "설정값", D-68)
+  list:
+    page-sizes: ${ADMIN_LIST_PAGE_SIZES:10,20,50}                # research 가정 13
+    default-size: ${ADMIN_LIST_DEFAULT_SIZE:20}
+  member:
+    nickname-search-max-length: ${ADMIN_MEMBER_NICKNAME_SEARCH_MAX_LENGTH:12}   # 닉네임 2~12자(D-97)
+  privacy-view:
+    rate-limit: ${ADMIN_PRIVACY_VIEW_RATE_LIMIT:30}              # research R-04(가정), 관리자당
+    rate-window: ${ADMIN_PRIVACY_VIEW_RATE_WINDOW:1m}
+  warning:
+    revoke-threshold: ${ADMIN_WARNING_REVOKE_THRESHOLD:3}        # ADM-07, D-30
+    window: ${ADMIN_WARNING_WINDOW:365d}                         # D-95
+    reason-max-length: ${ADMIN_WARNING_REASON_MAX_LENGTH:500}    # D-103 #12, owner_warnings.reason VARCHAR(500) 이하
+  revocation:
+    reason-max-length: ${ADMIN_REVOCATION_REASON_MAX_LENGTH:500} # research R-09(가정)
+  records:
+    retention: ${ADMIN_RECORDS_RETENTION:365d}                   # 4.5, D-60, D-103 #19
+  stats:
+    daily-days: ${ADMIN_STATS_DAILY_DAYS:30}                     # D-103 #21. 30(board.purge-after)보다 크면 지운 글이 빠진다
+
 app:
   base-url: ${APP_BASE_URL:http://localhost:8080}                # og 절대 주소(004 research R-12)
 

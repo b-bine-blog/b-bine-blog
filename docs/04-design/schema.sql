@@ -1,5 +1,6 @@
 -- 원천은 Crowfoot 문서 654 "메인블로그"(https://crowfoot.java21.net/workspaces/54/models/654). 손으로 고치지 않음.
 -- Crowfoot export_ddl로 다시 만든다(research R-02). 2026-10-08, 문서 버전 41, 36개 테이블(shedlock 포함).
+-- 005(D-103 #11·#12): comments.deleted_by, owner_warnings.reason과 admin_actions.action_type 설명은 개발 DB에 먼저 반영된 것을 손으로 맞췄다(005 T057).
 
 -- 메인블로그 — MySQL DDL
 
@@ -383,6 +384,7 @@ CREATE TABLE comments (
     edited TINYINT(1) NOT NULL DEFAULT FALSE COMMENT '수정 여부',
     status VARCHAR(10) NOT NULL DEFAULT 'VISIBLE' COMMENT '상태-----VISIBLE, HIDDEN, DELETED',
     deleted_at DATETIME COMMENT '삭제 시각',
+    deleted_by BIGINT COMMENT '삭제한 회원-----users.id(FK 선 없음). deleted_by = author_id면 작성자가 지운 것이라 복구 불가(D-103 #11, ADM)',
     created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) COMMENT '작성 일시',
     updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6) COMMENT '수정 일시',
     PRIMARY KEY (id),
@@ -420,7 +422,7 @@ CREATE TABLE admin_actions (
     id BIGINT NOT NULL AUTO_INCREMENT COMMENT '번호',
     admin_id BIGINT NOT NULL COMMENT '관리자 회원 번호',
     report_id BIGINT COMMENT '관련 신고 번호',
-    action_type VARCHAR(30) NOT NULL COMMENT '종류-----OWNER_WARNING, OWNER_KICK, AUTO_DELEGATE, CLOSE_SCHEDULE, BLOG_HIDE, BLOG_FORCE_CLOSE, POST_HIDE, POST_DELETE, COMMENT_HIDE, COMMENT_DELETE, RESTORE, REPORT_HANDLE, PRIVACY_VIEW',
+    action_type VARCHAR(30) NOT NULL COMMENT '종류-----OWNER_WARNING, OWNER_KICK, AUTO_DELEGATE, CLOSE_SCHEDULE, BLOG_HIDE, BLOG_UNHIDE, BLOG_FORCE_CLOSE, POST_HIDE, POST_UNHIDE, POST_DELETE, COMMENT_HIDE, COMMENT_UNHIDE, COMMENT_DELETE, RESTORE, REPORT_HANDLE, PRIVACY_VIEW',
     target_type VARCHAR(15) NOT NULL COMMENT '대상 종류-----USER, BLOG, POST, COMMENT, REPORT',
     target_id BIGINT NOT NULL COMMENT '대상 번호',
     memo VARCHAR(500) COMMENT '메모',
@@ -434,6 +436,7 @@ CREATE TABLE owner_warnings (
     user_id BIGINT NOT NULL COMMENT '대상 블로그장 회원 번호',
     report_id BIGINT COMMENT '관련 신고 번호',
     admin_id BIGINT NOT NULL COMMENT '경고한 관리자 회원 번호-----users.id(FK 선 없음)',
+    reason VARCHAR(500) COMMENT '경고 사유-----앞뒤 공백 제거 후 1~500자(admin.warning.reason-max-length, D-103 #12)',
     created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) COMMENT '경고 시각',
     updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6) COMMENT '수정 일시',
     PRIMARY KEY (id)
