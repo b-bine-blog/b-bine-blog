@@ -60,6 +60,7 @@
 
   function renderPages(totalCount) {
     var nav = $('pages');
+    if (!nav) { return; } // 메인 블로그 둘러보기는 번호 페이지 없이 첫 10개만 보여 준다
     nav.textContent = '';
     var last = Math.max(1, Math.ceil(totalCount / Number(state.size)));
     var start = Math.max(1, state.page - 4);
