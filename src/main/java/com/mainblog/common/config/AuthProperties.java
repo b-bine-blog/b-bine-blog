@@ -30,7 +30,8 @@ public record AuthProperties(
         @Valid @NotNull Turnstile turnstile) {
 
     /** 로그인 실패: 3번째부터 사람 확인(SEC-13), 5번째에 5분 잠금(SEC-03). */
-    public record Login(@Positive int captchaAfter, @Positive int lockAfter, @NotNull Duration lockDuration) {}
+    public record Login(@Positive int captchaAfter, @Positive int lockAfter, @NotNull Duration lockDuration,
+                        @NotNull Duration failureRetention) {}
 
     /** IP당 요청 제한(SCL-01, R-06). */
     public record RateLimit(@Valid @NotNull Window login, @Valid @NotNull Window findEmail) {}

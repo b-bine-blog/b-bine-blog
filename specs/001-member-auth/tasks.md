@@ -123,16 +123,16 @@ description: "001 회원 가입·로그인·계정 관리 구현 작업 목록"
 
 ### US3 테스트
 
-- [ ] T045 [P] [US3] `src/test/java/com/mainblog/member/WithdrawalIntegrationTest.java`: 인수 시나리오 1~6과 SC-008(blog_members role=OWNER 행이 있으면 409 OWNS_BLOGS, blogs.status=CLOSING이어도 409, 탈퇴 직후 같은 이메일 재가입 성공, 이전 닉네임으로 가입 시도는 30일 동안 NICKNAME_DUPLICATE), 탈퇴 후 기존 RT로 refresh 401
-- [ ] T046 [P] [US3] `src/test/java/com/mainblog/batch/DailyCleanupJobTest.java`: 탈퇴 30일 지난 회원의 withdrawn_email·name·nickname·phone·bio가 NULL, 프로필 이미지 deleted_at 설정, 29일째는 그대로 / 만료·폐기 RT 삭제 / last_failed_at 1일 지난 login_failures 삭제
+- [X] T045 [P] [US3] `src/test/java/com/mainblog/member/WithdrawalIntegrationTest.java`: 인수 시나리오 1~6과 SC-008(blog_members role=OWNER 행이 있으면 409 OWNS_BLOGS, blogs.status=CLOSING이어도 409, 탈퇴 직후 같은 이메일 재가입 성공, 이전 닉네임으로 가입 시도는 30일 동안 NICKNAME_DUPLICATE), 탈퇴 후 기존 RT로 refresh 401
+- [X] T046 [P] [US3] `src/test/java/com/mainblog/batch/DailyCleanupJobTest.java`: 탈퇴 30일 지난 회원의 withdrawn_email·name·nickname·phone·bio가 NULL, 프로필 이미지 deleted_at 설정, 29일째는 그대로 / 만료·폐기 RT 삭제 / last_failed_at 1일 지난 login_failures 삭제
 
 ### US3 구현
 
-- [ ] T047 [P] [US3] `src/main/java/com/mainblog/member/domain/OwnedBlogQuery.java`: `blog_members`(role = OWNER)와 `blogs`(status ACTIVE·CLOSING)를 조인해 blogId, name, address, status, closeScheduledAt을 읽는 읽기 전용 쿼리(JdbcTemplate). 블로그 엔티티는 002에서 만든다
-- [ ] T048 [US3] `src/main/java/com/mainblog/member/application/WithdrawalService.java`: 비밀번호 확인(PASSWORD_MISMATCH) → OwnedBlogQuery가 비어 있지 않으면 OWNS_BLOGS → users.status = WITHDRAWN, withdrawn_at = now, withdrawn_email = email, email = NULL(닉네임은 그대로) → RT 전부 폐기 (FR-045~FR-048, D-15, D-18, D-97)
-- [ ] T049 [US3] `src/main/java/com/mainblog/member/api/WithdrawalController.java`: `GET /api/members/me/withdrawal`(canWithdraw, ownedBlogs), `POST /api/members/me/withdrawal`(204 + 쿠키 삭제)
-- [ ] T050 [US3] `src/main/java/com/mainblog/batch/DailyCleanupJob.java`와 `src/main/java/com/mainblog/common/config/SchedulingConfig.java`: `@Scheduled(cron = "0 0 4 * * *", zone = "Asia/Seoul")` + `@SchedulerLock(name = "dailyCleanup")`, ShedLock JdbcTemplateLockProvider. 작업: 탈퇴 30일 지난 개인정보 삭제, 만료·폐기 RT 삭제(D-83), 1일 지난 login_failures 삭제 (4.5, SCL-03, R-13)
-- [ ] T051 [US3] 탈퇴 화면 `src/main/resources/static/me/withdraw.html`, `src/main/resources/static/js/withdraw.js`: 운영 중 블로그 목록(폐쇄 예정이면 예정 시각)과 "위임하거나 폐쇄한 뒤 탈퇴할 수 있습니다" 안내, 비밀번호 입력, 탈퇴 후 메인으로
+- [X] T047 [P] [US3] `src/main/java/com/mainblog/member/domain/OwnedBlogQuery.java`: `blog_members`(role = OWNER)와 `blogs`(status ACTIVE·CLOSING)를 조인해 blogId, name, address, status, closeScheduledAt을 읽는 읽기 전용 쿼리(JdbcTemplate). 블로그 엔티티는 002에서 만든다
+- [X] T048 [US3] `src/main/java/com/mainblog/member/application/WithdrawalService.java`: 비밀번호 확인(PASSWORD_MISMATCH) → OwnedBlogQuery가 비어 있지 않으면 OWNS_BLOGS → users.status = WITHDRAWN, withdrawn_at = now, withdrawn_email = email, email = NULL(닉네임은 그대로) → RT 전부 폐기 (FR-045~FR-048, D-15, D-18, D-97)
+- [X] T049 [US3] `src/main/java/com/mainblog/member/api/WithdrawalController.java`: `GET /api/members/me/withdrawal`(canWithdraw, ownedBlogs), `POST /api/members/me/withdrawal`(204 + 쿠키 삭제)
+- [X] T050 [US3] `src/main/java/com/mainblog/batch/DailyCleanupJob.java`와 `src/main/java/com/mainblog/common/config/SchedulingConfig.java`: `@Scheduled(cron = "0 0 4 * * *", zone = "Asia/Seoul")` + `@SchedulerLock(name = "dailyCleanup")`, ShedLock JdbcTemplateLockProvider. 작업: 탈퇴 30일 지난 개인정보 삭제, 만료·폐기 RT 삭제(D-83), 1일 지난 login_failures 삭제 (4.5, SCL-03, R-13)
+- [X] T051 [US3] 탈퇴 화면 `src/main/resources/static/me/withdraw.html`, `src/main/resources/static/js/withdraw.js`: 운영 중 블로그 목록(폐쇄 예정이면 예정 시각)과 "위임하거나 폐쇄한 뒤 탈퇴할 수 있습니다" 안내, 비밀번호 입력, 탈퇴 후 메인으로
 
 **확인 지점**: 탈퇴·재가입이 따로 동작한다.
 

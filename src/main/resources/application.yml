@@ -51,6 +51,7 @@ auth:
     captcha-after: ${AUTH_LOGIN_CAPTCHA_AFTER:3}        # SEC-13, D-97
     lock-after: ${AUTH_LOGIN_LOCK_AFTER:5}              # SEC-03
     lock-duration: ${AUTH_LOGIN_LOCK_DURATION:5m}       # SEC-03
+    failure-retention: ${AUTH_LOGIN_FAILURE_RETENTION:1d}  # 마지막 실패가 1일 지난 기록은 04:00 배치가 지움(data-model)
   rate-limit:
     login:
       limit: ${AUTH_RATE_LIMIT_LOGIN:20}                # D-97, IP당

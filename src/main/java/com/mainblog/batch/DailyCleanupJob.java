@@ -1,0 +1,110 @@
+package com.mainblog.batch;
+
+import com.mainblog.auth.domain.LoginFailureRepository;
+import com.mainblog.auth.domain.RefreshTokenRepository;
+import com.mainblog.common.config.AuthProperties;
+import com.mainblog.common.config.MemberProperties;
+import com.mainblog.common.storage.FileStorage;
+import java.io.IOException;
+import java.time.Clock;
+import java.time.LocalDateTime;
+import java.util.List;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * 매일 04:00(한국 시간) 정리 작업 (T050, 4.5, SCL-03, D-83, R-13).
+ * 서버가 여러 대여도 ShedLock으로 한 번만 돈다. 001 범위는 회원 기능의 정리만 하고, 블로그 폐쇄 처리 등은 002에서 더한다.
+ * 실행하지 못한 날이 있어도 기준 시각 이전 것을 모두 지우므로 다음 실행에서 밀린 것까지 처리된다.
+ */
+@Component
+public class DailyCleanupJob {
+
+    private static final Logger log = LoggerFactory.getLogger(DailyCleanupJob.class);
+
+    private final JdbcTemplate jdbc;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final LoginFailureRepository loginFailureRepository;
+    private final FileStorage fileStorage;
+    private final AuthProperties authProperties;
+    private final MemberProperties memberProperties;
+    private final Clock clock;
+
+    public DailyCleanupJob(JdbcTemplate jdbc, RefreshTokenRepository refreshTokenRepository,
+                           LoginFailureRepository loginFailureRepository, FileStorage fileStorage,
+                           AuthProperties authProperties, MemberProperties memberProperties, Clock clock) {
+        this.jdbc = jdbc;
+        this.refreshTokenRepository = refreshTokenRepository;
+        this.loginFailureRepository = loginFailureRepository;
+        this.fileStorage = fileStorage;
+        this.authProperties = authProperties;
+        this.memberProperties = memberProperties;
+        this.clock = clock;
+    }
+
+    @Scheduled(cron = "0 0 4 * * *", zone = "Asia/Seoul")
+    @SchedulerLock(name = "dailyCleanup", lockAtMostFor = "PT30M", lockAtLeastFor = "PT1M")
+    public void scheduled() {
+        Result result = runOnce();
+        log.info("04:00 정리: 탈퇴 개인정보 {}명, RT {}건, 로그인 실패 기록 {}건, 인증번호 {}건",
+                result.purgedMembers(), result.refreshTokens(), result.loginFailures(), result.codes());
+    }
+
+    @Transactional
+    public Result runOnce() {
+        LocalDateTime now = LocalDateTime.now(clock);
+        int members = purgeWithdrawnMembers(now);
+        int tokens = refreshTokenRepository.deleteExpiredOrRevoked(now);
+        int failures = loginFailureRepository.deleteByLastFailedAtBefore(
+                now.minus(authProperties.login().failureRetention()));
+        int codes = deleteExpiredCodes(now);
+        return new Result(members, tokens, failures, codes);
+    }
+
+    /** 탈퇴 30일 뒤 개인정보 삭제(4.5, USR-05 인수 시나리오 6). 행은 남겨 예전 글이 "탈퇴한 회원"을 가리키게 한다. */
+    private int purgeWithdrawnMembers(LocalDateTime now) {
+        LocalDateTime cutoff = now.minus(memberProperties.withdrawal().retention());
+        List<Long> ids = jdbc.queryForList("""
+                SELECT id FROM users
+                WHERE status = 'WITHDRAWN' AND withdrawn_at <= ?
+                  AND (withdrawn_email IS NOT NULL OR name IS NOT NULL OR nickname IS NOT NULL
+                       OR phone IS NOT NULL OR bio IS NOT NULL)""", Long.class, cutoff);
+        for (Long id : ids) {
+            jdbc.update("UPDATE users SET withdrawn_email = NULL, name = NULL, nickname = NULL, phone = NULL, "
+                    + "bio = NULL WHERE id = ?", id);
+            List<String> files = jdbc.queryForList("SELECT stored_name FROM images WHERE owner_type = 'PROFILE' "
+                    + "AND owner_id = ? AND deleted_at IS NULL", String.class, id);
+            jdbc.update("UPDATE images SET deleted_at = ? WHERE owner_type = 'PROFILE' AND owner_id = ? "
+                    + "AND deleted_at IS NULL", now, id);
+            for (String file : files) {
+                deleteQuietly(file);
+            }
+        }
+        return ids.size();
+    }
+
+    /** 만료된 인증번호·임시 토큰(FR-004, FR-031, FR-038). 쓰이면 서비스가 바로 지우고, 남은 것만 여기서 지운다. */
+    private int deleteExpiredCodes(LocalDateTime now) {
+        LocalDateTime verifiedCutoff = now.minus(authProperties.signup().verifiedTtl());
+        int count = jdbc.update("DELETE FROM email_verifications WHERE expires_at <= ? "
+                + "AND (verified_at IS NULL OR verified_at <= ?)", now, verifiedCutoff);
+        count += jdbc.update("DELETE FROM password_reset_codes WHERE expires_at <= ?", now);
+        count += jdbc.update("DELETE FROM password_reset_tokens WHERE expires_at <= ?", now);
+        return count;
+    }
+
+    private void deleteQuietly(String storedName) {
+        try {
+            fileStorage.delete(storedName);
+        } catch (IOException | IllegalArgumentException e) {
+            log.warn("프로필 사진 파일 삭제 실패: {}", e.getClass().getSimpleName());
+        }
+    }
+
+    public record Result(int purgedMembers, int refreshTokens, int loginFailures, int codes) {}
+}

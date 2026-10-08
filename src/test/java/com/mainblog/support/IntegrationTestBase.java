@@ -85,6 +85,37 @@ public abstract class IntegrationTestBase {
         return "10." + ((n >> 16) & 255) + "." + ((n >> 8) & 255) + "." + (n & 255);
     }
 
+    /** 로그인해서 AT·RT 쿠키 값을 돌려준다. */
+    protected LoginCookies loginAs(String email, String password, boolean rememberMe) throws Exception {
+        String ip = nextIp();
+        org.springframework.mock.web.MockHttpServletResponse res = mvc.perform(AuthTestSupport.postJson(
+                        "/api/auth/login", AuthTestSupport.loginJson(email, password, rememberMe, null))
+                        .with(r -> { r.setRemoteAddr(ip); return r; }))
+                .andReturn().getResponse();
+        if (res.getStatus() != 200) {
+            throw new AssertionError("로그인 실패: " + res.getStatus() + " " + res.getContentAsString());
+        }
+        return new LoginCookies(AuthTestSupport.cookieValue(res, "AT"), AuthTestSupport.cookieValue(res, "RT"));
+    }
+
+    public record LoginCookies(String at, String rt) {
+        public jakarta.servlet.http.Cookie[] cookies() {
+            return new jakarta.servlet.http.Cookie[] {
+                    new jakarta.servlet.http.Cookie("AT", at), new jakarta.servlet.http.Cookie("RT", rt)};
+        }
+    }
+
+    /** 블로그와 그 블로그장 멤버십을 만든다. */
+    protected long createOwnedBlog(long ownerId, String address, String status) {
+        jdbc.update("INSERT INTO blogs (name, address, visibility, join_policy, status, close_scheduled_at) "
+                        + "VALUES (?, ?, 'PUBLIC', 'FREE', ?, ?)", "블로그 " + address, address, status,
+                "CLOSING".equals(status) ? BASE_TIME.plusDays(7).withHour(4) : null);
+        Long blogId = jdbc.queryForObject("SELECT id FROM blogs WHERE address = ?", Long.class, address);
+        jdbc.update("INSERT INTO blog_members (user_id, blog_id, role, joined_at) VALUES (?, ?, 'OWNER', ?)",
+                ownerId, blogId, BASE_TIME);
+        return blogId;
+    }
+
     /** 가입 절차 없이 ACTIVE 회원을 만든다. 회원 번호를 돌려준다. */
     protected long createUser(String email, String password, String nickname) {
         org.springframework.jdbc.support.GeneratedKeyHolder keys = new org.springframework.jdbc.support.GeneratedKeyHolder();
