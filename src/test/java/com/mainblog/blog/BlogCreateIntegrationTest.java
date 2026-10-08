@@ -13,6 +13,7 @@ class BlogCreateIntegrationTest extends BlogTestBase {
         Res r = postAs(m, "/api/blogs", blogJson("여행 기록", "travel-log", "PUBLIC", "APPROVAL"));
         assertThat(r.status()).isEqualTo(201);
         long id = r.json().get("id").asLong();
+        assertThat(r.json().get("createdAt").isNull()).as("만든 응답에도 생성 일시가 있다").isFalse();
         assertThat(role(id, m.id())).isEqualTo("OWNER");
 
         Res view = getAs(m, "/api/blogs/address/travel-log");

@@ -16,6 +16,8 @@ import com.mainblog.common.notification.NotificationWriter;
 import com.mainblog.common.tag.TagNormalizer;
 import com.mainblog.member.domain.User;
 import com.mainblog.member.domain.UserRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -40,6 +42,9 @@ public class BlogService {
     private final SubscriptionService subscriptionService;
     private final NotificationWriter notificationWriter;
     private final Clock clock;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     public BlogService(BlogRepository blogRepository, BlogMemberRepository memberRepository,
                        UserRepository userRepository, BlogAddressPolicy addressPolicy, BlogLimitPolicy limitPolicy,
@@ -98,6 +103,7 @@ public class BlogService {
         } catch (DataIntegrityViolationException e) {
             throw new BusinessException(ErrorCode.BLOG_ADDRESS_TAKEN);
         }
+        entityManager.refresh(blog); // DB가 채운 생성 일시를 응답에 싣는다
         LocalDateTime now = LocalDateTime.now(clock);
         BlogMember owner = memberRepository.save(BlogMember.owner(blog.getId(), userId, now));
         tagStore.replace(blog.getId(), tags);

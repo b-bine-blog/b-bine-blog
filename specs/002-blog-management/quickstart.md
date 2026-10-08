@@ -60,3 +60,14 @@ BLOG_LIMIT_PRIVATE=5            # 선택
 - `blog/` 통합 테스트: 위 표의 1~25를 `IntegrationTestBase`(MutableClock, `createUser`, `loginAs`, `createOwnedBlog`)로 하나씩.
 - `contract/OpenApiConformanceTest`: `contracts/blog-api.yaml`의 경로·메서드가 모두 컨트롤러에 있는지(001 계약과 함께).
 - `perf/BlogResponseTimeTest`: 27번.
+
+## 확인 결과 (2026-10-08, T076)
+
+- 전체 테스트: `./gradlew test` 339개 통과(실패·건너뜀 0). 위 표 1~25는 `blog/` 통합 테스트, 27은 `perf/BlogResponseTimeTest`(블로그 1,000개, 목록·검색 2초 이내)로 확인했다.
+- 계약: `OpenApiConformanceTest`가 `blog-api.yaml`의 경로·메서드가 모두 매핑됐고 계약 밖 API가 없음을 확인한다(T072).
+- 보안: `BlogSecurityTest`가 블로그별 API가 모두 권한 검사 목록(`BlogRoleCheckIntegrationTest.MANAGE_APIS`)이나 멤버용 목록에 들어 있는지, 강퇴·재신청·해제 문의 흐름의 응답과 로그에 이메일·전화번호·해시가 없는지 확인한다(T075).
+- 화면(26): 로컬 MySQL 8 컨테이너에 `docs/04-design/schema.sql`을 넣고 jar로 띄워 360px 폭에서 메인·블로그 만들기·내 블로그·블로그 홈(블로그장/멤버)·운영 화면 탭을 열었다. 가로 스크롤 0건, 콘솔 오류 0건. 블로그 화면 JS의 `innerHTML` 0건(T074).
+  - 고친 것: 상단 메뉴가 글자 단위로 꺾이던 것을 줄 단위로 넘기게 했고, 운영 표는 표 안에서만 가로로 밀리게 했다. 블로그 만들기의 인라인 style이 CSP에 막혀 클래스로 바꿨다.
+- 화면 흐름: 참여 신청 → 운영 화면에서 승인 → 위임 요청 → 받은 멤버가 블로그 홈에서 수락까지 브라우저로 진행해 역할이 바뀌는 것을 확인했다.
+- 함께 고친 것: 블로그를 만든 응답의 `createdAt`이 비어 있던 것(DB가 채운 값을 다시 읽음).
+- 주의: `DB_URL`에 `serverTimezone`을 붙이면 JVM 시간대(UTC)와 달라 저장 시각이 9시간 밀린다. README처럼 붙이지 않는다(application.yml 설명 참고).

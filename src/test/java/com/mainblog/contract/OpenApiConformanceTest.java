@@ -23,7 +23,7 @@ import org.yaml.snakeyaml.Yaml;
 class OpenApiConformanceTest extends IntegrationTestBase {
 
     static final Path CONTRACT = Path.of("specs/001-member-auth/contracts/member-auth-api.yaml");
-    /** 002 블로그 관리 계약. 모든 경로가 매핑됐는지는 002 T072에서 확인한다. */
+    /** 002 블로그 관리 계약 (002 T072). */
     static final Path BLOG_CONTRACT = Path.of("specs/002-blog-management/contracts/blog-api.yaml");
     static final Set<String> HTTP_METHODS = Set.of("get", "post", "put", "patch", "delete");
     /** 화면이 Turnstile 사이트 키를 읽는 설정 조회. 회원 기능 계약 밖이다(T040). */
@@ -66,6 +66,15 @@ class OpenApiConformanceTest extends IntegrationTestBase {
         Set<String> contract = contractOperations();
         assertThat(contract.stream().map(op -> op.substring(op.indexOf(' ') + 1)).distinct()).hasSize(18);
         assertThat(mappedOperations()).containsAll(contract);
+    }
+
+    @Test
+    void 블로그_계약의_모든_경로와_메서드가_매핑돼_있다() throws Exception {
+        Set<String> contract = contractOperations(BLOG_CONTRACT);
+        assertThat(contract).isNotEmpty();
+        Set<String> missing = new TreeSet<>(contract);
+        missing.removeAll(mappedOperations());
+        assertThat(missing).isEmpty();
     }
 
     @Test

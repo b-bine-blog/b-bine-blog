@@ -314,11 +314,11 @@ description: "002 블로그 생성·참여·운영 구현 작업 목록"
 
 ## 12단계: 마무리 (Polish)
 
-- [ ] T072 [P] `src/test/java/com/mainblog/contract/OpenApiConformanceTest.java`가 `contracts/blog-api.yaml`도 읽어, 경로·메서드가 모두 컨트롤러에 있는지 확인하게 한다
-- [ ] T073 [P] `src/test/java/com/mainblog/perf/BlogResponseTimeTest.java`를 만든다. 블로그 1,000개를 넣고 목록·검색이 2초 안에 응답하는지 확인한다 (SC-001)
-- [ ] T074 [P] 화면 반응형을 점검한다. 모바일 폭(360px)에서 가로 스크롤이 없고, 블로그 데이터는 모두 textContent로 넣었는지(innerHTML 0건) 확인한다 (SC-010, D-64)
-- [ ] T075 보안 점검: 관리 API 전체에 `@PreAuthorize`가 붙었는지 확인하는 테스트를 만든다. 오류 응답과 로그에 이메일·전화번호·해시가 남지 않는지도 확인한다 (헌장 I·II·III)
-- [ ] T076 quickstart.md의 시나리오를 실제로 돌리고 "확인 결과" 절을 적는다. 전체 테스트를 통과시킨다
+- [X] T072 [P] `src/test/java/com/mainblog/contract/OpenApiConformanceTest.java`가 `contracts/blog-api.yaml`도 읽어, 경로·메서드가 모두 컨트롤러에 있는지 확인하게 한다
+- [X] T073 [P] `src/test/java/com/mainblog/perf/BlogResponseTimeTest.java`를 만든다. 블로그 1,000개를 넣고 목록·검색이 2초 안에 응답하는지 확인한다 (SC-001)
+- [X] T074 [P] 화면 반응형을 점검한다. 모바일 폭(360px)에서 가로 스크롤이 없고, 블로그 데이터는 모두 textContent로 넣었는지(innerHTML 0건) 확인한다 (SC-010, D-64)
+- [X] T075 보안 점검: 관리 API 전체에 `@PreAuthorize`가 붙었는지 확인하는 테스트를 만든다. 오류 응답과 로그에 이메일·전화번호·해시가 남지 않는지도 확인한다 (헌장 I·II·III)
+- [X] T076 quickstart.md의 시나리오를 실제로 돌리고 "확인 결과" 절을 적는다. 전체 테스트를 통과시킨다
 
 ---
 

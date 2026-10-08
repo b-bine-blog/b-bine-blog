@@ -25,11 +25,11 @@
     <section data-panel="info" hidden>
       <form id="info-form">
         <label for="name">블로그 이름</label>
-        <input id="name" maxlength="30" required>
+        <input type="text" id="name" maxlength="30" required>
         <label for="description">소개 (선택, 500자까지)</label>
         <textarea id="description" maxlength="500" rows="3"></textarea>
         <label for="tag-input">태그 (10개까지, Enter로 추가)</label>
-        <input id="tag-input" maxlength="30">
+        <input type="text" id="tag-input" maxlength="30">
         <ul class="chips" id="tags"></ul>
         <div data-owner-only hidden>
           <label for="visibility">공개 범위</label>
