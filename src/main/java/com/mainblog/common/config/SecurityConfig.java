@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -30,6 +31,7 @@ import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWrite
  * 보안 헤더(SEC-12), bcrypt(SEC-01, D-81, R-09).
  */
 @Configuration
+@EnableMethodSecurity
 public class SecurityConfig {
 
     static final String CSP = "default-src 'self'; "
@@ -69,6 +71,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/members/nickname-availability").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/public-config").permitAll()
                         .requestMatchers("/api/members/me/**").authenticated()
+                        // 비회원도 보는 블로그 API(FR-014, FR-015, FR-025, FR-026). 볼 수 있는지는 BlogAccessPolicy가 본다.
+                        .requestMatchers(HttpMethod.GET, "/api/blogs", "/api/blogs/search", "/api/blogs/address/*",
+                                "/api/blogs/*/share-link").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/blogs/share-access").permitAll()
                         .requestMatchers("/api/**").authenticated()
                         // 정적 화면(D-66). 화면이 부르는 API에서 권한을 확인한다.
                         .anyRequest().permitAll());

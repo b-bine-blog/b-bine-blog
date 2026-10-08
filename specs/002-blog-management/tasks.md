@@ -23,9 +23,9 @@ description: "002 블로그 생성·참여·운영 구현 작업 목록"
 
 ## 1단계: 준비 (Setup)
 
-- [ ] T001 `src/main/resources/application.yml`에 data-model.md "설정값" 표의 `blog.*`, `blacklist.hash-secret` 키를 `${ENV:기본값}` 형식으로 더한다(비밀키는 기본값 없음). `src/test/resources/application-test.yml`에 테스트용 `blacklist.hash-secret`을 둔다 (D-68)
-- [ ] T002 [P] `.env.example`에 `BLACKLIST_HASH_SECRET`, `BLOG_LIMIT_PUBLIC`, `BLOG_LIMIT_PRIVATE`를 더하고 README 실행 방법의 환경변수 목록을 갱신한다
-- [ ] T003 [P] `src/main/java/com/mainblog/common/config/BlogProperties.java`, `BlacklistProperties.java`를 `@ConfigurationProperties`로 만든다. `blog.limit.public`이 1~5가 아니면 시작에 실패하게 한다(`@Validated`) (FR-011)
+- [X] T001 `src/main/resources/application.yml`에 data-model.md "설정값" 표의 `blog.*`, `blacklist.hash-secret` 키를 `${ENV:기본값}` 형식으로 더한다(비밀키는 기본값 없음). `src/test/resources/application-test.yml`에 테스트용 `blacklist.hash-secret`을 둔다 (D-68)
+- [X] T002 [P] `.env.example`에 `BLACKLIST_HASH_SECRET`, `BLOG_LIMIT_PUBLIC`, `BLOG_LIMIT_PRIVATE`를 더하고 README 실행 방법의 환경변수 목록을 갱신한다
+- [X] T003 [P] `src/main/java/com/mainblog/common/config/BlogProperties.java`, `BlacklistProperties.java`를 `@ConfigurationProperties`로 만든다. `blog.limit.public`이 1~5가 아니면 시작에 실패하게 한다(`@Validated`) (FR-011)
 
 ---
 
@@ -33,29 +33,29 @@ description: "002 블로그 생성·참여·운영 구현 작업 목록"
 
 **⚠️ 중요**: 이 단계를 끝내기 전에는 어떤 사용자 스토리도 시작하지 않는다.
 
-- [ ] T004 [P] 블로그 엔티티 `src/main/java/com/mainblog/blog/domain/Blog.java`(+`BlogRepository`, enum `Visibility`, `JoinPolicy`, `BlogStatus`, `CloseReason`)를 blogs 테이블에 맞춘다. `findByIdForUpdate`(PESSIMISTIC_WRITE)와 `findByAddress`를 둔다
-- [ ] T005 [P] `src/main/java/com/mainblog/blog/domain/BlogMember.java`(+Repository, enum `BlogRole`)를 만든다. `owner_blog_id`는 `insertable=false, updatable=false`로 읽기만 하고, `findByBlogIdAndUserId`, `findManagersOrderByManagerSince`를 둔다
-- [ ] T006 [P] `Tag`, `BlogTag` 엔티티와 Repository를 `src/main/java/com/mainblog/blog/domain/`에 만든다
-- [ ] T007 [P] `BlogJoinRequest`, `BlogDelegation`, `BlogSanction`, `BlogBlacklist`, `BlacklistAppeal`, `BlogSubscription`, `BlogShareLink`, `BlogClosingNotice` 엔티티와 Repository·enum을 `src/main/java/com/mainblog/blog/domain/`에 만든다. 컬럼은 data-model의 규칙을 따른다
-- [ ] T008 [P] `src/main/java/com/mainblog/blog/domain/BlogCoverImage.java`를 만든다. images 테이블에 `@SQLRestriction("owner_type = 'BLOG_COVER'")`을 걸고, 001의 `ProfileImage`와 같은 방식으로 Repository를 둔다
-- [ ] T009 [P] `src/main/java/com/mainblog/blog/domain/BlogReport.java`를 만든다. reports 테이블을 route=BLOG 처리용으로 매핑한다
-- [ ] T010 [P] `src/main/java/com/mainblog/common/tag/TagNormalizer.java`와 단위 테스트 `src/test/java/com/mainblog/common/tag/TagNormalizerTest.java`를 만든다. 테스트할 규칙은 6.4다: `#` 제거, trim, 가운데 공백은 `_`, 소문자, 1~20자 한글·영문·숫자·`_`, 중복 합치기 (research R-04)
-- [ ] T011 [P] `src/main/java/com/mainblog/common/masking/PhoneMasker.java`와 테스트를 만든다(`01012345678` → `010-****-5678`) (FR-046)
-- [ ] T012 [P] `src/main/java/com/mainblog/blog/application/BlacklistHasher.java`와 테스트를 만든다. 이름·이메일·전화번호를 정규화하고 HMAC-SHA256(`blacklist.hash-secret`)으로 16진수 64자를 만든다 (research R-09)
-- [ ] T013 [P] `src/main/java/com/mainblog/common/notification/NotificationWriter.java`, `NotificationType.java`, `NotificationSettingKey.java`와 테스트를 만든다 (research R-14)
+- [X] T004 [P] 블로그 엔티티 `src/main/java/com/mainblog/blog/domain/Blog.java`(+`BlogRepository`, enum `Visibility`, `JoinPolicy`, `BlogStatus`, `CloseReason`)를 blogs 테이블에 맞춘다. `findByIdForUpdate`(PESSIMISTIC_WRITE)와 `findByAddress`를 둔다
+- [X] T005 [P] `src/main/java/com/mainblog/blog/domain/BlogMember.java`(+Repository, enum `BlogRole`)를 만든다. `owner_blog_id`는 `insertable=false, updatable=false`로 읽기만 하고, `findByBlogIdAndUserId`, `findManagersOrderByManagerSince`를 둔다
+- [X] T006 [P] 태그(`tags`, `blog_tags`)는 엔티티 없이 `BlogTagStore`(JdbcTemplate)로 읽고 쓴다. 이름으로 찾고 없으면 만든다 (구현 중 변경: 단순한 연결 테이블이라 JDBC로 둠)
+- [X] T007 [P] `BlogJoinRequest`, `BlogDelegation`, `BlogSanction`, `BlogBlacklist`, `BlacklistAppeal`, `BlogShareLink` 엔티티와 Repository·enum을 (구독·폐쇄 알림 기록은 INSERT IGNORE를 쓰므로 JdbcTemplate) `src/main/java/com/mainblog/blog/domain/`에 만든다. 컬럼은 data-model의 규칙을 따른다
+- [X] T008 [P] `src/main/java/com/mainblog/blog/domain/BlogCoverImage.java`를 만든다. images 테이블에 `@SQLRestriction("owner_type = 'BLOG_COVER'")`을 걸고, 001의 `ProfileImage`와 같은 방식으로 Repository를 둔다
+- [X] T009 [P] reports(route=BLOG)는 처리만 하므로 엔티티 없이 `BlogReportService`(T063)에서 JdbcTemplate로 다룬다 (구현 중 변경)
+- [X] T010 [P] `src/main/java/com/mainblog/common/tag/TagNormalizer.java`와 단위 테스트 `src/test/java/com/mainblog/common/tag/TagNormalizerTest.java`를 만든다. 테스트할 규칙은 6.4다: `#` 제거, trim, 가운데 공백은 `_`, 소문자, 1~20자 한글·영문·숫자·`_`, 중복 합치기 (research R-04)
+- [X] T011 [P] `src/main/java/com/mainblog/common/masking/PhoneMasker.java`와 테스트를 만든다(`01012345678` → `010-****-5678`) (FR-046)
+- [X] T012 [P] `src/main/java/com/mainblog/blog/application/BlacklistHasher.java`와 테스트를 만든다. 이름·이메일·전화번호를 정규화하고 HMAC-SHA256(`blacklist.hash-secret`)으로 16진수 64자를 만든다 (research R-09)
+- [X] T013 [P] `src/main/java/com/mainblog/common/notification/NotificationWriter.java`, `NotificationType.java`, `NotificationSettingKey.java`와 테스트를 만든다 (research R-14)
   - `INSERT IGNORE`로 넣어 event_key 중복을 막는다.
   - 설정을 확인하되, 행이 없으면 모두 켜진 것으로 본다.
   - 알림 종류는 data-model의 "알림 종류" 표를 따른다.
-- [ ] T014 `src/main/java/com/mainblog/blog/application/BlogPermissionService.java`(빈 이름 `blogAuth`)를 만든다. `BlogPermission` enum은 VIEW·MEMBER·BLOG_INFO·MEMBER_MANAGE·POST_MANAGE·OWNER이고, `has(blogId, permission)`와 `require(...)`를 둔다 (research R-01, data-model 권한표)
+- [X] T014 `src/main/java/com/mainblog/blog/application/BlogPermissionService.java`(빈 이름 `blogAuth`)를 만든다. `BlogPermission` enum은 VIEW·MEMBER·BLOG_INFO·MEMBER_MANAGE·POST_MANAGE·OWNER이고, `has(blogId, permission)`와 `require(...)`를 둔다 (research R-01, data-model 권한표)
   - 진행 중 정지면 `BLOG_SUSPENDED`(suspendedUntil, reason)로 거부한다.
   - CLOSED 블로그면 404로 거부한다.
   - SecurityConfig에서 메서드 보안(`@EnableMethodSecurity`)을 켠다.
-- [ ] T015 `src/main/java/com/mainblog/blog/application/BlogAccessPolicy.java`를 만든다. 열람 판단 규칙은 research R-06이다: PUBLIC은 누구나, LINK는 멤버·구독자·유효한 `BLOG_SHARE_{blogId}` 쿠키, PRIVATE은 멤버, CLOSED는 404
-- [ ] T016 `src/main/java/com/mainblog/common/error/ErrorCode.java`에 contracts의 오류 코드를 더한다: BLOG_NOT_FOUND, BLOG_FORBIDDEN, BLOG_SUSPENDED, ADMIN_NOT_ALLOWED, BLOG_ADDRESS_TAKEN, BLOG_LIMIT_EXCEEDED, ALREADY_MEMBER, ALREADY_OWNER, JOIN_PENDING_EXISTS, JOIN_REAPPLY_TOO_SOON, JOIN_NOT_PENDING, BLOG_BLACKLISTED, OWNER_CANNOT_LEAVE, NOT_SUSPENDED, ALREADY_SUSPENDED, REPORT_ALREADY_HANDLED, NOT_BLACKLISTED, APPEAL_PENDING_EXISTS, APPEAL_RETRY_TOO_SOON, APPEAL_NOT_PENDING, DELEGATION_PENDING_EXISTS, DELEGATION_NOT_PENDING, BLOG_CLOSING, BLOG_ALREADY_CLOSING, BLOG_NOT_CLOSING
+- [X] T015 `src/main/java/com/mainblog/blog/application/BlogAccessPolicy.java`를 만든다. 열람 판단 규칙은 research R-06이다: PUBLIC은 누구나, LINK는 멤버·구독자·유효한 `BLOG_SHARE_{blogId}` 쿠키, PRIVATE은 멤버, CLOSED는 404
+- [X] T016 `src/main/java/com/mainblog/common/error/ErrorCode.java`에 contracts의 오류 코드를 더한다: BLOG_NOT_FOUND, BLOG_FORBIDDEN, BLOG_SUSPENDED, ADMIN_NOT_ALLOWED, BLOG_ADDRESS_TAKEN, BLOG_LIMIT_EXCEEDED, ALREADY_MEMBER, ALREADY_OWNER, JOIN_PENDING_EXISTS, JOIN_REAPPLY_TOO_SOON, JOIN_NOT_PENDING, BLOG_BLACKLISTED, OWNER_CANNOT_LEAVE, NOT_SUSPENDED, ALREADY_SUSPENDED, REPORT_ALREADY_HANDLED, NOT_BLACKLISTED, APPEAL_PENDING_EXISTS, APPEAL_RETRY_TOO_SOON, APPEAL_NOT_PENDING, DELEGATION_PENDING_EXISTS, DELEGATION_NOT_PENDING, BLOG_CLOSING, BLOG_ALREADY_CLOSING, BLOG_NOT_CLOSING
   - 추가 필드(suspendedUntil, reason, appealAllowed, reapplyAt, retryAt)를 `ErrorResponse`에 넣는다.
   - `@PreAuthorize` 거부(AccessDeniedException)를 403 BLOG_FORBIDDEN으로 바꾼다.
-- [ ] T017 `src/main/java/com/mainblog/blog/api/BlogPageController.java`를 만든다. `/blog/{address}`와 그 아래 경로를 `blog/index.html`·`blog/manage.html`로 forward하고, SecurityConfig에서 `/blog/**`, `/blogs/**`를 permitAll로 둔다 (research R-03, FR-005)
-- [ ] T018 테스트 기반 `src/test/java/com/mainblog/support/IntegrationTestBase.java`의 `createOwnedBlog`를 새 엔티티 기준으로 바꾼다. 도우미 `addMember(blog, user, role)`, `subscribe`, `insertBlogReport`, `runDaily()`(DailyCleanupJob.runOnce), `notificationsOf(userId)`를 더한다
+- [X] T017 `src/main/java/com/mainblog/blog/api/BlogPageController.java`를 만든다. `/blog/{address}`와 그 아래 경로를 `blog/index.html`·`blog/manage.html`로 forward하고, SecurityConfig에서 `/blog/**`, `/blogs/**`를 permitAll로 둔다 (research R-03, FR-005)
+- [X] T018 테스트 기반 `src/test/java/com/mainblog/support/IntegrationTestBase.java`의 `createOwnedBlog`를 새 엔티티 기준으로 바꾼다. 도우미 `addMember(blog, user, role)`, `subscribe`, `insertBlogReport`, `runDaily()`(DailyCleanupJob.runOnce), `notificationsOf(userId)`를 더한다
 
 **체크포인트**: 기반 준비가 끝나면 스토리를 시작한다.
 

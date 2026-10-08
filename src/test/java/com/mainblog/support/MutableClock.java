@@ -39,4 +39,9 @@ public class MutableClock extends Clock {
     public Instant instant() {
         return instant;
     }
+
+    /** 지금 시각(이 시계의 시간대 기준). */
+    public java.time.LocalDateTime now() {
+        return java.time.LocalDateTime.now(this);
+    }
 }

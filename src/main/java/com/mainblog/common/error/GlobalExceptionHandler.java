@@ -3,6 +3,7 @@ package com.mainblog.common.error;
 import jakarta.validation.ConstraintViolationException;
 import java.util.List;
 import org.springframework.http.HttpHeaders;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -54,6 +55,13 @@ public class GlobalExceptionHandler {
             MissingServletRequestPartException.class})
     public ResponseEntity<ErrorResponse> handleUnreadable(Exception e) {
         return validation(List.of());
+    }
+
+    /** @PreAuthorize에서 막힌 블로그 운영 요청 → 403 BLOG_FORBIDDEN (FR-034, contracts/blog-api.yaml). */
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleDenied(AccessDeniedException e) {
+        ErrorCode code = ErrorCode.BLOG_FORBIDDEN;
+        return ResponseEntity.status(code.status()).body(ErrorResponse.of(code, null));
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)

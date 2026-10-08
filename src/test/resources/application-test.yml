@@ -24,3 +24,6 @@ auth:
 
 file-storage:
   root: build/test-uploads
+
+blacklist:
+  hash-secret: test-blacklist-hash-secret-0123456789abcdef

@@ -18,7 +18,7 @@ docker run -d --name mainblog-db -p 3306:3306 \
 cp .env.example .env
 #   DB_URL=jdbc:mysql://localhost:3306/mainblog
 #   DB_USERNAME=root / DB_PASSWORD=root
-#   JWT_SECRET, CODE_HASH_SECRET: 32바이트 이상 무작위 값 (예: openssl rand -base64 48)
+#   JWT_SECRET, CODE_HASH_SECRET, BLACKLIST_HASH_SECRET: 32바이트 이상 무작위 값 (예: openssl rand -base64 48)
 #   MAIL_*: Gmail 앱 비밀번호. 비워 두면 메일만 실패하고 화면 응답은 같다
 #   TURNSTILE_*: 로컬은 Cloudflare 테스트 키 1x00000000000000000000AA / 1x0000000000000000000000000000000AA
 

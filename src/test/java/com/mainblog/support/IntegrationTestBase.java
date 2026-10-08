@@ -116,6 +116,46 @@ public abstract class IntegrationTestBase {
         return blogId;
     }
 
+    /** 블로그에 회원을 역할과 함께 넣고 멤버 수를 올린다(002 테스트 도우미, T018). */
+    protected void addMember(long blogId, long userId, String role) {
+        jdbc.update("INSERT INTO blog_members (user_id, blog_id, role, joined_at, manager_since) VALUES (?, ?, ?, ?, ?)",
+                userId, blogId, role, clock.now(), "MANAGER".equals(role) ? clock.now() : null);
+        jdbc.update("UPDATE blogs SET member_count = member_count + 1 WHERE id = ?", blogId);
+    }
+
+    /** 부블로그장 권한 체크박스를 직접 켠다. */
+    protected void setManagerPerms(long blogId, long userId, boolean blogInfo, boolean memberManage,
+                                   boolean postManage) {
+        jdbc.update("UPDATE blog_members SET role = 'MANAGER', manager_since = COALESCE(manager_since, ?), "
+                        + "perm_blog_info = ?, perm_member_manage = ?, perm_post_manage = ? WHERE blog_id = ? AND user_id = ?",
+                clock.now(), blogInfo, memberManage, postManage, blogId, userId);
+    }
+
+    protected void subscribe(long blogId, long userId) {
+        jdbc.update("INSERT INTO blog_subscriptions (blog_id, user_id) VALUES (?, ?)", blogId, userId);
+    }
+
+    /** 블로그 안 신고(route = BLOG)를 직접 넣는다. 신고 만들기는 003. */
+    protected long insertBlogReport(long blogId, long reporterId, String targetType, long targetId) {
+        jdbc.update("INSERT INTO reports (blog_id, reporter_id, target_type, target_id, target_snapshot, reason, route, "
+                + "status, created_at) VALUES (?, ?, ?, ?, '신고 당시 내용', 'SPAM', 'BLOG', 'PENDING', ?)",
+                blogId, reporterId, targetType, targetId, clock.now());
+        return jdbc.queryForObject("SELECT MAX(id) FROM reports", Long.class);
+    }
+
+    /** 그 회원이 받은 알림 종류, 받은 순. */
+    protected List<String> notificationsOf(long userId) {
+        return jdbc.queryForList("SELECT notification_type FROM notifications WHERE recipient_id = ? ORDER BY id",
+                String.class, userId);
+    }
+
+    /** 이름·전화번호를 정해 회원을 만든다(블랙리스트 비교용). */
+    protected long createUser(String email, String password, String nickname, String name, String phone) {
+        long id = createUser(email, password, nickname);
+        jdbc.update("UPDATE users SET name = ?, phone = ? WHERE id = ?", name, phone, id);
+        return id;
+    }
+
     /** 가입 절차 없이 ACTIVE 회원을 만든다. 회원 번호를 돌려준다. */
     protected long createUser(String email, String password, String nickname) {
         org.springframework.jdbc.support.GeneratedKeyHolder keys = new org.springframework.jdbc.support.GeneratedKeyHolder();
