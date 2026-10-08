@@ -22,7 +22,17 @@
   <main class="home">
     <!-- 메인 피드 (004 T031, FR-061~FR-064, D-100 #18) -->
     <section id="feed" class="panel">
-      <div class="panel__head"><h2>글</h2></div>
+      <div class="panel__head">
+        <h2>글</h2>
+        <!-- 목록·페이징: 한 페이지 10·20·30개 중 고름(BRD-02). 최신·인기 탭에만 보인다 -->
+        <label class="inline" id="feed-size-box">보기
+          <select id="feed-size">
+            <option value="10">10개</option>
+            <option value="20">20개</option>
+            <option value="30">30개</option>
+          </select>
+        </label>
+      </div>
       <div class="tabs" role="tablist" id="feed-tabs">
         <button type="button" role="tab" data-feed="LATEST">최신</button>
         <button type="button" role="tab" data-feed="POPULAR">인기</button>
@@ -39,13 +49,6 @@
       <section class="panel">
         <div class="panel__head">
           <h2>블로그 둘러보기</h2>
-          <label class="inline">보기
-            <select id="size">
-              <option value="10">10개</option>
-              <option value="20">20개</option>
-              <option value="30">30개</option>
-            </select>
-          </label>
         </div>
         <div class="tabs" role="tablist">
           <button type="button" role="tab" data-sort="latest">최신</button>

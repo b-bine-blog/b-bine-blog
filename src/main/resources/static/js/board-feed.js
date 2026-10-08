@@ -1,4 +1,4 @@
-// 메인 피드 (004 T031, FR-061~FR-064, D-100 #18). 최신·인기는 번호 페이지, 구독·팔로우는 20개씩 "더 보기".
+// 메인 피드 (004 T031, FR-061~FR-064, D-100 #18). 최신·인기는 번호 페이지(10·20·30개 선택, BRD-02), 구독·팔로우는 20개씩 "더 보기".
 (function () {
   'use strict';
 
@@ -19,7 +19,9 @@
 
   function load(page) {
     var paged = tab === 'LATEST' || tab === 'POPULAR';
-    var url = '/api/feed?tab=' + tab + (paged ? '&page=' + page : (cursor ? '&cursor=' + encodeURIComponent(cursor) : ''));
+    $('feed-size-box').hidden = !paged;
+    var url = '/api/feed?tab=' + tab + (paged ? '&page=' + page + '&size=' + $('feed-size').value
+      : (cursor ? '&cursor=' + encodeURIComponent(cursor) : ''));
     board.say($('feed-message'), '');
     api.get(url).then(function (r) {
       if (paged) {
@@ -43,6 +45,7 @@
     b.addEventListener('click', function () { select(b.getAttribute('data-feed')); });
   });
   $('feed-more').addEventListener('click', function () { load(1); });
+  $('feed-size').addEventListener('change', function () { load(1); });
 
   api.get('/api/auth/session').then(function () {
     document.querySelectorAll('[data-login]').forEach(function (b) { b.hidden = false; });
