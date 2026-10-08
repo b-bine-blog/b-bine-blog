@@ -206,20 +206,20 @@ description: "005 메인 관리자·제재 구현 작업 목록"
 
 ## 8단계: 사용자 스토리 6 - 관리자 활동 기록과 운영 기록 1년 보관 (P2)
 
-- [ ] T045 [P] [US6] `admin/AdminActionLogIntegrationTest` (US6-1, FR-039, SC-004, D-103 #20)
+- [X] T045 [P] [US6] `admin/AdminActionLogIntegrationTest` (US6-1, FR-039, SC-004, D-103 #20)
   - 16가지 조치마다 관리자·시각·종류·대상이 맞는 행 1개
   - 목록: 종류·관리자·대상·기간으로 거르기, 관리자 닉네임, 탈퇴 대상은 "탈퇴한 회원", 지워진 대상은 "삭제된 대상"
   - 고치기·지우기 경로가 없다
   - 조치가 실패해 되돌려지면 기록도 없다
-- [ ] T046 [P] [US6] `admin/AdminDailyTasksIntegrationTest` (US6-2~4, FR-038, D-103 #19)
+- [X] T046 [P] [US6] `admin/AdminDailyTasksIntegrationTest` (US6-2~4, FR-038, D-103 #19)
   - 31일 뒤 04:00: 활동·경고·박탈·신고·멤버 정지 기록이 그대로다
   - 366일 뒤: 모두 지워진다
   - 남는 것: 효력 있는 영구 정지, 블랙리스트가 가리키는 강제 퇴장
   - 지운 신고를 가리키던 남은 행의 `report_id`는 NULL
   - 탈퇴 30일 뒤 개인정보가 지워진 회원의 기록도 남는다("탈퇴한 회원")
-- [ ] T047 [US6] `admin/application/AdminActionQueryService.java`와 `admin/api/AdminActionController.java`(`GET /api/admin/actions`)를 만든다
-- [ ] T048 [US6] `admin/application/AdminDailyTasks.java`(research R-13 순서, 단계마다 트랜잭션)를 만들고 `batch/DailyCleanupJob`에 단계와 로그를 더한다 (SCL-03)
-- [ ] T049 [US6] 화면 `static/js/admin-actions.js`: 활동 기록 탭을 만든다. 거르기와 목록
+- [X] T047 [US6] `admin/application/AdminActionQueryService.java`와 `admin/api/AdminActionController.java`(`GET /api/admin/actions`)를 만든다
+- [X] T048 [US6] `admin/application/AdminDailyTasks.java`(research R-13 순서, 단계마다 트랜잭션)를 만들고 `batch/DailyCleanupJob`에 단계와 로그를 더한다 (SCL-03)
+- [X] T049 [US6] 화면 `static/js/admin-actions.js`: 활동 기록 탭을 만든다. 거르기와 목록
 
 ---
 
@@ -291,3 +291,5 @@ description: "005 메인 관리자·제재 구현 작업 목록"
 11. **T041** 004 `PostService`가 관리자 패키지를 직접 알지 않도록 `PostService.AdminPostDelete` 인터페이스를 두고 `AdminPostModerationService`가 구현한다(`@Lazy`로 순환 의존을 끊음). 작성자 알림 문구는 `PostService.notifyDeleted` 하나로 같이 쓴다.
 12. **T042** 숨긴 최상위 댓글 자리는 `hidden: true`, `deleted: false`, 내용·작성자 null이다. 화면(`board-post.js`)은 "관리자가 숨긴 댓글입니다"로 보인다. 004 `CommentService.delete`는 이제 `deleted_by`를 채운다.
 13. **T040 (사용자 확인 필요)** `deleted_by` 칸이 생기기 전에 지워진 댓글(`deleted_by` NULL)은 누가 지웠는지 알 수 없어 복구 대상에서 뺐다(`restorable: false`, 복구하면 409 `NOT_RESTORABLE`). 개발 DB에 그런 행이 있으면 30일 안에만 문제가 된다.
+14. **T048** 멤버 제재 기록(`blog_sanctions`)의 1년 기준은 `created_at` 대신 제재한 시각 `starts_at`으로 했다. 002가 `created_at`을 DB 기본값(DB 시계)으로 채워 서버 시계(`Clock`)와 어긋날 수 있어서다. 실제 운영에서는 두 값이 같다. 활동 기록·경고·박탈·신고는 서비스가 `created_at`을 서버 시계로 채우므로 그대로 `created_at`을 쓴다.
+15. **T045** "조치가 실패하면 기록도 없다"는 같은 트랜잭션에서 조치와 기록을 쓰고 일부러 실패시켜 둘 다 없는 것을 확인했다. `AdminActionLog.write`는 트랜잭션 밖에서 부르면 실패한다(`MANDATORY`).
