@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +64,8 @@ public class DailyCleanupJob {
         int failures = loginFailureRepository.deleteByLastFailedAtBefore(
                 now.minus(authProperties.login().failureRetention()));
         int codes = deleteExpiredCodes(now);
-        return new Result(members, tokens, failures, codes);
+        int images = purgeDeletedProfileImages(now);
+        return new Result(members, tokens, failures, codes, images);
     }
 
     /** 탈퇴 30일 뒤 개인정보 삭제(4.5, USR-05 인수 시나리오 6). 행은 남겨 예전 글이 "탈퇴한 회원"을 가리키게 한다. */
@@ -88,6 +90,18 @@ public class DailyCleanupJob {
         return ids.size();
     }
 
+    /** 바꾸거나 지운 프로필 사진은 30일 뒤 파일과 행을 완전히 지운다(FR-043, images 테이블 설명). */
+    private int purgeDeletedProfileImages(LocalDateTime now) {
+        LocalDateTime cutoff = now.minus(memberProperties.profileImage().purgeAfter());
+        List<Map<String, Object>> rows = jdbc.queryForList("SELECT id, stored_name FROM images "
+                + "WHERE owner_type = 'PROFILE' AND deleted_at <= ?", cutoff);
+        for (Map<String, Object> row : rows) {
+            deleteQuietly((String) row.get("stored_name"));
+            jdbc.update("DELETE FROM images WHERE id = ?", row.get("id"));
+        }
+        return rows.size();
+    }
+
     /** 만료된 인증번호·임시 토큰(FR-004, FR-031, FR-038). 쓰이면 서비스가 바로 지우고, 남은 것만 여기서 지운다. */
     private int deleteExpiredCodes(LocalDateTime now) {
         LocalDateTime verifiedCutoff = now.minus(authProperties.signup().verifiedTtl());
@@ -106,5 +120,5 @@ public class DailyCleanupJob {
         }
     }
 
-    public record Result(int purgedMembers, int refreshTokens, int loginFailures, int codes) {}
+    public record Result(int purgedMembers, int refreshTokens, int loginFailures, int codes, int profileImages) {}
 }

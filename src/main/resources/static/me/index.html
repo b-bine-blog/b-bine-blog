@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>내 정보 - 메인블로그</title>
+  <link rel="stylesheet" href="/css/base.css">
+</head>
+<body>
+  <main>
+    <h1>내 정보</h1>
+    <!-- 본인에게는 가리지 않고 보여준다. 비밀번호 칸은 없다(FR-040) -->
+    <section id="info" hidden>
+      <div class="profile">
+        <img id="profile-image" alt="프로필 사진" width="96" height="96" hidden>
+        <p id="no-profile-image">프로필 사진이 없습니다.</p>
+        <label for="profile-file">사진 바꾸기 (3MB 이하 jpg·jpeg·png·gif·webp)</label>
+        <input type="file" id="profile-file" accept=".jpg,.jpeg,.png,.gif,.webp,image/jpeg,image/png,image/gif,image/webp">
+        <button type="button" id="delete-image" hidden>사진 지우기</button>
+        <p class="message" id="image-message"></p>
+      </div>
+
+      <dl>
+        <dt>이메일</dt><dd id="email"></dd>
+        <dt>이름</dt><dd id="name"></dd>
+        <dt>가입일</dt><dd id="joined-on"></dd>
+      </dl>
+      <p class="hint">이메일과 이름은 바꿀 수 없습니다.</p>
+
+      <form id="edit-form" novalidate>
+        <label for="nickname">닉네임</label>
+        <input type="text" id="nickname" maxlength="12">
+        <button type="button" id="check-nickname">중복 확인</button>
+        <p class="hint">2~12자 한글·영문·숫자</p>
+        <label for="phone">전화번호</label>
+        <input type="tel" id="phone" maxlength="13" inputmode="numeric">
+        <button type="submit" id="save">저장</button>
+        <p class="message" id="edit-message"></p>
+      </form>
+
+      <p>
+        <a href="/me/password.html">비밀번호 바꾸기</a> ·
+        <a href="/me/withdraw.html">회원탈퇴</a>
+      </p>
+    </section>
+    <p class="message message--error" id="message"></p>
+  </main>
+  <script src="/js/api.js"></script>
+  <script src="/js/session.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/me.js"></script>
+</body>
+</html>

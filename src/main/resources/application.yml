@@ -38,7 +38,8 @@ spring:
     multipart:
       # 프로필 사진 장당 3MB (6.3, FR-043)
       max-file-size: ${MEMBER_PROFILE_IMAGE_MAX_SIZE:3MB}
-      max-request-size: ${MEMBER_PROFILE_IMAGE_MAX_SIZE:3MB}
+      # 요청 전체는 파일 + multipart 경계 여유
+      max-request-size: ${MEMBER_PROFILE_IMAGE_MAX_REQUEST_SIZE:4MB}
 
 auth:
   jwt-secret: ${JWT_SECRET}
@@ -79,6 +80,8 @@ member:
     retention: ${MEMBER_WITHDRAWAL_RETENTION:30d}       # 4.5, 탈퇴 닉네임 30일(D-97)
   profile-image:
     max-size: ${MEMBER_PROFILE_IMAGE_MAX_SIZE:3MB}      # 6.3
+    max-pixels: ${MEMBER_PROFILE_IMAGE_MAX_PIXELS:25000000}   # 가로×세로 한도(압축 폭탄 방지)
+    purge-after: ${MEMBER_PROFILE_IMAGE_PURGE_AFTER:30d}  # 바꾸거나 지운 사진 파일은 30일 뒤 완전 삭제(images 테이블 설명)
   nickname:
     reserved: ${MEMBER_NICKNAME_RESERVED:관리자,admin,운영자,탈퇴한 회원}   # FR-011, D-97
 

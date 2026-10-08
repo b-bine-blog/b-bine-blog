@@ -21,3 +21,6 @@ auth:
     # Cloudflare가 제공하는 항상 통과하는 테스트 키(R-07)
     site-key: 1x00000000000000000000AA
     secret-key: 1x0000000000000000000000000000000AA
+
+file-storage:
+  root: build/test-uploads

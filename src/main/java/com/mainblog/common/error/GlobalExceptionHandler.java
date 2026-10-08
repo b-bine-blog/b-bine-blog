@@ -10,6 +10,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 /** 모든 API 오류를 contracts의 {@code Error} 형식으로 돌려준다 (T008). */
 @RestControllerAdvice
@@ -49,7 +50,8 @@ public class GlobalExceptionHandler {
         return validation(fields);
     }
 
-    @ExceptionHandler({HttpMessageNotReadableException.class, MissingServletRequestParameterException.class})
+    @ExceptionHandler({HttpMessageNotReadableException.class, MissingServletRequestParameterException.class,
+            MissingServletRequestPartException.class})
     public ResponseEntity<ErrorResponse> handleUnreadable(Exception e) {
         return validation(List.of());
     }

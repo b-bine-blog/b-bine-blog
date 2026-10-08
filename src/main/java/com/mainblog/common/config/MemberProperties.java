@@ -2,6 +2,7 @@ package com.mainblog.common.config;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import java.time.Duration;
 import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -18,7 +19,8 @@ public record MemberProperties(
 
     public record Withdrawal(@NotNull Duration retention) {}
 
-    public record ProfileImage(@NotNull DataSize maxSize) {}
+    /** 파일 3MB(6.3), 가로×세로 한도, 지운 사진 파일을 남겨 두는 기간(images: 삭제 30일 뒤 완전 삭제). */
+    public record ProfileImage(@NotNull DataSize maxSize, @Positive long maxPixels, @NotNull Duration purgeAfter) {}
 
     public record Nickname(@NotNull List<String> reserved) {}
 }

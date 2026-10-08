@@ -12,6 +12,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     /** 대소문자 무시 중복 확인(FR-010, D-97). 탈퇴 30일 안의 닉네임도 행이 남아 있어 막힌다. */
     boolean existsByNicknameIgnoreCase(String nickname);
 
+    /** 닉네임 변경: 자기 자신은 빼고 대소문자 무시 중복 확인(FR-042). */
+    boolean existsByNicknameIgnoreCaseAndIdNot(String nickname, Long id);
+
     /** 이메일 찾기: 이름 + 전화번호(USR-08). */
     List<User> findAllByNameAndPhoneAndStatus(String name, String phone, UserStatus status);
 }

@@ -53,4 +53,14 @@ public class NicknamePolicy {
         }
         return userRepository.existsByNicknameIgnoreCase(nickname) ? Result.DUPLICATE : Result.AVAILABLE;
     }
+
+    /** 닉네임 변경(FR-042): 그 회원 자신의 지금 닉네임과는 겹쳐도 된다(대소문자만 바꾸기). */
+    public Result checkForMember(String nickname, Long memberId) {
+        Result format = checkFormat(nickname);
+        if (format != Result.AVAILABLE) {
+            return format;
+        }
+        return userRepository.existsByNicknameIgnoreCaseAndIdNot(nickname, memberId)
+                ? Result.DUPLICATE : Result.AVAILABLE;
+    }
 }

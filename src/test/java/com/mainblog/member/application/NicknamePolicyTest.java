@@ -19,7 +19,7 @@ class NicknamePolicyTest {
     private final UserRepository users = mock(UserRepository.class);
     private final NicknamePolicy policy = new NicknamePolicy(new MemberProperties(
             new MemberProperties.Withdrawal(Duration.ofDays(30)),
-            new MemberProperties.ProfileImage(DataSize.ofMegabytes(3)),
+            new MemberProperties.ProfileImage(DataSize.ofMegabytes(3), 25_000_000L, java.time.Duration.ofDays(30)),
             new MemberProperties.Nickname(List.of("관리자", "admin", "운영자", "탈퇴한 회원"))), users);
 
     @Test

@@ -22,7 +22,7 @@
       name.className = 'site-header__nickname';
       name.textContent = me.nickname;
       right.appendChild(name);
-      right.appendChild(link('/me.html', '내 정보'));
+      right.appendChild(link('/me/index.html', '내 정보'));
       var logout = document.createElement('button');
       logout.type = 'button';
       logout.textContent = '로그아웃';

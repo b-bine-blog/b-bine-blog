@@ -167,17 +167,17 @@ description: "001 회원 가입·로그인·계정 관리 구현 작업 목록"
 
 ### US5 테스트
 
-- [ ] T057 [P] [US5] `src/test/java/com/mainblog/member/MyInfoIntegrationTest.java`: 인수 시나리오 1~4, 6(내 정보 원문 표시·비밀번호 필드 없음, email·name 필드를 보내면 400, 닉네임 규칙·중복, 비밀번호 변경 시 현재 기기 RT는 새로 발급되어 refresh 성공·다른 기기 RT는 401)
-- [ ] T058 [P] [US5] `src/test/java/com/mainblog/common/storage/ProfileImageUploadTest.java`: 인수 시나리오 5(3MB 초과·svg·확장자만 jpg인 png 파일 거부, jpg는 EXIF GPS 태그가 지워진 채 저장, webp는 EXIF 청크 제거, 저장 이름 UUID)
+- [X] T057 [P] [US5] `src/test/java/com/mainblog/member/MyInfoIntegrationTest.java`: 인수 시나리오 1~4, 6(내 정보 원문 표시·비밀번호 필드 없음, email·name 필드를 보내면 400, 닉네임 규칙·중복, 비밀번호 변경 시 현재 기기 RT는 새로 발급되어 refresh 성공·다른 기기 RT는 401)
+- [X] T058 [P] [US5] `src/test/java/com/mainblog/common/storage/ProfileImageUploadTest.java`: 인수 시나리오 5(3MB 초과·svg·확장자만 jpg인 png 파일 거부, jpg는 EXIF GPS 태그가 지워진 채 저장, webp는 EXIF 청크 제거, 저장 이름 UUID)
 
 ### US5 구현
 
-- [ ] T059 [P] [US5] `src/main/java/com/mainblog/common/storage/FileStorage.java`(인터페이스 save/delete/url), `LocalDiskFileStorage.java`(`FILE_STORAGE_ROOT`, UUID 이름) (D-75, SCL-02)
-- [ ] T060 [P] [US5] `src/main/java/com/mainblog/common/storage/ImageValidator.java`: 확장자 jpg·jpeg·png·gif·webp, MIME, 매직 넘버(FFD8FF / 89504E47 / GIF8 / RIFF....WEBP)가 모두 맞아야 통과, 3MB 이하. `ImageSanitizer.java`: jpg·png·gif는 ImageIO로 다시 써서 메타데이터 제거, webp는 RIFF에서 `EXIF`·`XMP ` 청크 제거 (FR-043, 6.3, SEC-08, R-11)
-- [ ] T061 [P] [US5] `src/main/java/com/mainblog/member/domain/ProfileImage.java`(images 테이블, owner_type = PROFILE, owner_id = users.id, uploader_id = users.id, stored_name UUID UNIQUE, content_type, size_bytes, deleted_at), `ProfileImageRepository.java`
-- [ ] T062 [US5] `src/main/java/com/mainblog/member/application/MemberService.java`: 내 정보 조회(원문), 닉네임·전화번호 수정(NicknamePolicy, MemberInputNormalizer 재사용), 비밀번호 변경(현재 비밀번호 확인 → PasswordPolicy → 저장 → 다른 기기 RT 폐기 `revokeAllByUserIdExcept` → 이 기기 RT 회전 후 새 쿠키), 프로필 사진 교체(이전 행 deleted_at)·삭제 (FR-040~FR-044, D-97)
-- [ ] T063 [US5] `src/main/java/com/mainblog/member/api/MemberController.java`: `GET /api/members/me`, `PATCH /api/members/me`(알 수 없는 필드 거부), `PUT /api/members/me/password`, `PUT`·`DELETE /api/members/me/profile-image`. 모든 요청은 principal의 회원 번호만 쓰고 경로·본문의 회원 번호를 받지 않는다(인수 시나리오 6)
-- [ ] T064 [US5] 화면 `src/main/resources/static/me/index.html`, `src/main/resources/static/js/me.js`(정보 표시·닉네임·전화번호·사진 수정), `src/main/resources/static/me/password.html`, `src/main/resources/static/js/me-password.js`
+- [X] T059 [P] [US5] `src/main/java/com/mainblog/common/storage/FileStorage.java`(인터페이스 save/delete/url), `LocalDiskFileStorage.java`(`FILE_STORAGE_ROOT`, UUID 이름) (D-75, SCL-02)
+- [X] T060 [P] [US5] `src/main/java/com/mainblog/common/storage/ImageValidator.java`: 확장자 jpg·jpeg·png·gif·webp, MIME, 매직 넘버(FFD8FF / 89504E47 / GIF8 / RIFF....WEBP)가 모두 맞아야 통과, 3MB 이하. `ImageSanitizer.java`: jpg·png·gif는 ImageIO로 다시 써서 메타데이터 제거, webp는 RIFF에서 `EXIF`·`XMP ` 청크 제거 (FR-043, 6.3, SEC-08, R-11)
+- [X] T061 [P] [US5] `src/main/java/com/mainblog/member/domain/ProfileImage.java`(images 테이블, owner_type = PROFILE, owner_id = users.id, uploader_id = users.id, stored_name UUID UNIQUE, content_type, size_bytes, deleted_at), `ProfileImageRepository.java`
+- [X] T062 [US5] `src/main/java/com/mainblog/member/application/MemberService.java`: 내 정보 조회(원문), 닉네임·전화번호 수정(NicknamePolicy, MemberInputNormalizer 재사용), 비밀번호 변경(현재 비밀번호 확인 → PasswordPolicy → 저장 → 다른 기기 RT 폐기 `revokeAllByUserIdExcept` → 이 기기 RT 회전 후 새 쿠키), 프로필 사진 교체(이전 행 deleted_at)·삭제 (FR-040~FR-044, D-97)
+- [X] T063 [US5] `src/main/java/com/mainblog/member/api/MemberController.java`: `GET /api/members/me`, `PATCH /api/members/me`(알 수 없는 필드 거부), `PUT /api/members/me/password`, `PUT`·`DELETE /api/members/me/profile-image`. 모든 요청은 principal의 회원 번호만 쓰고 경로·본문의 회원 번호를 받지 않는다(인수 시나리오 6)
+- [X] T064 [US5] 화면 `src/main/resources/static/me/index.html`, `src/main/resources/static/js/me.js`(정보 표시·닉네임·전화번호·사진 수정), `src/main/resources/static/me/password.html`, `src/main/resources/static/js/me-password.js`
 
 **확인 지점**: 내 정보 수정이 따로 동작한다.
 

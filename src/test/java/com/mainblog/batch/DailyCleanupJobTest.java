@@ -46,6 +46,20 @@ class DailyCleanupJobTest extends IntegrationTestBase {
     }
 
     @Test
+    void 바꾸거나_지운_프로필_사진은_30일_뒤_행을_지우고_29일째는_그대로() {
+        long id = createUser("u@x.com", "Abcd123!", "회원");
+        String sql = "INSERT INTO images (uploader_id, owner_type, owner_id, stored_name, original_name, "
+                + "content_type, size_bytes, deleted_at) VALUES (?, ?, ?, ?, 'a.jpg', 'image/jpeg', 10, ?)";
+        jdbc.update(sql, id, "PROFILE", id, java.util.UUID.randomUUID() + ".jpg", BASE_TIME.minusDays(30));
+        jdbc.update(sql, id, "PROFILE", id, java.util.UUID.randomUUID() + ".jpg", BASE_TIME.minusDays(29));
+        jdbc.update(sql, id, "PROFILE", id, java.util.UUID.randomUUID() + ".jpg", null);
+        jdbc.update(sql, id, "POST", null, java.util.UUID.randomUUID() + ".jpg", BASE_TIME.minusDays(40));
+
+        assertThat(job.runOnce().profileImages()).isEqualTo(1);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM images", Integer.class)).isEqualTo(3);
+    }
+
+    @Test
     void 만료되거나_폐기된_RT를_지운다() {
         long id = createUser("u@x.com", "Abcd123!", "회원");
         String sql = "INSERT INTO refresh_tokens (user_id, token_hash, remember_me, last_active_at, expires_at, revoked) "

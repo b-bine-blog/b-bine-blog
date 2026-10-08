@@ -95,6 +95,23 @@ public class TokenService {
         find(rawToken).ifPresent(RefreshToken::revoke);
     }
 
+    /**
+     * 비밀번호 변경 뒤(FR-044, D-97): 그 회원의 RT를 모두 폐기하고 이 기기에만 새 RT를 준다.
+     * 이 기기의 RT가 유효하면 로그인 유지 여부와 만료 시각을 이어받고, 없으면 로그인 유지 없이 새로 발급한다.
+     */
+    @Transactional
+    public IssuedTokens reissueAfterPasswordChange(Long userId, String rawToken) {
+        LocalDateTime now = LocalDateTime.now(clock);
+        Optional<RefreshToken> current = find(rawToken)
+                .filter(t -> t.getUserId().equals(userId))
+                .filter(t -> t.isUsable(now, properties.idleTimeout()));
+        refreshTokenRepository.revokeAllByUserId(userId);
+        if (current.isEmpty()) {
+            return save(userId, false, now, now.plus(properties.rememberMeTtl()), now);
+        }
+        return save(userId, current.get().isRememberMe(), now, current.get().getExpiresAt(), now);
+    }
+
     /** 유효한 RT의 행. 비밀번호 변경에서 지금 기기를 가릴 때 쓴다. */
     @Transactional(readOnly = true)
     public Optional<RefreshToken> findUsable(String rawToken) {
