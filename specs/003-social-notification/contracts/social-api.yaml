@@ -1,0 +1,440 @@
+openapi: 3.0.3
+info:
+  title: 메인블로그 소셜·알림 API (003-social-notification)
+  version: 0.1.0
+  description: |
+    프로필·소개·팔로우·팔로워 목록·차단·신고·알림함·폴링·알림 설정 API. 근거는 specs/003-social-notification/spec.md의 FR 번호와 D-102.
+
+    공통 규칙 (001·002·004 계약과 같음)
+    - 상태를 바꾸는 요청은 `X-XSRF-TOKEN` 헤더가 있어야 한다(SEC-10).
+    - 블로그별 역할과 볼 수 있는지는 요청마다 DB에서 확인한다(SEC-07, 002 R-01).
+    - 메인 관리자(role = ADMIN)의 팔로우·구독·차단·신고는 403 `ADMIN_NOT_ALLOWED`(D-90).
+    - 응답의 회원 정보는 닉네임·프로필 사진·소개만이고 이메일·이름·전화번호는 어느 응답에도 없다(FR-002, D-22).
+    - 모든 문자열은 화면이 글자 그대로(textContent) 표시한다(D-64).
+    - 알림 자동 확인(`GET /api/notifications/unread-count`)은 `X-User-Activity` 헤더 없이 보내 로그인 연장으로 세지 않는다(FR-032, D-62).
+    - 요청 제한을 넘으면 429 `RATE_LIMITED`(001과 같은 코드, `retryAfterSeconds` 포함).
+
+    기존 경로의 동작 변경 (경로·계약 파일은 002 blog-api.yaml 그대로)
+    - `POST /api/blogs/{blogId}/subscription`: 관리자 403 `ADMIN_NOT_ALLOWED`, 블로그장 400 `SELF_NOT_ALLOWED`, 회원당 1분 30번 넘으면 429 `RATE_LIMITED`, 새로 구독되면 블로그장에게 BLOG_SUBSCRIBED 알림(FR-007, FR-009, FR-040, D-102 #1·#2·#4).
+    - `DELETE /api/blogs/{blogId}/subscription`: 요청 제한(구독과 합쳐 셈).
+    - `GET /api/blogs/{blogId}/posts`: 로그인한 회원이 차단한 회원의 글을 뺀다. 둘 다 그 블로그 멤버면 넣는다(FR-017, FR-018).
+servers:
+  - url: /
+tags:
+  - name: profile
+  - name: follow
+  - name: block
+  - name: report
+  - name: notification
+
+paths:
+  /api/users/{userId}/profile:
+    parameters: [ { $ref: '#/components/parameters/UserId' } ]
+    get:
+      tags: [profile]
+      summary: 회원 프로필 (SOC-03, FR-001~FR-003, FR-005, D-102 #6·#8)
+      description: |
+        비회원도 볼 수 있다. 다른 사람이 보면 운영·참여 블로그에 공개(숨기지 않은) 블로그만, 본인이 보면 모두 넣는다.
+        없는 회원·탈퇴한 회원·메인 관리자 계정은 404 NOT_FOUND.
+      security: []
+      responses:
+        '200': { description: 프로필, content: { application/json: { schema: { $ref: '#/components/schemas/Profile' } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/members/me/bio:
+    put:
+      tags: [profile]
+      summary: 내 소개 고치기 (SOC-03, FR-004, D-102 #7)
+      description: 본인만(회원 번호는 로그인 정보로만 정함). 앞뒤 공백 제거 후 0~500자, 빈 값·null이면 지운다. 줄바꿈 허용.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                bio: { type: string, nullable: true, description: 0~500자 }
+      responses:
+        '200':
+          description: 바뀜
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  bio: { type: string, nullable: true }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /api/users/{userId}/followers:
+    parameters: [ { $ref: '#/components/parameters/UserId' } ]
+    get:
+      tags: [follow]
+      summary: 팔로워 목록 (SOC-02, FR-015, D-102 #9)
+      description: 프로필을 볼 수 있는 누구나. 최근에 팔로우한 순서로 20명씩 번호 페이지. 닉네임·프로필 사진만.
+      security: []
+      parameters: [ { $ref: '#/components/parameters/Page' } ]
+      responses:
+        '200': { description: 목록, content: { application/json: { schema: { $ref: '#/components/schemas/UserPage' } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/users/{userId}/following:
+    parameters: [ { $ref: '#/components/parameters/UserId' } ]
+    get:
+      tags: [follow]
+      summary: 팔로잉 목록 (SOC-02, FR-015, D-102 #9)
+      description: 팔로워 목록과 같은 규칙.
+      security: []
+      parameters: [ { $ref: '#/components/parameters/Page' } ]
+      responses:
+        '200': { description: 목록, content: { application/json: { schema: { $ref: '#/components/schemas/UserPage' } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/users/{userId}/follow:
+    parameters: [ { $ref: '#/components/parameters/UserId' } ]
+    post:
+      tags: [follow]
+      summary: 팔로우 (SOC-01, FR-006, FR-008, FR-009, FR-014, FR-039, D-102 #1·#3·#4·#11)
+      description: |
+        이미 팔로우 중이어도 200(한 쌍에 한 건). 새로 생겼을 때만 대상에게 NEW_FOLLOWER 알림(다시 팔로우해도 한 번).
+        둘 사이에 어느 방향이든 차단이 있으면 403 FOLLOW_NOT_ALLOWED(문구에 차단을 드러내지 않음).
+      responses:
+        '200': { description: 팔로우 상태, content: { application/json: { schema: { $ref: '#/components/schemas/FollowState' } } } }
+        '400': { description: SELF_NOT_ALLOWED, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: "ADMIN_NOT_ALLOWED, FOLLOW_NOT_ALLOWED", content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+    delete:
+      tags: [follow]
+      summary: 팔로우 취소 (SOC-01, FR-008)
+      description: 팔로우하지 않았어도 200.
+      responses:
+        '200': { description: 팔로우 상태, content: { application/json: { schema: { $ref: '#/components/schemas/FollowState' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /api/users/{userId}/block:
+    parameters: [ { $ref: '#/components/parameters/UserId' } ]
+    post:
+      tags: [block]
+      summary: 차단 (SOC-05, FR-016, FR-019, FR-020, D-102 #11·#13)
+      description: |
+        이미 차단했어도 204. 같은 트랜잭션에서 두 방향 팔로우를 지우고, 내가 블로그장인 블로그에 그 회원의 대기 중 참여 신청이 있으면
+        일반 거절과 같이 자동 거절한다(거절 알림, 7일 규칙). 차단당한 회원에게는 알리지 않는다.
+      responses:
+        '204': { description: 차단됨 }
+        '400': { description: SELF_NOT_ALLOWED, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: ADMIN_NOT_ALLOWED, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [block]
+      summary: 차단 해제 (SOC-05, FR-016, D-102 #10)
+      description: 차단하지 않았어도 204. 끊긴 팔로우는 되살리지 않는다.
+      responses:
+        '204': { description: 해제됨 }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /api/me/blocks:
+    get:
+      tags: [block]
+      summary: 내 차단 목록 (SOC-05, FR-016, D-102 #10)
+      description: 닉네임·프로필 사진·차단한 날짜. 최근 차단 순 20개씩 번호 페이지.
+      parameters: [ { $ref: '#/components/parameters/Page' } ]
+      responses:
+        '200': { description: 목록, content: { application/json: { schema: { $ref: '#/components/schemas/BlockPage' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /api/reports:
+    post:
+      tags: [report]
+      summary: 신고 (SOC-06, FR-022~FR-025, FR-027, D-93, D-102 #1·#14·#15)
+      description: |
+        접수처(route): 블로그 자체, 블로그장(블로그장이 그 블로그에 쓴 글·댓글 포함), 메인 프로필 회원 신고는 ADMIN, 블로그 안의 회원·글·댓글은 BLOG.
+        블로그장 여부는 신고하는 순간의 역할로 본다. 같은 대상을 14일 안에 다시 신고하면 409 REPORT_TOO_SOON(reportableAt 포함).
+        볼 수 없는 대상은 그 대상의 404. 신고당한 사람에게는 알리지 않는다.
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/ReportRequest' } } }
+      responses:
+        '201':
+          description: 접수됨
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: integer, format: int64 }
+                  route: { type: string, enum: [BLOG, ADMIN] }
+        '400': { description: "VALIDATION_FAILED(reason·detail·targetType, 공지 글은 field targetId), SELF_NOT_ALLOWED", content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: "ADMIN_NOT_ALLOWED, BLOG_SUSPENDED", content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '404': { description: "NOT_FOUND(회원, 블로그 안 신고의 비멤버), BLOG_NOT_FOUND, POST_NOT_FOUND, COMMENT_NOT_FOUND", content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '409': { description: "REPORT_TOO_SOON(reportableAt)", content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+
+  /api/reports/reasons:
+    get:
+      tags: [report]
+      summary: 신고 사유 목록 (FR-022, D-102 #14)
+      description: 설정값의 사유 목록. 화면의 신고 창이 그대로 쓴다.
+      responses:
+        '200': { description: 사유, content: { application/json: { schema: { $ref: '#/components/schemas/ReportReasons' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /api/notifications:
+    get:
+      tags: [notification]
+      summary: 알림 목록 (SOC-04, FR-029, FR-030, FR-033, D-102 #17·#21)
+      description: 본인 알림만 최신순 20개. 다음 묶음은 nextBefore를 before에 넣어 받는다("더 보기"). 목록을 받는 것만으로는 읽음이 되지 않는다.
+      parameters:
+        - $ref: '#/components/parameters/Tab'
+        - { name: before, in: query, schema: { type: integer, format: int64 }, description: 이 알림 번호보다 오래된 것 }
+      responses:
+        '200': { description: 목록, content: { application/json: { schema: { $ref: '#/components/schemas/NotificationSlice' } } } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    delete:
+      tags: [notification]
+      summary: 알림 전체 삭제 (SOC-04, FR-031, FR-057, D-102 #19·#28)
+      description: tab=ALL이면 모두, 다른 탭이면 그 탭만 바로 지운다(30일 보관 없음).
+      parameters: [ { $ref: '#/components/parameters/Tab' } ]
+      responses:
+        '200':
+          description: 지움
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted: { type: integer }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /api/notifications/unread-count:
+    get:
+      tags: [notification]
+      summary: 안 읽은 알림 개수, 30초 자동 확인 (FR-032, D-72, D-102 #20)
+      description: |
+        화면이 pollIntervalSeconds(설정값 30)마다 X-User-Activity 헤더 없이 부른다. 로그인 30분 연장으로 세지 않는다(D-62).
+        개수는 100에서 멈춰 센다. 화면은 99를 넘으면 "99+".
+      responses:
+        '200':
+          description: 개수
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  unreadCount: { type: integer, maximum: 100 }
+                  pollIntervalSeconds: { type: integer, example: 30 }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /api/notifications/{notificationId}:
+    parameters: [ { $ref: '#/components/parameters/NotificationId' } ]
+    delete:
+      tags: [notification]
+      summary: 알림 하나 지우기 (FR-031, D-102 #19·#28)
+      responses:
+        '204': { description: 지움 }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: NOT_FOUND(없거나 남의 알림), content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+
+  /api/notifications/{notificationId}/read:
+    parameters: [ { $ref: '#/components/parameters/NotificationId' } ]
+    post:
+      tags: [notification]
+      summary: 알림 읽음 (FR-030, D-102 #18)
+      description: 알림 하나를 누를 때 화면이 부른다. 이미 읽었어도 204.
+      responses:
+        '204': { description: 읽음 }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: NOT_FOUND(없거나 남의 알림), content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+
+  /api/notifications/read-all:
+    post:
+      tags: [notification]
+      summary: 모두 읽음 (FR-030, D-102 #18)
+      description: 보고 있는 탭의 안 읽은 알림을 모두 읽음으로 바꾼다.
+      parameters: [ { $ref: '#/components/parameters/Tab' } ]
+      responses:
+        '200':
+          description: 바꿈
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updated: { type: integer }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /api/me/notification-settings:
+    get:
+      tags: [notification]
+      summary: 알림 설정 보기 (FR-054, FR-057, D-102 #26)
+      description: 설정한 적이 없으면 9가지 모두 켜짐, 보관 30일.
+      responses:
+        '200': { description: 설정, content: { application/json: { schema: { $ref: '#/components/schemas/NotificationSettings' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    put:
+      tags: [notification]
+      summary: 알림 설정 바꾸기 (FR-054, FR-055, FR-057, FR-058, D-102 #27·#29)
+      description: |
+        보낸 항목만 바꾼다. 끌 수 있는 9가지와 retentionDays(7 또는 30) 말고 다른 키(끌 수 없는 알림 등)가 오면 400 VALIDATION_FAILED(code NotAllowed).
+        끄면 그 뒤 새 알림만 안 만들고 받은 알림은 그대로. 7일로 줄이면 다음 04:00 정리 때 7일 지난 알림이 지워진다. 블로그 단위 설정은 없다.
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/NotificationSettings' } } }
+      responses:
+        '200': { description: 바뀐 설정, content: { application/json: { schema: { $ref: '#/components/schemas/NotificationSettings' } } } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+components:
+  parameters:
+    UserId: { name: userId, in: path, required: true, schema: { type: integer, format: int64 } }
+    NotificationId: { name: notificationId, in: path, required: true, schema: { type: integer, format: int64 } }
+    Page: { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+    Tab: { name: tab, in: query, schema: { type: string, enum: [ALL, COMMENT, LIKE, FOLLOW, BLOG, OPERATION], default: ALL }, description: "FOLLOW는 화면의 팔로우·구독 탭(새 팔로워 + 블로그 구독)" }
+  responses:
+    ValidationError:
+      description: VALIDATION_FAILED(fieldErrors 포함)
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    Unauthorized:
+      description: UNAUTHENTICATED
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    NotFound:
+      description: NOT_FOUND(없는 회원, 탈퇴한 회원, 관리자 계정)
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    RateLimited:
+      description: RATE_LIMITED(retryAfterSeconds 포함, 회원당 1분 30번)
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+  schemas:
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: string }
+        message: { type: string }
+        fieldErrors:
+          type: array
+          items:
+            type: object
+            properties:
+              field: { type: string }
+              code: { type: string }
+    UserRef:
+      type: object
+      description: 닉네임·프로필 사진만(FR-015)
+      properties:
+        id: { type: integer, format: int64 }
+        nickname: { type: string }
+        profileImageUrl: { type: string, nullable: true }
+    ProfileBlog:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        address: { type: string }
+        name: { type: string }
+        visibility: { type: string, enum: [PUBLIC, LINK, PRIVATE], description: 다른 사람에게는 PUBLIC만 온다 }
+        status: { type: string, enum: [ACTIVE, CLOSING] }
+    Profile:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        nickname: { type: string }
+        profileImageUrl: { type: string, nullable: true }
+        bio: { type: string, nullable: true, description: 줄바꿈 포함 가능. 화면은 textContent }
+        ownedBlogs: { type: array, items: { $ref: '#/components/schemas/ProfileBlog' } }
+        joinedBlogs: { type: array, items: { $ref: '#/components/schemas/ProfileBlog' } }
+        followerCount: { type: integer }
+        viewer:
+          type: object
+          nullable: true
+          description: 로그인했을 때만. 상대가 나를 차단했는지는 넣지 않는다(D-102 #11)
+          properties:
+            self: { type: boolean }
+            following: { type: boolean }
+            blocking: { type: boolean }
+    UserPage:
+      type: object
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/UserRef' } }
+        page: { type: integer }
+        size: { type: integer }
+        totalElements: { type: integer, format: int64 }
+        totalPages: { type: integer }
+    FollowState:
+      type: object
+      properties:
+        following: { type: boolean }
+        followerCount: { type: integer }
+    BlockPage:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/UserRef'
+              - type: object
+                properties:
+                  blockedAt: { type: string, format: date-time }
+        page: { type: integer }
+        size: { type: integer }
+        totalElements: { type: integer, format: int64 }
+        totalPages: { type: integer }
+    ReportRequest:
+      type: object
+      required: [targetType, targetId, reason]
+      properties:
+        targetType: { type: string, enum: [USER, BLOG, POST, COMMENT] }
+        targetId: { type: integer, format: int64 }
+        blogId: { type: integer, format: int64, nullable: true, description: "USER를 블로그 안에서 신고할 때만. 없으면 메인 프로필 신고(ADMIN)" }
+        reason: { type: string, enum: [SPAM, ABUSE, SEXUAL, PRIVACY, COPYRIGHT, OTHER], description: 설정값 social.report.reasons }
+        detail: { type: string, nullable: true, description: "0~500자, OTHER면 필수" }
+    ReportReasons:
+      type: object
+      properties:
+        reasons:
+          type: array
+          items:
+            type: object
+            properties:
+              code: { type: string }
+              label: { type: string }
+              detailRequired: { type: boolean }
+        detailMaxLength: { type: integer, example: 500 }
+    Notification:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        type: { type: string, example: NEW_FOLLOWER }
+        tab: { type: string, enum: [COMMENT, LIKE, FOLLOW, BLOG, OPERATION] }
+        content: { type: string, description: 행동한 회원은 닉네임으로만 }
+        link: { type: string, nullable: true, description: "누르면 갈 곳(research R-06). null이면 내용만 보여주거나 \"볼 수 없는 내용입니다\"" }
+        read: { type: boolean }
+        createdAt: { type: string, format: date-time }
+    NotificationSlice:
+      type: object
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/Notification' } }
+        hasMore: { type: boolean }
+        nextBefore: { type: integer, format: int64, nullable: true }
+    NotificationSettings:
+      type: object
+      description: 끌 수 있는 알림 9가지와 보관 기간. 다른 키는 400.
+      additionalProperties: false
+      properties:
+        postComment: { type: boolean }
+        commentReply: { type: boolean }
+        postLike: { type: boolean }
+        newFollower: { type: boolean }
+        blogSubscribed: { type: boolean }
+        joinRequest: { type: boolean }
+        joinResult: { type: boolean }
+        reportResult: { type: boolean }
+        notice: { type: boolean }
+        retentionDays: { type: integer, enum: [7, 30] }
