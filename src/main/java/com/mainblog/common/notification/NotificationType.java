@@ -3,6 +3,7 @@ package com.mainblog.common.notification;
 /**
  * 알림 종류 (T013, 3.6, SOC-04). tab과 끌 수 있는지(설정 컬럼)를 함께 정한다. 설정 컬럼이 null이면 끌 수 없다.
  * 002가 쓰는 것은 specs/002-blog-management/data-model.md "알림 종류". 003·004가 종류를 더한다.
+ * 위임 요청·결과와 블랙리스트 해제 문의 결과는 3.6 표대로 "블로그" 탭(003 T015, FR-043, FR-044, FR-049, research R-03).
  * blockable: 받는 사람이 행동한 회원을 차단했으면 만들지 않는 종류(003 research R-07, D-102 #11).
  */
 public enum NotificationType {
@@ -15,12 +16,12 @@ public enum NotificationType {
     MEMBER_UNSUSPENDED("OPERATION", null),
     MEMBER_KICKED("OPERATION", null),
     REPORT_RESOLVED("OPERATION", "report_result"),
-    APPEAL_RELEASED("OPERATION", null),
-    APPEAL_REJECTED("OPERATION", null),
-    DELEGATION_REQUESTED("OPERATION", null),
-    DELEGATION_ACCEPTED("OPERATION", null),
-    DELEGATION_REJECTED("OPERATION", null),
-    DELEGATION_CANCELED("OPERATION", null),
+    APPEAL_RELEASED("BLOG", null),
+    APPEAL_REJECTED("BLOG", null),
+    DELEGATION_REQUESTED("BLOG", null),
+    DELEGATION_ACCEPTED("BLOG", null),
+    DELEGATION_REJECTED("BLOG", null),
+    DELEGATION_CANCELED("BLOG", null),
     BLOG_CLOSING("BLOG", null),
     BLOG_CLOSING_WITHDRAWN("BLOG", null),
     BLOG_CLOSED_REQUEST_REJECTED("BLOG", null),

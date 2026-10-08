@@ -164,10 +164,13 @@ public class BlogService {
         return viewService.detail(ctx);
     }
 
-    /** 구독은 그대로 두고 구독자 모두에게 끌 수 없는 알림을 보낸다(FR-031). */
+    /** 구독은 그대로 두고 구독자 모두에게 끌 수 없는 알림을 보낸다(FR-031). 바꾼 본인은 뺀다(003 T016, FR-048, D-102 #25). */
     private void notifyPrivate(Blog blog, long actorId) {
         String stamp = String.valueOf(LocalDateTime.now(clock).atZone(clock.getZone()).toInstant().toEpochMilli());
         for (Long subscriber : subscriptionService.subscriberIds(blog.getId())) {
+            if (subscriber == actorId) {
+                continue;
+            }
             notificationWriter.write(subscriber, NotificationType.BLOG_PRIVATE, "BLOG", blog.getId(), actorId,
                     "'" + blog.getName() + "' 블로그가 비공개로 바뀌었습니다.",
                     "BLOG_PRIVATE:" + blog.getId() + ":" + stamp);

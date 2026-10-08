@@ -61,9 +61,10 @@ description: "003 소셜·알림 구현 작업 목록"
 
 **독립 테스트**: 끌 수 있는 알림을 모두 끈 회원들로 폐쇄·철회·위임·비공개 전환·글 삭제·제재·해제 문의를 일으켜 받는 사람과 탭을 확인한다. 대부분 002·004에 이미 있는 동작이라 테스트로 확인하고, 다른 곳만 고친다.
 
-- [ ] T014 [P] [US2] `src/test/java/com/mainblog/notification/MandatoryNotificationIntegrationTest.java`: 받는 사람이 9가지를 모두 끈 상태에서 폐쇄 버튼 → 부블로그장·멤버·구독자는 즉시 받고 블로그장·다른 블로그 멤버는 안 받음, 3일 전·1일 전(MutableClock) 한 번씩, 멤버이면서 구독자는 한 번, 그 사이 들어온 구독자는 3일 전부터 받음, 서버가 꺼졌던 날 몫은 다음 실행에 한 번, 철회 알림 뒤 더 안 감, 위임 요청·수락·거절·7일 자동 취소, 폐쇄 버튼으로 취소된 위임은 받는 멤버에게 별도 알림 없음, 비공개 전환은 구독자 모두(바꾼 본인 제외, 일부 공개 전환은 없음), 내 글 삭제됨, 경고·정지·정지 해제·강제 퇴장, 해제 문의 결과, 각 알림의 탭이 3.6 표와 같음 (US2-1~12, SC-003, SC-004, D-102 #22~#25)
-- [ ] T015 [US2] (사용자 확인 뒤, plan "구현 전에 할 일" 1) `src/main/java/com/mainblog/common/notification/NotificationType.java`에서 `DELEGATION_REQUESTED`·`DELEGATION_ACCEPTED`·`DELEGATION_REJECTED`·`DELEGATION_CANCELED`·`APPEAL_RELEASED`·`APPEAL_REJECTED`의 탭을 `BLOG`로 바꾼다(지금 002 테스트에는 이 탭 값을 확인하는 곳이 없다). 개발 DB의 쌓인 행은 `UPDATE notifications SET tab = 'BLOG' WHERE notification_type IN (...)`로 맞춘다. 확인 전에는 T014의 탭 확인에서 이 종류만 빼 둔다 (FR-043, FR-044, FR-049, research R-03)
-- [ ] T016 [US2] `src/main/java/com/mainblog/blog/application/BlogService.java`의 `notifyPrivate`가 바꾼 본인을 빼게 한다 (FR-048, D-102 #25)
+- [X] T014 [P] [US2] `src/test/java/com/mainblog/notification/MandatoryNotificationIntegrationTest.java`: 받는 사람이 9가지를 모두 끈 상태에서 폐쇄 버튼 → 부블로그장·멤버·구독자는 즉시 받고 블로그장·다른 블로그 멤버는 안 받음, 3일 전·1일 전(MutableClock) 한 번씩, 멤버이면서 구독자는 한 번, 그 사이 들어온 구독자는 3일 전부터 받음, 서버가 꺼졌던 날 몫은 다음 실행에 한 번, 철회 알림 뒤 더 안 감, 위임 요청·수락·거절·7일 자동 취소, 폐쇄 버튼으로 취소된 위임은 받는 멤버에게 별도 알림 없음, 비공개 전환은 구독자 모두(바꾼 본인 제외, 일부 공개 전환은 없음), 내 글 삭제됨, 경고·정지·정지 해제·강제 퇴장, 해제 문의 결과, 각 알림의 탭이 3.6 표와 같음 (US2-1~12, SC-003, SC-004, D-102 #22~#25)
+- [X] T015 [US2] (사용자 확인 뒤, plan "구현 전에 할 일" 1) `src/main/java/com/mainblog/common/notification/NotificationType.java`에서 `DELEGATION_REQUESTED`·`DELEGATION_ACCEPTED`·`DELEGATION_REJECTED`·`DELEGATION_CANCELED`·`APPEAL_RELEASED`·`APPEAL_REJECTED`의 탭을 `BLOG`로 바꾼다(지금 002 테스트에는 이 탭 값을 확인하는 곳이 없다). 개발 DB의 쌓인 행은 `UPDATE notifications SET tab = 'BLOG' WHERE notification_type IN (...)`로 맞춘다. 확인 전에는 T014의 탭 확인에서 이 종류만 빼 둔다 (FR-043, FR-044, FR-049, research R-03)
+  - **진행 기록 (2026-10-08)**: 사용자 확인이 아직 오지 않아 추천안(3.6 표대로 `BLOG`)으로 진행했다. 탭 값 6개만 바꾼 것이라 되돌릴 수 있다. 개발 DB의 `UPDATE`는 저장소에서 실행하지 않았다(아래 "구현하며 바뀐 점" 참고)
+- [X] T016 [US2] `src/main/java/com/mainblog/blog/application/BlogService.java`의 `notifyPrivate`가 바꾼 본인을 빼게 한다 (FR-048, D-102 #25)
 
 **체크포인트**: 끌 수 없는 알림이 설정과 관계없이 정해진 사람에게만 간다.
 
