@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>프로필 - 메인블로그</title>
+  <link rel="stylesheet" href="/css/base.css">
+</head>
+<body>
+  <main class="wide profile-page">
+    <!-- 회원 프로필 (003 SOC-03). 닉네임·사진·소개·운영/참여 블로그·팔로워 수만 보인다(FR-002, D-22) -->
+    <section id="profile" hidden>
+      <div class="panel profile-card">
+        <img id="avatar" class="profile-card__avatar" alt="" width="88" height="88" hidden>
+        <div class="profile-card__avatar profile-card__avatar--empty" id="avatar-empty" aria-hidden="true"></div>
+        <div class="profile-card__body">
+          <h1 id="nickname"></h1>
+          <p class="profile-card__bio" id="bio"></p>
+          <p class="hint"><button type="button" class="link-button" id="follower-count"></button></p>
+          <div class="row" id="actions">
+            <button type="button" id="follow" hidden>팔로우</button>
+            <button type="button" id="unfollow" class="button-outline" hidden>팔로우 취소</button>
+            <a id="edit-profile" class="button button-outline" href="/me/index.html" hidden>내 정보 고치기</a>
+            <button type="button" id="block" class="button-quiet" hidden>차단</button>
+            <button type="button" id="unblock" class="button-outline" hidden>차단 해제</button>
+            <button type="button" id="report" class="button-quiet" hidden>신고</button>
+          </div>
+          <p class="message" id="action-message" role="status"></p>
+        </div>
+      </div>
+
+      <div class="profile-grid">
+        <section class="panel">
+          <h2>운영하는 블로그</h2>
+          <ul class="blog-list" id="owned-blogs"></ul>
+        </section>
+        <section class="panel">
+          <h2>참여한 블로그</h2>
+          <ul class="blog-list" id="joined-blogs"></ul>
+        </section>
+      </div>
+
+      <!-- 팔로워·팔로잉 목록 (SOC-02, D-102 #9): 닉네임·사진만, 최근 팔로우 순 20명씩 -->
+      <section class="panel" id="follow-lists" hidden>
+        <div class="tabs" role="tablist">
+          <button type="button" role="tab" data-list="followers">팔로워</button>
+          <button type="button" role="tab" data-list="following">팔로잉</button>
+        </div>
+        <ul class="user-list" id="user-list"></ul>
+        <nav class="pagination" id="user-pages" aria-label="목록 페이지"></nav>
+      </section>
+    </section>
+    <p class="message message--error" id="message" role="alert"></p>
+  </main>
+  <script src="/js/api.js"></script>
+  <script src="/js/session.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/board-common.js"></script>
+  <script src="/js/report.js"></script>
+  <script src="/js/profile.js"></script>
+</body>
+</html>

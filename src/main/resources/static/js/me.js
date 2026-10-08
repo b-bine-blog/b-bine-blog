@@ -1,4 +1,5 @@
 // 내 정보 화면 (T064, USR-07, FR-040~FR-043). 값은 textContent·value로만 넣는다(D-64).
+// 003 T020: 소개 고치기(PUT /api/members/me/bio, 0~500자), 내 프로필·알림 설정·차단 목록 링크.
 (function () {
   'use strict';
 
@@ -66,7 +67,28 @@
     $('nickname').value = me.nickname;
     $('phone').value = formatPhone(me.phone);
     renderImage(me.profileImageUrl);
+    $('bio').value = me.bio || '';
+    updateBioLength();
     $('info').hidden = false;
+  }
+
+  // 글자 수는 서버와 같이 코드 포인트로 센다(이모지 하나 = 1자)
+  function updateBioLength() {
+    api.setText($('bio-length'), Array.from($('bio').value.trim()).length);
+  }
+
+  function saveBio(e) {
+    e.preventDefault();
+    $('save-bio').disabled = true;
+    api.put('/api/members/me/bio', { bio: $('bio').value }, { activity: true }).then(function (r) {
+      $('save-bio').disabled = false;
+      $('bio').value = r.bio || '';
+      updateBioLength();
+      show($('bio-message'), '소개를 저장했습니다.', false);
+    }, function (err) {
+      $('save-bio').disabled = false;
+      show($('bio-message'), err.code === 'VALIDATION_FAILED' ? '소개는 500자까지 쓸 수 있습니다.' : err.message, true);
+    });
   }
 
   function load() {
@@ -141,5 +163,9 @@
     $('edit-form').addEventListener('submit', save);
     $('profile-file').addEventListener('change', uploadImage);
     $('delete-image').addEventListener('click', deleteImage);
+    $('bio').addEventListener('input', updateBioLength);
+    $('bio-form').addEventListener('submit', saveBio);
+    api.get('/api/auth/session').then(function (s) { $('my-profile').href = '/profile/' + s.memberId; },
+      function () { /* 로그인하지 않았으면 load()가 로그인 화면으로 보낸다 */ });
   });
 })();

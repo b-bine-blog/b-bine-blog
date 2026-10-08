@@ -45,9 +45,11 @@
       link.textContent = post.blog.name;
     }
     api.setText($('title'), post.title);
-    var meta = [post.author ? post.author.nickname : '', board.formatTime(post.createdAt), '조회 ' + post.viewCount];
-    if (post.categoryName) { meta.unshift(post.categoryName); }
-    api.setText($('meta'), meta.join(' · '));
+    var metaBox = $('meta');
+    board.clear(metaBox);
+    if (post.categoryName) { metaBox.appendChild(document.createTextNode(post.categoryName + ' · ')); }
+    metaBox.appendChild(board.authorNode(post.author)); // 활동 중인 작성자는 프로필 링크(003 T021)
+    metaBox.appendChild(document.createTextNode(' · ' + board.formatTime(post.createdAt) + ' · 조회 ' + post.viewCount));
     $('content').innerHTML = post.contentHtml; // 서버에서 걸러낸 HTML(R-01)
     var tags = $('tags');
     board.clear(tags);
@@ -150,8 +152,10 @@
       li.appendChild(el('p', 'comment__deleted', '삭제된 댓글입니다'));
       return li;
     }
-    var meta = (c.author ? c.author.nickname : '') + ' · ' + board.formatTime(c.createdAt) + (c.edited ? ' · 수정됨' : '');
-    li.appendChild(el('div', 'comment__meta', meta));
+    var meta = el('div', 'comment__meta');
+    meta.appendChild(board.authorNode(c.author));
+    meta.appendChild(document.createTextNode(' · ' + board.formatTime(c.createdAt) + (c.edited ? ' · 수정됨' : '')));
+    li.appendChild(meta);
     var text = el('p', 'comment__text');
     if (c.replyToNickname) {
       var to = el('strong', null, '@' + c.replyToNickname + ' ');

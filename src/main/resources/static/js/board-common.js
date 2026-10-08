@@ -39,13 +39,15 @@
       var a = el('a', 'post-item__title', p.title);
       a.href = postUrl(p);
       body.appendChild(a);
-      var meta = [];
-      if (options.showBlog && p.blog) { meta.push(p.blog.name); }
-      if (p.categoryName) { meta.push(p.categoryName); }
-      meta.push(p.author ? p.author.nickname : '');
-      meta.push(formatTime(p.createdAt));
-      meta.push('좋아요 ' + p.likeCount + ' · 댓글 ' + p.commentCount + ' · 조회 ' + p.viewCount);
-      body.appendChild(el('div', 'post-item__meta', meta.join(' · ')));
+      var before = [];
+      if (options.showBlog && p.blog) { before.push(p.blog.name); }
+      if (p.categoryName) { before.push(p.categoryName); }
+      var metaLine = el('div', 'post-item__meta');
+      if (before.length) { metaLine.appendChild(document.createTextNode(before.join(' · ') + ' · ')); }
+      metaLine.appendChild(authorNode(p.author));
+      metaLine.appendChild(document.createTextNode(' · ' + formatTime(p.createdAt) + ' · 좋아요 ' + p.likeCount
+        + ' · 댓글 ' + p.commentCount + ' · 조회 ' + p.viewCount));
+      body.appendChild(metaLine);
       li.appendChild(body);
       if (p.thumbnailUrl) {
         var img = el('img', 'post-item__thumb');
@@ -56,6 +58,17 @@
       }
       list.appendChild(li);
     });
+  }
+
+  // 작성자 닉네임. 활동 중인 회원이면 프로필 링크(003 T021, FR-001), 탈퇴·블로그 탈퇴는 글자만.
+  function authorNode(author) {
+    if (!author) { return document.createTextNode(''); }
+    if (author.state === 'ACTIVE' && author.id) {
+      var a = el('a', 'author-link', author.nickname);
+      a.href = '/profile/' + author.id;
+      return a;
+    }
+    return document.createTextNode(author.nickname || '');
   }
 
   // 번호 페이지. 다섯 개씩 보이고 처음·끝으로 바로 간다(FR-018).
@@ -95,7 +108,7 @@
   }
 
   global.board = {
-    el: el, clear: clear, formatTime: formatTime, postUrl: postUrl, renderPosts: renderPosts,
+    el: el, clear: clear, formatTime: formatTime, postUrl: postUrl, renderPosts: renderPosts, authorNode: authorNode,
     renderPager: renderPager, say: say, sayError: sayError
   };
 })(window);

@@ -72,11 +72,11 @@ description: "003 소셜·알림 구현 작업 목록"
 
 ## 5단계: 사용자 스토리 3 - 회원 프로필 보기와 소개 고치기 (P1)
 
-- [ ] T017 [P] [US3] `src/test/java/com/mainblog/social/ProfileIntegrationTest.java`: 블로그 2개 운영·1개 참여·팔로워 3명인 회원의 프로필, 비회원도 200, 다른 사람에게 일부 공개·비공개·숨김·폐쇄 블로그 없음·본인에게는 일부 공개·비공개 있음, 탈퇴 회원·관리자·없는 번호 404, `viewer`(self·following·blocking)와 상대가 나를 차단했는지는 없음, 응답에 이메일·이름·전화번호 없음, 소개 0·500자 성공·501자 400·줄바꿈 유지·앞뒤 공백 제거·빈 값이면 null, 바뀐 소개가 프로필과 `GET /api/members/me`에 같게 보임, 남의 소개를 고칠 경로가 없음 (US3, SC-010, D-102 #6~#8)
-- [ ] T018 [US3] `src/main/java/com/mainblog/social/application/ProfileService.java`와 `src/main/java/com/mainblog/social/api/ProfileController.java`(`GET /api/users/{userId}/profile`, `PUT /api/members/me/bio`)를 만든다 (FR-001~FR-005, research R-09)
-- [ ] T019 [US3] `src/main/java/com/mainblog/social/api/SocialPageController.java`(`/profile/{id}` → `profile.html` forward)와 화면 `src/main/resources/static/profile.html` + `src/main/resources/static/js/profile.js`(닉네임·사진·소개 `white-space: pre-line`·운영·참여 블로그 링크·팔로워 수, 모두 textContent)를 만든다
-- [ ] T020 [P] [US3] `src/main/resources/static/me/index.html` + `src/main/resources/static/js/me.js`에 소개 고치기 칸(글자 수 표시 0/500), 내 프로필·알림 설정·차단 목록 링크를 더한다 (FR-004)
-- [ ] T021 [P] [US3] `src/main/resources/static/js/board-common.js`·`board-post.js`·`board-feed.js`에서 작성자 `state = ACTIVE`인 닉네임을 `/profile/{id}` 링크로 바꾼다 (FR-001)
+- [X] T017 [P] [US3] `src/test/java/com/mainblog/social/ProfileIntegrationTest.java`: 블로그 2개 운영·1개 참여·팔로워 3명인 회원의 프로필, 비회원도 200, 다른 사람에게 일부 공개·비공개·숨김·폐쇄 블로그 없음·본인에게는 일부 공개·비공개 있음, 탈퇴 회원·관리자·없는 번호 404, `viewer`(self·following·blocking)와 상대가 나를 차단했는지는 없음, 응답에 이메일·이름·전화번호 없음, 소개 0·500자 성공·501자 400·줄바꿈 유지·앞뒤 공백 제거·빈 값이면 null, 바뀐 소개가 프로필과 `GET /api/members/me`에 같게 보임, 남의 소개를 고칠 경로가 없음 (US3, SC-010, D-102 #6~#8)
+- [X] T018 [US3] `src/main/java/com/mainblog/social/application/ProfileService.java`와 `src/main/java/com/mainblog/social/api/ProfileController.java`(`GET /api/users/{userId}/profile`, `PUT /api/members/me/bio`)를 만든다 (FR-001~FR-005, research R-09)
+- [X] T019 [US3] `src/main/java/com/mainblog/social/api/SocialPageController.java`(`/profile/{id}` → `profile.html` forward)와 화면 `src/main/resources/static/profile.html` + `src/main/resources/static/js/profile.js`(닉네임·사진·소개 `white-space: pre-line`·운영·참여 블로그 링크·팔로워 수, 모두 textContent)를 만든다
+- [X] T020 [P] [US3] `src/main/resources/static/me/index.html` + `src/main/resources/static/js/me.js`에 소개 고치기 칸(글자 수 표시 0/500), 내 프로필·알림 설정·차단 목록 링크를 더한다 (FR-004)
+- [X] T021 [P] [US3] `src/main/resources/static/js/board-common.js`·`board-post.js`·`board-feed.js`에서 작성자 `state = ACTIVE`인 닉네임을 `/profile/{id}` 링크로 바꾼다 (FR-001)
 
 **체크포인트**: 어디서든 닉네임을 눌러 프로필을 본다.
 

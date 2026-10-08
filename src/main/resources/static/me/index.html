@@ -38,6 +38,20 @@
         <p class="message" id="edit-message"></p>
       </form>
 
+      <!-- 소개 (003 SOC-03, D-102 #7): 0~500자, 줄바꿈 가능. 프로필에 그대로 보인다 -->
+      <form id="bio-form" novalidate>
+        <label for="bio">소개</label>
+        <textarea id="bio" rows="4" maxlength="500"></textarea>
+        <div class="counter"><span id="bio-length">0</span>/500</div>
+        <button type="submit" id="save-bio">소개 저장</button>
+        <p class="message" id="bio-message"></p>
+      </form>
+
+      <p>
+        <a id="my-profile" href="#">내 프로필</a> ·
+        <a href="/me/notifications.html">알림 설정</a> ·
+        <a href="/me/blocks.html">차단 목록</a>
+      </p>
       <p>
         <a href="/me/password.html">비밀번호 바꾸기</a> ·
         <a href="/me/withdraw.html">회원탈퇴</a>
