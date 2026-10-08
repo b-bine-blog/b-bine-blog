@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>관리자 - 메인블로그</title>
+  <link rel="stylesheet" href="/css/base.css">
+</head>
+<body>
+  <!-- 메인 관리자 화면 (005 T009, D-103 #1). 서버가 role = ADMIN을 확인한 뒤에만 내려준다. 모든 값은 textContent로 넣는다(D-64). -->
+  <main class="admin">
+    <h1>관리자</h1>
+    <p class="message message--error" id="admin-message" role="alert"></p>
+    <div class="tabs" role="tablist" id="admin-tabs">
+      <button type="button" role="tab" data-tab="members" aria-selected="true">회원</button>
+      <button type="button" role="tab" data-tab="blogs" aria-selected="false">블로그</button>
+      <button type="button" role="tab" data-tab="reports" aria-selected="false">신고</button>
+      <button type="button" role="tab" data-tab="content" aria-selected="false">글·댓글</button>
+      <button type="button" role="tab" data-tab="actions" aria-selected="false">활동 기록</button>
+      <button type="button" role="tab" data-tab="stats" aria-selected="false">통계</button>
+    </div>
+
+    <section class="panel" data-panel="members" aria-label="회원">
+      <h2>회원 찾기</h2>
+      <form class="admin-filter" id="member-search">
+        <div>
+          <label for="member-type">검색 종류</label>
+          <select id="member-type">
+            <option value="NICKNAME">닉네임(일부)</option>
+            <option value="EMAIL">이메일(전체)</option>
+          </select>
+        </div>
+        <div class="grow">
+          <label for="member-q">검색어</label>
+          <input type="search" id="member-q" maxlength="255" required>
+        </div>
+        <button type="submit">찾기</button>
+      </form>
+      <p class="message" id="member-message"></p>
+      <div id="member-list"></div>
+      <div class="pagination" id="member-pager"></div>
+      <div class="admin-detail" id="member-detail" hidden></div>
+    </section>
+
+    <section class="panel" data-panel="blogs" aria-label="블로그" hidden>
+      <h2>블로그 찾기</h2>
+      <form class="admin-filter" id="blog-search">
+        <div class="grow">
+          <label for="blog-q">이름·주소·블로그장 닉네임</label>
+          <input type="search" id="blog-q" maxlength="30">
+        </div>
+        <div>
+          <label for="blog-status">상태</label>
+          <select id="blog-status">
+            <option value="">전체</option>
+            <option value="ACTIVE">운영 중</option>
+            <option value="CLOSING">폐쇄 예정</option>
+            <option value="CLOSED">폐쇄됨</option>
+            <option value="HIDDEN">숨김</option>
+          </select>
+        </div>
+        <button type="submit">찾기</button>
+      </form>
+      <p class="message" id="blog-message"></p>
+      <div id="blog-list"></div>
+      <div class="pagination" id="blog-pager"></div>
+      <div class="admin-detail" id="blog-detail" hidden></div>
+    </section>
+
+    <section class="panel" data-panel="reports" aria-label="신고" hidden>
+      <h2>관리자 신고함</h2>
+      <div class="tabs" role="tablist" id="report-status-tabs">
+        <button type="button" role="tab" data-status="PENDING" aria-selected="true">대기 중</button>
+        <button type="button" role="tab" data-status="DONE" aria-selected="false">처리됨</button>
+      </div>
+      <p class="message" id="report-message"></p>
+      <div id="report-list"></div>
+      <div class="pagination" id="report-pager"></div>
+      <div class="admin-detail" id="report-detail" hidden></div>
+    </section>
+
+    <section class="panel" data-panel="content" aria-label="글·댓글" hidden>
+      <h2>글·댓글</h2>
+      <form class="admin-filter" id="post-search">
+        <div>
+          <label for="post-blog">블로그 번호</label>
+          <input type="text" id="post-blog" inputmode="numeric" pattern="[0-9]*">
+        </div>
+        <div class="grow">
+          <label for="post-q">제목</label>
+          <input type="search" id="post-q" maxlength="30">
+        </div>
+        <div>
+          <label for="post-status">상태</label>
+          <select id="post-status">
+            <option value="">전체</option>
+            <option value="VISIBLE">보임</option>
+            <option value="HIDDEN">숨김</option>
+            <option value="DELETED">삭제(30일 안)</option>
+          </select>
+        </div>
+        <button type="submit">찾기</button>
+      </form>
+      <p class="message" id="post-message"></p>
+      <div id="post-list"></div>
+      <div class="pagination" id="post-pager"></div>
+      <div class="admin-detail" id="post-detail" hidden></div>
+    </section>
+
+    <section class="panel" data-panel="actions" aria-label="활동 기록" hidden>
+      <h2>관리자 활동 기록</h2>
+      <form class="admin-filter" id="action-search">
+        <div>
+          <label for="action-type">종류</label>
+          <select id="action-type">
+            <option value="">전체</option>
+          </select>
+        </div>
+        <div>
+          <label for="action-admin">관리자 번호</label>
+          <input type="text" id="action-admin" inputmode="numeric" pattern="[0-9]*">
+        </div>
+        <div>
+          <label for="action-target-type">대상</label>
+          <select id="action-target-type">
+            <option value="">전체</option>
+            <option value="USER">회원</option>
+            <option value="BLOG">블로그</option>
+            <option value="POST">글</option>
+            <option value="COMMENT">댓글</option>
+            <option value="REPORT">신고</option>
+          </select>
+        </div>
+        <div>
+          <label for="action-target-id">대상 번호</label>
+          <input type="text" id="action-target-id" inputmode="numeric" pattern="[0-9]*">
+        </div>
+        <div>
+          <label for="action-from">시작일</label>
+          <input type="date" id="action-from">
+        </div>
+        <div>
+          <label for="action-to">종료일</label>
+          <input type="date" id="action-to">
+        </div>
+        <button type="submit">보기</button>
+      </form>
+      <p class="message" id="action-message"></p>
+      <div id="action-list"></div>
+      <div class="pagination" id="action-pager"></div>
+    </section>
+
+    <section class="panel" data-panel="stats" aria-label="통계" hidden>
+      <h2>운영 통계</h2>
+      <p class="message" id="stats-message"></p>
+      <div class="admin-stats" id="stats-cards"></div>
+      <div id="stats-daily"></div>
+    </section>
+  </main>
+  <script src="/js/api.js"></script>
+  <script src="/js/session.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/admin-common.js"></script>
+  <script src="/js/admin-members.js"></script>
+</body>
+</html>

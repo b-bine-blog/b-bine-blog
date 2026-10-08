@@ -2,6 +2,7 @@
 // 메뉴 글자는 textContent로만 넣는다(D-64).
 // 로그인하면 오른쪽 내 메뉴에 종 아이콘을 넣고 알림 사이드바(notifications.js)를 시작한다(003 T012, FR-028).
 // 메인과 모든 개별 블로그 화면이 이 파일을 같이 써서 어디서나 같은 종 아이콘이 보인다(4.2).
+// 메인 관리자는 "관리자" 링크가 보이고 "내 블로그·블로그 만들기"는 보이지 않는다(005 T010, D-90).
 (function () {
   'use strict';
 
@@ -46,7 +47,12 @@
 
     var right = document.createElement('div');
     right.className = 'site-header__right';
-    if (me) {
+    if (me && me.admin) {
+      // 메인 관리자는 블로그 활동을 하지 않으므로 "내 블로그·블로그 만들기" 대신 관리자 화면 링크(005 T010, D-90)
+      right.appendChild(link('/admin', '관리자'));
+      right.appendChild(bellButton());
+      right.appendChild(profileMenu(me));
+    } else if (me) {
       right.appendChild(link('/me/blogs.html', '내 블로그'));
       right.appendChild(bellButton());
       right.appendChild(profileMenu(me));
@@ -77,7 +83,9 @@
     list.hidden = true;
     toggle.setAttribute('aria-controls', list.id);
     list.appendChild(link('/me/index.html', '내 정보'));
-    list.appendChild(link('/blogs/new.html', '블로그 만들기'));
+    if (!me.admin) {
+      list.appendChild(link('/blogs/new.html', '블로그 만들기'));
+    }
     var logout = document.createElement('button');
     logout.type = 'button';
     logout.textContent = '로그아웃';

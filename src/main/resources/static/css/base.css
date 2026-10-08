@@ -405,3 +405,49 @@ main.post-page .post-content { margin: 0; padding: 32px 40px 36px; border: 0; bo
   .post-card__spacer { display: none; }
 }
 
+
+/* 005 관리자 화면 (T009, SC-010): 같은 초록 틀(.panel, .tabs)을 쓰고, 표는 좁은 화면에서 카드로 바뀐다 */
+main.admin { max-width: 1120px; }
+main.admin > .panel { margin-top: 12px; }
+.admin-filter { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: flex-end; }
+.admin-filter > div { min-width: 140px; }
+.admin-filter label { margin-top: 0; font-size: 0.875rem; }
+.admin-filter input[type="date"] { padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; font: inherit; }
+.admin-filter button { margin-top: 0; }
+.admin-table { width: 100%; border-collapse: collapse; margin-top: 12px; background: var(--surface); font-size: 0.925rem; }
+.admin-table th, .admin-table td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+.admin-table th { background: var(--green-50); color: var(--green-900); font-size: 0.85rem; white-space: nowrap; }
+.admin-table tr.is-clickable { cursor: pointer; }
+.admin-table tr.is-clickable:hover, .admin-table tr.is-clickable:focus { background: var(--green-50); outline: none; }
+.admin-detail { margin-top: 16px; padding-top: 12px; border-top: 2px solid var(--green-100); }
+.admin-detail h3 { margin: 16px 0 6px; font-size: 1.05rem; }
+.admin-detail .row button, .admin-actions button { margin-top: 0; }
+.admin-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.admin-dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 14px; margin: 8px 0; }
+.admin-dl dt { color: var(--muted); font-size: 0.875rem; }
+.admin-dl dd { margin: 0; overflow-wrap: anywhere; }
+.admin-pre { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--green-50); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; max-height: 320px; overflow: auto; margin: 8px 0; }
+.admin-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin: 8px 0 16px; }
+.stat-card { background: var(--green-50); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; }
+.stat-card__label { color: var(--muted); font-size: 0.875rem; }
+.stat-card__value { color: var(--green-800); font-size: 1.9rem; font-weight: 800; }
+.status-chip { display: inline-block; padding: 0 8px; border-radius: 999px; background: var(--green-100); color: var(--green-800); font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
+.status-chip--warn { background: var(--accent-warm); color: #8a5a00; }
+.status-chip--danger { background: #fdecea; color: var(--danger); }
+button.button-small { margin-top: 0; padding: 5px 12px; font-size: 0.875rem; }
+button.button-danger { background: var(--danger); }
+button.button-danger:hover:not(:disabled) { background: #9e2f23; }
+button.button-light { background: var(--green-50); color: var(--green-800); border: 1px solid var(--line); }
+button.button-light:hover:not(:disabled) { background: var(--green-100); }
+.admin-hidden-note { color: var(--danger); font-weight: 600; }
+@media (max-width: 720px) {
+  .admin-table thead { display: none; }
+  .admin-table, .admin-table tbody, .admin-table tr, .admin-table td { display: block; width: 100%; }
+  .admin-table { background: transparent; }
+  .admin-table tr { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); margin-bottom: 8px; padding: 6px 12px; }
+  .admin-table td { border: 0; padding: 3px 0; }
+  .admin-table td::before { content: attr(data-label); display: inline-block; min-width: 6.5em; margin-right: 8px; color: var(--muted); font-size: 0.8rem; }
+  .admin-filter > div { flex: 1 1 100%; }
+  .admin-dl { grid-template-columns: minmax(0, 1fr); }
+  .admin-dl dd { margin-bottom: 6px; }
+}

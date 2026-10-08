@@ -29,6 +29,8 @@ class OpenApiConformanceTest extends IntegrationTestBase {
     static final Path BOARD_CONTRACT = Path.of("specs/004-board/contracts/board-api.yaml");
     /** 003 소셜·알림 계약 (003 T046). */
     static final Path SOCIAL_CONTRACT = Path.of("specs/003-social-notification/contracts/social-api.yaml");
+    /** 005 관리자 계약 (005 T053). */
+    static final Path ADMIN_CONTRACT = Path.of("specs/005-admin-moderation/contracts/admin-api.yaml");
     static final Set<String> HTTP_METHODS = Set.of("get", "post", "put", "patch", "delete");
     /** 화면이 Turnstile 사이트 키를 읽는 설정 조회. 회원 기능 계약 밖이다(T040). */
     static final Set<String> OUTSIDE_CONTRACT = Set.of("GET /api/public-config");
@@ -106,6 +108,7 @@ class OpenApiConformanceTest extends IntegrationTestBase {
         extra.removeAll(contractOperations(BLOG_CONTRACT));
         extra.removeAll(contractOperations(BOARD_CONTRACT));
         extra.removeAll(contractOperations(SOCIAL_CONTRACT));
+        extra.removeAll(contractOperations(ADMIN_CONTRACT));
         extra.removeAll(OUTSIDE_CONTRACT);
         assertThat(extra).isEmpty();
     }
