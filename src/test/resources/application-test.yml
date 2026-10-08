@@ -1,0 +1,23 @@
+# 테스트 설정 (T022). DB 접속 정보는 Testcontainers(@ServiceConnection)가 채운다.
+spring:
+  mail:
+    host: localhost
+    port: 3025
+    username: ""
+    password: ""
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+            required: false
+
+auth:
+  # 테스트 전용 값. 실제 비밀 값은 환경변수로만 넣는다.
+  jwt-secret: test-jwt-secret-0123456789abcdef0123456789abcdef
+  code-hash-secret: test-code-hash-secret-0123456789abcdef
+  turnstile:
+    # Cloudflare가 제공하는 항상 통과하는 테스트 키(R-07)
+    site-key: 1x00000000000000000000AA
+    secret-key: 1x0000000000000000000000000000000AA

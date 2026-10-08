@@ -1,0 +1,83 @@
+package com.mainblog.common.config;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mainblog.common.error.ErrorCode;
+import com.mainblog.common.error.ErrorResponse;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy;
+
+/**
+ * 보안 설정 (T009).
+ * CSRF는 쿠키(XSRF-TOKEN) + 헤더(X-XSRF-TOKEN) 방식(SEC-10, R-12), 세션 없음(SCL-01),
+ * 보안 헤더(SEC-12), bcrypt(SEC-01, D-81, R-09).
+ */
+@Configuration
+public class SecurityConfig {
+
+    static final String CSP = "default-src 'self'; "
+            + "script-src 'self' https://challenges.cloudflare.com; "
+            + "frame-src https://challenges.cloudflare.com";
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationEntryPoint entryPoint)
+            throws Exception {
+        // api.js가 쿠키 값을 그대로 헤더에 담으므로 XOR 마스킹 없는 처리기를 쓴다.
+        // 요청 속성 이름을 비워 토큰을 매 요청 바로 읽게 해, 모든 응답에 XSRF-TOKEN 쿠키가 실린다.
+        CsrfTokenRequestAttributeHandler csrfHandler = new CsrfTokenRequestAttributeHandler();
+        csrfHandler.setCsrfRequestAttributeName(null);
+
+        http
+                .csrf(csrf -> csrf
+                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .csrfTokenRequestHandler(csrfHandler))
+                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .formLogin(AbstractHttpConfigurer::disable)
+                .logout(AbstractHttpConfigurer::disable)
+                .requestCache(AbstractHttpConfigurer::disable)
+                .headers(h -> h
+                        .frameOptions(f -> f.deny())
+                        .contentTypeOptions(c -> {})
+                        .contentSecurityPolicy(c -> c.policyDirectives(CSP))
+                        .httpStrictTransportSecurity(hsts -> hsts.includeSubDomains(true).maxAgeInSeconds(31536000))
+                        .referrerPolicy(r -> r.policy(ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)))
+                .exceptionHandling(e -> e.authenticationEntryPoint(entryPoint))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/members/nickname-availability").permitAll()
+                        .requestMatchers("/api/members/me/**").authenticated()
+                        .requestMatchers("/api/**").authenticated()
+                        // 정적 화면(D-66). 화면이 부르는 API에서 권한을 확인한다.
+                        .anyRequest().permitAll());
+        return http.build();
+    }
+
+    /** 로그인이 필요한 API에 토큰 없이 오면 401 UNAUTHENTICATED (contracts의 Unauthenticated). */
+    @Bean
+    public AuthenticationEntryPoint authenticationEntryPoint(ObjectMapper objectMapper) {
+        return (request, response, ex) -> {
+            ErrorCode code = ErrorCode.UNAUTHENTICATED;
+            response.setStatus(code.status().value());
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            response.setCharacterEncoding("UTF-8");
+            objectMapper.writeValue(response.getOutputStream(), ErrorResponse.of(code, null));
+        };
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder(10);
+    }
+}
