@@ -142,7 +142,7 @@ description: "005 메인 관리자·제재 구현 작업 목록"
 
 ## 6단계: 사용자 스토리 4 - 블로그·블로그장 신고 처리 (P2)
 
-- [ ] T033 [P] [US4] `admin/AdminReportIntegrationTest` (US4-1~8, FR-030~FR-034, D-93, D-102 #15·#16, D-103 #18)
+- [X] T033 [P] [US4] `admin/AdminReportIntegrationTest` (US4-1~8, FR-030~FR-034, D-93, D-102 #15·#16, D-103 #18)
   - 신고함
     - `route = 'ADMIN'` 4종(블로그·블로그장·블로그장 글·메인 프로필)만 나온다. 멤버 글 신고(BLOG)는 없고, 블로그장 신고함에는 ADMIN 신고가 없다
     - 대기 중은 오래된 순, 처리됨은 최근 순
@@ -159,9 +159,9 @@ description: "005 메인 관리자·제재 구현 작업 목록"
   - 알림: `REPORT_RESOLVED`. 신고자가 `report_result`를 껐으면 0건(처리·기록은 남음)
   - 신고 5건이 쌓여도 자동 조치 없음
   - 기록: `REPORT_HANDLE`, 조치 행과 `owner_warnings.report_id`
-- [ ] T034 [US4] `admin/application/AdminReportService.java`를 만든다. 목록·상세, 처리(블로그 행 → 신고 행 잠금, R-08·R-09 서비스 호출, 알림, 기록) (research R-10)
-- [ ] T035 [US4] `admin/api/AdminReportController.java`를 만든다. `GET /api/admin/reports`, `GET /api/admin/reports/{reportId}`, `POST /api/admin/reports/{reportId}/resolution` (contracts)
-- [ ] T036 [US4] 화면 `static/js/admin-reports.js`: 신고 탭을 만든다. 대기·처리 탭, 상세(당시 내용 textContent), 결과 선택·사유 입력·확인 창
+- [X] T034 [US4] `admin/application/AdminReportService.java`를 만든다. 목록·상세, 처리(블로그 행 → 신고 행 잠금, R-08·R-09 서비스 호출, 알림, 기록) (research R-10)
+- [X] T035 [US4] `admin/api/AdminReportController.java`를 만든다. `GET /api/admin/reports`, `GET /api/admin/reports/{reportId}`, `POST /api/admin/reports/{reportId}/resolution` (contracts)
+- [X] T036 [US4] 화면 `static/js/admin-reports.js`: 신고 탭을 만든다. 대기·처리 탭, 상세(당시 내용 textContent), 결과 선택·사유 입력·확인 창
 
 ---
 
@@ -286,3 +286,4 @@ description: "005 메인 관리자·제재 구현 작업 목록"
 6. **T029** 002 `DelegationIntegrationTest`의 "박탈된 사람도 멤버로서 폐쇄 알림을 받는다" 확인을 "받지 않는다"로 바꿨다. 005 FR-024·US3-5("박탈된 사람을 제외한 멤버 전원과 구독자")가 002 구현보다 뒤의 결정이라서다. `OwnerSuccessionService.revokeOwner`가 박탈된 사람을 즉시 알림에서 빼고, 3일 전·1일 전 알림은 `owner_revocations`(이 블로그·이 폐쇄 예정 시각)로 뺀다.
 7. **T029 (사용자 확인 필요)** 박탈 때 받는 멤버에게 가는 `DELEGATION_CANCELED` 알림은 002에 이미 있는 종류를 그대로 써서 탭이 "블로그"다. data-model 알림 표는 "운영" 탭으로 적었지만, 종류의 탭을 바꾸면 002의 위임 취소 알림(블로그장에게 가는 것)까지 바뀌어 그대로 두었다. 끌 수 없는 것은 같다.
 8. **T032** 경고 확인 창의 "기준 횟수"는 블로그 상세 응답에 없어(계약 `BlogDetail`) "기준 횟수(기본 3번)"로 적었다. 실제 판단과 "3번 중 n번" 알림 문구는 서버 설정값(`admin.warning.revoke-threshold`)을 쓴다.
+9. **T034** 신고 처리에서 "처리 대상이 지금 블로그장인지" 확인은 경고·강퇴뿐 아니라 블로그 폐쇄에도 한다(계약 설명대로). 문제 없음은 확인하지 않는다. 신고 사유는 003처럼 코드(SPAM 등)로 주고, 화면이 `/api/reports/reasons`로 이름을 붙인다.
