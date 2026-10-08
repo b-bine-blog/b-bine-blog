@@ -360,3 +360,47 @@ a.author-link { color: inherit; }
 .settings-list { list-style: none; padding: 0; margin: 8px 0; }
 .settings-list li { padding: 6px 0; border-bottom: 1px solid var(--line); }
 .settings-list label.inline { color: var(--text); font-size: 0.95rem; }
+
+/* 글 상세(2026-10-08 꾸밈): 글을 한 장의 카드로, 위에 나뭇잎 띠, 아래 버튼 줄, 댓글은 따로 카드 */
+main.post-page { max-width: 820px; }
+.post-back { margin: 0 0 14px; }
+.post-back a { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px 6px 10px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); color: var(--green-800); font-weight: 600; text-decoration: none; font-size: 0.92rem; }
+.post-back a::before { content: ""; width: 16px; height: 16px; background: url("/img/icon/arrow-left.svg") center / contain no-repeat; }
+.post-back a:hover { border-color: var(--green-500); }
+.post-back a:empty { display: none; }
+.post-page .post-card { padding: 0; overflow: hidden; }
+.post-card__head { position: relative; padding: 28px 28px 18px; border-bottom: 1px solid var(--line);
+  background: url("/img/leaf/leaf-pale.svg") right -20px top -26px / 110px no-repeat, linear-gradient(180deg, var(--green-50), var(--surface)); }
+.post-card__head::before { content: ""; position: absolute; left: 0; top: 0; right: 0; height: 5px; background: linear-gradient(90deg, var(--green-700), var(--green-500)); }
+.post-page .post-title { margin: 0 0 8px; font-size: 1.85rem; padding-right: 60px; }
+.post-card__meta { margin: 0; }
+.post-card__meta a { color: var(--green-800); font-weight: 600; }
+main.post-page .post-content { margin: 0; padding: 24px 28px; border: 0; border-radius: 0; box-shadow: none; min-height: 120px; }
+.post-page .post-card > .chips { margin: 0; padding: 0 28px 16px; }
+.post-page .post-card > .chips:empty { display: none; }
+.post-page .post-card__actions { margin: 0; padding: 14px 28px; border-top: 1px solid var(--line); background: var(--green-50); }
+.post-card__spacer { flex: 1; }
+.post-page .post-card > .message:empty { display: none; }
+.post-page .post-card > .message { margin: 0; padding: 0 28px 14px; }
+.like-button { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 7px 16px; background: var(--surface); color: var(--green-800); border: 1px solid var(--green-500); }
+.like-button::before { content: ""; width: 16px; height: 16px; background: url("/img/icon/heart.svg") center / contain no-repeat; }
+.like-button[aria-pressed="true"] { background: var(--green-700); color: #fff; border-color: var(--green-700); }
+.like-button[aria-pressed="true"]::before { background-image: url("/img/icon/heart-filled.svg"); }
+.post-page .comments-card { margin-top: 20px; }
+.comments-card h2 { margin-top: 0; display: flex; align-items: center; gap: 8px; }
+.count-badge { display: inline-block; min-width: 26px; padding: 1px 8px; border-radius: 999px; background: var(--green-100); color: var(--green-800); font-size: 0.85rem; text-align: center; }
+.comment-form__foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; }
+.comment-form__foot button { margin: 0; }
+.comment-form__foot .counter { margin: 0; }
+.post-page .comment { border-color: var(--line); padding: 10px 14px; }
+.post-page .comment--reply { background: var(--green-50); border-left: 3px solid var(--green-500); }
+@media (max-width: 600px) {
+  .post-card__head { padding: 22px 16px 14px; }
+  .post-page .post-title { font-size: 1.5rem; padding-right: 40px; }
+  .post-card__head { background-size: 80px; background-position: right -16px top -20px, 0 0; }
+  main.post-page .post-content { padding: 18px 16px; }
+  .post-page .post-card > .chips, .post-page .post-card > .message { padding-left: 16px; padding-right: 16px; }
+  .post-page .post-card__actions { padding: 12px 16px; }
+  .post-card__spacer { display: none; }
+}
+
