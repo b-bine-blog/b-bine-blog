@@ -45,6 +45,8 @@ public class PostListService {
                 args.add(categoryId);
             }
         }
+        // 내가 차단한 회원의 글은 빼고, 둘 다 이 블로그 멤버면 보인다(003 T043, FR-017, FR-018, D-102 #11)
+        where += PostVisibility.notBlocked(BlogPermissionService.currentUserId(), args);
         return reader.page(where, args, LATEST, p, s);
     }
 

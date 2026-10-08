@@ -185,6 +185,35 @@ public class JoinService {
                 r.getRequestedAt()));
     }
 
+    /**
+     * 블로그장이 회원을 차단하는 순간, 그가 블로그장인 블로그들에 그 회원이 낸 대기 중 신청을 자동 거절한다
+     * (003 T042, FR-020, research R-13, D-102 #13). 일반 거절과 같이 AUTO_REJECTED·처리 시각·JOIN_REJECTED 알림이고,
+     * 처리 시각으로 7일 재신청 규칙이 걸린다. 승인과 겹치지 않게 블로그 행을 잠근다. 부블로그장의 차단은 영향 없음.
+     * BlockService가 같은 트랜잭션에서 부른다. 거절한 건수를 돌려준다.
+     */
+    public int rejectPendingBlockedByOwner(long ownerId, long blockedId) {
+        List<Long> blogIds = jdbc.queryForList("SELECT r.blog_id FROM blog_join_requests r JOIN blog_members m "
+                + "ON m.blog_id = r.blog_id AND m.user_id = ? AND m.role = 'OWNER' "
+                + "WHERE r.user_id = ? AND r.status = 'PENDING' ORDER BY r.blog_id", Long.class, ownerId, blockedId);
+        int count = 0;
+        LocalDateTime now = LocalDateTime.now(clock);
+        for (Long blogId : blogIds) {
+            Blog blog = blogRepository.findByIdForUpdate(blogId).orElse(null);
+            if (blog == null) {
+                continue;
+            }
+            BlogJoinRequest r = requestRepository.findFirstByBlogIdAndUserIdAndStatus(blogId, blockedId,
+                    JoinRequestStatus.PENDING).orElse(null);
+            if (r == null) {
+                continue; // 잠그는 사이 처리·취소됨
+            }
+            r.process(JoinRequestStatus.AUTO_REJECTED, ownerId, now);
+            notifyResult(r, blog, false);
+            count++;
+        }
+        return count;
+    }
+
     /** 폐쇄될 때 대기 중인 신청을 자동 거절하고 알린다(D-98 #15). BlogClosingService가 부른다. */
     public int rejectAllPendingOnClose(Blog blog, LocalDateTime now) {
         List<BlogJoinRequest> pending = requestRepository.findAllByBlogIdAndStatus(blog.getId(),

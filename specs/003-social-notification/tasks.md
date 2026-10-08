@@ -123,10 +123,10 @@ description: "003 소셜·알림 구현 작업 목록"
 
 ## 10단계: 사용자 스토리 8 - 회원 차단 (P3)
 
-- [ ] T041 [P] [US8] `src/test/java/com/mainblog/social/BlockIntegrationTest.java`: 서로 팔로우하던 A가 B를 차단하면 두 방향 팔로우 삭제, A의 피드·검색·태그·멤버가 아닌 블로그 K 글 목록·댓글에서 B 빠짐, 둘 다 멤버인 블로그 J에서는 보임, B에게는 A 글이 그대로 보임, 차단 중 서로 팔로우 403, B의 댓글·대댓글·좋아요·구독은 A에게 알림 없음·끌 수 없는 알림은 그대로, 블로그장 O가 B를 차단하면 대기 중 신청 자동 거절 + JOIN_REJECTED + 7일 안 재신청 409, 차단 뒤 신청도 자동 거절(기존), 부블로그장의 차단은 신청에 영향 없음, 해제해도 팔로우 안 돌아옴, 차단 목록 닉네임·날짜·20개 페이지, 자기 자신 400, 관리자 403, B가 받는 어떤 응답에도 차단 사실 없음 (US8, SC-011, D-102 #10~#13)
-- [ ] T042 [US8] `src/main/java/com/mainblog/social/application/BlockService.java`와 `src/main/java/com/mainblog/social/api/BlockController.java`(`POST·DELETE /api/users/{userId}/block`, `GET /api/me/blocks`)를 만들고, `src/main/java/com/mainblog/blog/application/JoinService.java`에 `rejectPendingBlockedByOwner(ownerId, blockedId)`(블로그 행 잠금, AUTO_REJECTED, 처리 시각, JOIN_REJECTED)를 더한다 (FR-016, FR-019, FR-020, research R-13)
-- [ ] T043 [US8] `src/main/java/com/mainblog/board/application/PostListService.java`의 `blogPosts`에 `PostVisibility.notBlocked`를 붙인다(같은 블로그 멤버 예외는 조건에 이미 있음) (FR-017, FR-018)
-- [ ] T044 [US8] `src/main/resources/static/js/profile.js`에 차단·해제 버튼(확인 창)을 붙이고, 화면 `src/main/resources/static/me/blocks.html` + `src/main/resources/static/js/me-blocks.js`(목록·해제·번호 페이지)를 만든다 (FR-016)
+- [X] T041 [P] [US8] `src/test/java/com/mainblog/social/BlockIntegrationTest.java`: 서로 팔로우하던 A가 B를 차단하면 두 방향 팔로우 삭제, A의 피드·검색·태그·멤버가 아닌 블로그 K 글 목록·댓글에서 B 빠짐, 둘 다 멤버인 블로그 J에서는 보임, B에게는 A 글이 그대로 보임, 차단 중 서로 팔로우 403, B의 댓글·대댓글·좋아요·구독은 A에게 알림 없음·끌 수 없는 알림은 그대로, 블로그장 O가 B를 차단하면 대기 중 신청 자동 거절 + JOIN_REJECTED + 7일 안 재신청 409, 차단 뒤 신청도 자동 거절(기존), 부블로그장의 차단은 신청에 영향 없음, 해제해도 팔로우 안 돌아옴, 차단 목록 닉네임·날짜·20개 페이지, 자기 자신 400, 관리자 403, B가 받는 어떤 응답에도 차단 사실 없음 (US8, SC-011, D-102 #10~#13)
+- [X] T042 [US8] `src/main/java/com/mainblog/social/application/BlockService.java`와 `src/main/java/com/mainblog/social/api/BlockController.java`(`POST·DELETE /api/users/{userId}/block`, `GET /api/me/blocks`)를 만들고, `src/main/java/com/mainblog/blog/application/JoinService.java`에 `rejectPendingBlockedByOwner(ownerId, blockedId)`(블로그 행 잠금, AUTO_REJECTED, 처리 시각, JOIN_REJECTED)를 더한다 (FR-016, FR-019, FR-020, research R-13)
+- [X] T043 [US8] `src/main/java/com/mainblog/board/application/PostListService.java`의 `blogPosts`에 `PostVisibility.notBlocked`를 붙인다(같은 블로그 멤버 예외는 조건에 이미 있음) (FR-017, FR-018)
+- [X] T044 [US8] `src/main/resources/static/js/profile.js`에 차단·해제 버튼(확인 창)을 붙이고, 화면 `src/main/resources/static/me/blocks.html` + `src/main/resources/static/js/me-blocks.js`(목록·해제·번호 페이지)를 만든다 (FR-016)
 
 ---
 
