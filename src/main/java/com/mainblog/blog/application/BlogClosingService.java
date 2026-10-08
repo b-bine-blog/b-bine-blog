@@ -127,7 +127,7 @@ public class BlogClosingService {
                 + "ORDER BY close_scheduled_at, id", Long.class, now);
     }
 
-    /** 폐쇄하고 대기 중인 참여 신청·해제 문의를 자동 거절한다(FR-074, D-98 #15). */
+    /** 폐쇄하고 대기 중인 참여 신청·해제 문의를 자동 거절한다(FR-074, D-98 #15). 구독은 같은 트랜잭션에서 지운다(003 T025, D-102 #5). */
     @Transactional
     public boolean closeIfDue(long blogId, LocalDateTime now) {
         Blog blog = lock(blogId);
@@ -139,6 +139,7 @@ public class BlogClosingService {
         joinService.rejectAllPendingOnClose(blog, now);
         rejectPendingAppeals(blog, now);
         cancelPendingDelegations(blogId, now);
+        jdbc.update("DELETE FROM blog_subscriptions WHERE blog_id = ?", blogId);
         return true;
     }
 

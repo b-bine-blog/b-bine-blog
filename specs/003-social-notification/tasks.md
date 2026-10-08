@@ -84,12 +84,12 @@ description: "003 소셜·알림 구현 작업 목록"
 
 ## 6단계: 사용자 스토리 4 - 회원 팔로우와 블로그 구독 (P2)
 
-- [ ] T022 [P] [US4] `src/test/java/com/mainblog/social/FollowIntegrationTest.java`: 팔로우 → 행 1개·팔로워 수 +1·NEW_FOLLOWER(FOLLOW 탭) 1건, 취소 → -1, 취소 후 다시 팔로우해도 알림 1건, 동시 10번 → 행 1개·알림 1건, 자기 자신 400 `SELF_NOT_ALLOWED`, 관리자 403 `ADMIN_NOT_ALLOWED`, 비회원 401, 탈퇴·관리자 대상 404, 어느 방향이든 차단이 있으면 403 `FOLLOW_NOT_ALLOWED`(문구에 "차단" 없음), 1분 31번째 429 `RATE_LIMITED`, new_follower 끄면 알림 없음, 팔로우 뒤 피드 팔로우 탭에 그 회원 글 (US4-1~3·7·8, SC-007, D-102 #1·#3·#4·#11)
-- [ ] T023 [P] [US4] `src/test/java/com/mainblog/social/SubscriptionIntegrationTest.java`: 공개 블로그 구독 → 블로그장에게 BLOG_SUBSCRIBED(SUBSCRIBE 탭) 1건·다시 구독해도 1건, 블로그장 400, 관리자 403, 비공개 블로그 비멤버 404·멤버 성공, 일부 공개는 공유 쿠키로 들어온 회원 성공·비회원 401·자동 구독 없음, 구독 목록에서 링크 없이 들어감, 1분 31번째 429, 블로그가 폐쇄되면(04:00) 구독 행 삭제·내 구독 목록에서 사라짐·별도 알림 없음, 블로그장이 차단한 회원의 구독은 알림 없음 (US4-4~6, FR-007~FR-011, D-102 #1·#2·#4·#5)
-- [ ] T024 [US4] `src/main/java/com/mainblog/social/application/FollowService.java`와 `src/main/java/com/mainblog/social/api/FollowController.java`(`POST·DELETE /api/users/{userId}/follow`)를 만든다. 요청 제한 → 관리자 → 대상 → 자기 자신 → 차단 순서로 확인하고, `INSERT IGNORE`가 1행일 때만 NEW_FOLLOWER를 쓴다 (research R-10)
-- [ ] T025 [US4] `src/main/java/com/mainblog/blog/application/SubscriptionService.java`에 요청 제한·관리자·블로그장 확인과 BLOG_SUBSCRIBED 알림을 더하고, `BlogClosingService.java`의 `closeIfDue`가 폐쇄와 같은 트랜잭션에서 그 블로그의 구독을 지우게 한다 (research R-11, D-102 #5)
-- [ ] T026 [US4] `src/main/resources/static/js/profile.js`에 팔로우·취소 버튼(로그인 회원, 본인·관리자에게는 숨김, 429·403 문구 그대로 표시)을 붙인다
-- [ ] T027 [US4] `src/main/resources/static/js/blog-home.js`의 구독 버튼을 블로그장·관리자에게 숨기고, 400·429 응답의 `message`를 보여준다
+- [X] T022 [P] [US4] `src/test/java/com/mainblog/social/FollowIntegrationTest.java`: 팔로우 → 행 1개·팔로워 수 +1·NEW_FOLLOWER(FOLLOW 탭) 1건, 취소 → -1, 취소 후 다시 팔로우해도 알림 1건, 동시 10번 → 행 1개·알림 1건, 자기 자신 400 `SELF_NOT_ALLOWED`, 관리자 403 `ADMIN_NOT_ALLOWED`, 비회원 401, 탈퇴·관리자 대상 404, 어느 방향이든 차단이 있으면 403 `FOLLOW_NOT_ALLOWED`(문구에 "차단" 없음), 1분 31번째 429 `RATE_LIMITED`, new_follower 끄면 알림 없음, 팔로우 뒤 피드 팔로우 탭에 그 회원 글 (US4-1~3·7·8, SC-007, D-102 #1·#3·#4·#11)
+- [X] T023 [P] [US4] `src/test/java/com/mainblog/social/SubscriptionIntegrationTest.java`: 공개 블로그 구독 → 블로그장에게 BLOG_SUBSCRIBED(SUBSCRIBE 탭) 1건·다시 구독해도 1건, 블로그장 400, 관리자 403, 비공개 블로그 비멤버 404·멤버 성공, 일부 공개는 공유 쿠키로 들어온 회원 성공·비회원 401·자동 구독 없음, 구독 목록에서 링크 없이 들어감, 1분 31번째 429, 블로그가 폐쇄되면(04:00) 구독 행 삭제·내 구독 목록에서 사라짐·별도 알림 없음, 블로그장이 차단한 회원의 구독은 알림 없음 (US4-4~6, FR-007~FR-011, D-102 #1·#2·#4·#5)
+- [X] T024 [US4] `src/main/java/com/mainblog/social/application/FollowService.java`와 `src/main/java/com/mainblog/social/api/FollowController.java`(`POST·DELETE /api/users/{userId}/follow`)를 만든다. 요청 제한 → 관리자 → 대상 → 자기 자신 → 차단 순서로 확인하고, `INSERT IGNORE`가 1행일 때만 NEW_FOLLOWER를 쓴다 (research R-10)
+- [X] T025 [US4] `src/main/java/com/mainblog/blog/application/SubscriptionService.java`에 요청 제한·관리자·블로그장 확인과 BLOG_SUBSCRIBED 알림을 더하고, `BlogClosingService.java`의 `closeIfDue`가 폐쇄와 같은 트랜잭션에서 그 블로그의 구독을 지우게 한다 (research R-11, D-102 #5)
+- [X] T026 [US4] `src/main/resources/static/js/profile.js`에 팔로우·취소 버튼(로그인 회원, 본인·관리자에게는 숨김, 429·403 문구 그대로 표시)을 붙인다
+- [X] T027 [US4] `src/main/resources/static/js/blog-home.js`의 구독 버튼을 블로그장·관리자에게 숨기고, 400·429 응답의 `message`를 보여준다
 
 ---
 

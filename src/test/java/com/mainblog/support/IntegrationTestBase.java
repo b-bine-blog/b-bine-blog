@@ -174,10 +174,28 @@ public abstract class IntegrationTestBase {
         return keys.getKey().longValue();
     }
 
+    @Autowired
+    private com.mainblog.common.ratelimit.InMemoryRateLimiter rateLimiter;
+
     @BeforeEach
     void resetClockAndData() {
         clock.setTo(BASE_TIME);
         cleanDatabase();
+        clearRateLimits();
+    }
+
+    /**
+     * 메모리 요청 제한을 비운다(003). 회원 번호는 테이블을 비울 때 1부터 다시 시작하고 시계도 같은 시각으로 돌아가서,
+     * 회원 단위 제한(팔로우·구독·좋아요)이 앞선 테스트의 횟수를 이어받지 않게 한다.
+     */
+    private void clearRateLimits() {
+        try {
+            java.lang.reflect.Field f = com.mainblog.common.ratelimit.InMemoryRateLimiter.class.getDeclaredField("buckets");
+            f.setAccessible(true);
+            ((java.util.Map<?, ?>) f.get(org.springframework.test.util.AopTestUtils.getTargetObject(rateLimiter))).clear();
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     /** shedlock을 뺀 모든 테이블을 비운다. 외래 키 확인은 같은 연결 안에서만 끈다. */
