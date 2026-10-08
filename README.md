@@ -2,6 +2,28 @@
 
 티스토리형 블로그 플랫폼(메인블로그) 프로젝트입니다.
 
+## 내 컴퓨터에서 바로 써 보기
+
+준비물: JDK 21, Docker(Docker Desktop). 저장소 루트에서 아래 하나만 실행합니다.
+
+```bash
+./local/start.sh        # macOS·Linux
+local\start.bat         # Windows
+```
+
+`.env`를 로컬용 값으로 만들고, MySQL을 띄워 스키마와 테스트 데이터를 넣은 뒤 앱을 띄웁니다. 다 뜨면 http://localhost:8080 으로 들어갑니다.
+
+| 계정 | 비밀번호 | 들어 있는 것 |
+|---|---|---|
+| owner@local.test | Passw0rd! | 블로그 `travel-log`의 블로그장. 참여 신청 1건이 기다리는 중 |
+| member@local.test | Passw0rd! | `travel-log` 멤버, 블로그 `daily-note`의 블로그장 |
+| newbie@local.test | Passw0rd! | `travel-log`에 참여 신청한 회원 |
+| admin@local.test | Passw0rd! | 관리자 |
+
+블로그는 `http://localhost:8080/blog/travel-log`, 운영 화면은 뒤에 `/manage`를 붙입니다.
+새 계정으로 회원가입하려면 인증 메일이 필요해서 `.env`의 `MAIL_USERNAME`, `MAIL_PASSWORD`(Gmail 앱 비밀번호)를 채웁니다.
+멈출 때는 Ctrl+C, DB까지 지우고 처음부터 다시 넣으려면 `docker compose -f local/docker-compose.yml down -v`.
+
 ## 실행
 
 준비물: JDK 21, Docker(로컬 MySQL과 테스트용).
