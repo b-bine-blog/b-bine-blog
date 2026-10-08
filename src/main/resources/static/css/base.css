@@ -43,7 +43,7 @@ main {
 a { color: #1a5fb4; }
 
 label { display: block; margin-top: 12px; font-weight: 600; }
-input[type="text"], input[type="email"], input[type="password"], input[type="tel"] {
+input[type="text"], input[type="email"], input[type="password"], input[type="tel"], input[type="search"] {
   width: 100%;
   padding: 8px 10px;
   border: 1px solid #ccc;
