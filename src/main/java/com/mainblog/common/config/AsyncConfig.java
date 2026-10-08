@@ -32,7 +32,9 @@ public class AsyncConfig implements AsyncConfigurer {
 
     @Override
     public AsyncUncaughtExceptionHandler getAsyncUncaughtExceptionHandler() {
-        // 받는 주소는 개인정보라 로그에 남기지 않는다(4.6).
-        return (ex, method, params) -> log.warn("비동기 작업 실패: {} ({})", method.getName(), ex.toString());
+        // 받는 주소·인증번호는 개인정보라 로그에 남기지 않는다(4.6, 헌장 III).
+        // 메일 예외의 메시지에는 받는 주소가 들어 있으므로 예외 종류만 남긴다.
+        return (ex, method, params) -> log.warn("비동기 작업 실패: {} ({})", method.getName(),
+                ex.getClass().getSimpleName());
     }
 }

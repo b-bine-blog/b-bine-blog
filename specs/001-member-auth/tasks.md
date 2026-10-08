@@ -208,11 +208,11 @@ description: "001 회원 가입·로그인·계정 관리 구현 작업 목록"
 
 ## 9단계: 마무리 (Polish)
 
-- [ ] T072 [P] `src/test/java/com/mainblog/contract/OpenApiConformanceTest.java`: `specs/001-member-auth/contracts/member-auth-api.yaml`의 18개 경로가 모두 매핑돼 있는지 Spring의 RequestMappingHandlerMapping과 대조
-- [ ] T073 [P] `src/test/java/com/mainblog/perf/AuthResponseTimeTest.java`: 로그인·가입 발송·비밀번호 찾기·이메일 찾기 응답이 2초 이내(SC-010), 가입된·안 된 이메일의 발송 응답 시간 차이가 측정 오차 범위 안(R-08, D-28)
-- [ ] T074 quickstart.md의 확인 시나리오 20개를 로컬에서 실행하고, 결과(통과·실패와 이유)를 `specs/001-member-auth/quickstart.md` 아래 "확인 결과" 절에 날짜와 함께 적는다
-- [ ] T075 [P] `README.md`(저장소 루트)에 실행 방법(JDK 21, `.env` 준비, `./gradlew bootRun`, 테스트)과 문서 위치를 짧게 적는다
-- [ ] T076 `/security-review`를 돌려 지적 사항을 고친다: 쿠키 속성, CSRF 예외 경로 없음, 로그·오류 메시지에 이메일·전화번호·인증번호·토큰 원문이 없는지(헌장 I, III)
+- [X] T072 [P] `src/test/java/com/mainblog/contract/OpenApiConformanceTest.java`: `specs/001-member-auth/contracts/member-auth-api.yaml`의 18개 경로가 모두 매핑돼 있는지 Spring의 RequestMappingHandlerMapping과 대조
+- [X] T073 [P] `src/test/java/com/mainblog/perf/AuthResponseTimeTest.java`: 로그인·가입 발송·비밀번호 찾기·이메일 찾기 응답이 2초 이내(SC-010), 가입된·안 된 이메일의 발송 응답 시간 차이가 측정 오차 범위 안(R-08, D-28)
+- [X] T074 quickstart.md의 확인 시나리오 20개를 로컬에서 실행하고, 결과(통과·실패와 이유)를 `specs/001-member-auth/quickstart.md` 아래 "확인 결과" 절에 날짜와 함께 적는다
+- [X] T075 [P] `README.md`(저장소 루트)에 실행 방법(JDK 21, `.env` 준비, `./gradlew bootRun`, 테스트)과 문서 위치를 짧게 적는다
+- [X] T076 `/security-review`를 돌려 지적 사항을 고친다: 쿠키 속성, CSRF 예외 경로 없음, 로그·오류 메시지에 이메일·전화번호·인증번호·토큰 원문이 없는지(헌장 I, III)
 
 ---
 

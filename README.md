@@ -2,9 +2,45 @@
 
 티스토리형 블로그 플랫폼(메인블로그) 프로젝트입니다.
 
+## 실행
+
+준비물: JDK 21, Docker(로컬 MySQL과 테스트용).
+
+```bash
+# 1. 로컬 MySQL 8.0에 스키마 넣기 (원천은 Crowfoot 문서, docs/04-design/schema.sql)
+docker run -d --name mainblog-db -p 3306:3306 \
+  -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=mainblog \
+  -v "$PWD/docs/04-design/schema.sql:/docker-entrypoint-initdb.d/1-schema.sql:ro" \
+  -v "$PWD/docs/04-design/shedlock.sql:/docker-entrypoint-initdb.d/2-shedlock.sql:ro" \
+  mysql:8.0
+
+# 2. 환경변수: .env.example을 .env로 복사해 채운다. 실행할 때 자동으로 읽는다.
+cp .env.example .env
+#   DB_URL=jdbc:mysql://localhost:3306/mainblog
+#   DB_USERNAME=root / DB_PASSWORD=root
+#   JWT_SECRET, CODE_HASH_SECRET: 32바이트 이상 무작위 값 (예: openssl rand -base64 48)
+#   MAIL_*: Gmail 앱 비밀번호. 비워 두면 메일만 실패하고 화면 응답은 같다
+#   TURNSTILE_*: 로컬은 Cloudflare 테스트 키 1x00000000000000000000AA / 1x0000000000000000000000000000000AA
+
+# 3. 실행 → http://localhost:8080
+./gradlew bootRun
+```
+
+로컬 실행은 http이므로 쿠키의 Secure 속성 때문에 `localhost`로 접속합니다(브라우저가 localhost는 예외로 둡니다).
+숫자 규칙(만료 시간, 제한 횟수 등)은 모두 `src/main/resources/application.yml`의 설정값이고 환경변수로 바꿀 수 있습니다(D-68).
+
+## 테스트
+
+```bash
+./gradlew test
+```
+
+Testcontainers가 MySQL 8.0 컨테이너를 띄우고(`docs/04-design/schema.sql`), 메일은 GreenMail(SMTP 3025)로 받습니다. Docker가 떠 있어야 합니다.
+
 ## 문서
 
 - [CLAUDE.md](CLAUDE.md): AI 코딩 에이전트 작업 규칙
 - [.specify/memory/constitution.md](.specify/memory/constitution.md): 개발 원칙 (Spec Kit)
-- [specs/](specs/README.md): 기능별 명세
+- [specs/](specs/README.md): 기능별 명세. 001 회원 기능은 [specs/001-member-auth/](specs/001-member-auth/spec.md)
+  (API 계약 `contracts/`, 확인 방법 `quickstart.md`)
 - [docs/](docs/README.md): 원본 요구사항 문서와 결정 기록

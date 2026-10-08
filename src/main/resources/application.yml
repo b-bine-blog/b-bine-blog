@@ -5,6 +5,9 @@
 spring:
   application:
     name: mainblog
+  config:
+    # 로컬 실행 때 저장소 루트의 .env를 읽는다(.env.example 참고). 운영은 환경변수로 넣는다.
+    import: optional:file:.env[.properties]
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
@@ -87,3 +90,9 @@ member:
 
 file-storage:
   root: ${FILE_STORAGE_ROOT:./uploads}                  # D-75
+
+logging:
+  level:
+    # UNIQUE 위반 메시지("Duplicate entry 'a@b.com' ...")에 이메일·닉네임 원문이 들어가므로 끈다(헌장 III, 4.6).
+    # 위반은 서비스가 받아 NICKNAME_DUPLICATE 등으로 바꾸고, 그 밖의 DB 오류는 예외로 그대로 올라간다.
+    org.hibernate.engine.jdbc.spi.SqlExceptionHelper: OFF
