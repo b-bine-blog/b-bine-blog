@@ -104,24 +104,24 @@ description: "002 블로그 생성·참여·운영 구현 작업 목록"
 
 ### 테스트
 
-- [ ] T029 [P] [US2] `src/test/java/com/mainblog/blog/BlogListSearchIntegrationTest.java`를 만든다. US2 시나리오 1, 2, 12를 다룬다: 공개만 보이는지, 숨김을 빼는지, 인기순(멤버 수 → 최신), 10·20·30 이외 페이지 크기는 400, 검색어 2~20자 규칙, 태그 검색
-- [ ] T030 [P] [US2] `src/test/java/com/mainblog/blog/JoinRequestIntegrationTest.java`를 만든다. US2 시나리오 3~11과 13을 다룬다: 자유·승인제, 중복 대기, 7일 재신청(MutableClock 6일·8일), 취소 뒤 바로 재신청, 이미 멤버·블로그장, 차단 자동 거절, 블랙리스트 403, 관리자 403, 승인·거절 알림, 내 블로그 목록
+- [X] T029 [P] [US2] `src/test/java/com/mainblog/blog/BlogListSearchIntegrationTest.java`를 만든다. US2 시나리오 1, 2, 12를 다룬다: 공개만 보이는지, 숨김을 빼는지, 인기순(멤버 수 → 최신), 10·20·30 이외 페이지 크기는 400, 검색어 2~20자 규칙, 태그 검색
+- [X] T030 [P] [US2] `src/test/java/com/mainblog/blog/JoinRequestIntegrationTest.java`를 만든다. US2 시나리오 3~11과 13을 다룬다: 자유·승인제, 중복 대기, 7일 재신청(MutableClock 6일·8일), 취소 뒤 바로 재신청, 이미 멤버·블로그장, 차단 자동 거절, 블랙리스트 403, 관리자 403, 승인·거절 알림, 내 블로그 목록
 
 ### 구현
 
-- [ ] T031 [US2] `src/main/java/com/mainblog/blog/application/BlogQueryService.java`를 만든다 (FR-014, FR-015, research R-07)
+- [X] T031 [US2] `src/main/java/com/mainblog/blog/application/BlogQueryService.java`를 만든다 (FR-014, FR-015, research R-07)
   - 목록은 latest·popular 정렬로 만든다.
   - 검색은 FULLTEXT 구절 검색과 태그 일치 검색을 UNION으로 합친다.
   - 페이지 크기는 10·20·30만 받는다.
-- [ ] T032 [US2] `src/main/java/com/mainblog/blog/api/BlogController.java`에 `GET /api/blogs`, `GET /api/blogs/search`, `GET /api/me/blogs`를 더한다 (FR-014~FR-016)
-- [ ] T033 [US2] `src/main/java/com/mainblog/blog/application/JoinService.java`를 만든다 (FR-017~FR-024)
+- [X] T032 [US2] `src/main/java/com/mainblog/blog/api/BlogController.java`에 `GET /api/blogs`, `GET /api/blogs/search`, `GET /api/me/blogs`를 더한다 (FR-014~FR-016)
+- [X] T033 [US2] `src/main/java/com/mainblog/blog/application/JoinService.java`를 만든다 (FR-017~FR-024)
   - apply: research R-08의 확인 순서를 따른다. 신청자 행을 잠그고, member_count를 올리고, 알림을 보낸다.
   - approve·reject: 블로그 행을 잠그고 PENDING인지 다시 확인한다.
   - cancel: 신청자 본인만 할 수 있다.
-- [ ] T034 [US2] `src/main/java/com/mainblog/blog/api/JoinRequestController.java`를 만든다. 대상은 `POST`·`GET /api/blogs/{blogId}/join-requests`, `.../{requestId}/approval`, `.../rejection`, `DELETE /api/me/join-requests/{requestId}`이고, MEMBER_MANAGE는 `@PreAuthorize`로 확인한다
-- [ ] T035 [P] [US2] 메인 화면 `src/main/resources/static/index.html`, `js/blog-list.js`를 만든다. 최신·인기 탭과 번호 페이지를 두고, 10·20·30개 선택(기본 10)과 블로그 검색 칸을 둔다. 결과가 없으면 "검색 결과가 없습니다"를 보여 준다
-- [ ] T036 [P] [US2] 블로그 홈 화면 `js/blog-home.js`에 참여 신청·취소 버튼을 더한다. 대기 중이면 대기 표시를, 블랙리스트면 안내와 "문의하기"를 보여 준다
-- [ ] T037 [P] [US2] 내 블로그 화면 `src/main/resources/static/me/blogs.html`, `js/me-blogs.js`를 만든다. 운영하는 블로그와 참여한 블로그를 나눠 보여 주고, 부블로그장·폐쇄 예정을 표시한다. 상단 메뉴(`js/layout.js`)에 링크를 더한다
+- [X] T034 [US2] `src/main/java/com/mainblog/blog/api/JoinRequestController.java`를 만든다. 대상은 `POST`·`GET /api/blogs/{blogId}/join-requests`, `.../{requestId}/approval`, `.../rejection`, `DELETE /api/me/join-requests/{requestId}`이고, MEMBER_MANAGE는 `@PreAuthorize`로 확인한다
+- [X] T035 [P] [US2] 메인 화면 `src/main/resources/static/index.html`, `js/blog-list.js`를 만든다. 최신·인기 탭과 번호 페이지를 두고, 10·20·30개 선택(기본 10)과 블로그 검색 칸을 둔다. 결과가 없으면 "검색 결과가 없습니다"를 보여 준다
+- [X] T036 [P] [US2] 블로그 홈 화면 `js/blog-home.js`에 참여 신청·취소 버튼을 더한다. 대기 중이면 대기 표시를, 블랙리스트면 안내와 "문의하기"를 보여 준다
+- [X] T037 [P] [US2] 내 블로그 화면 `src/main/resources/static/me/blogs.html`, `js/me-blogs.js`를 만든다. 운영하는 블로그와 참여한 블로그를 나눠 보여 주고, 부블로그장·폐쇄 예정을 표시한다. 상단 메뉴(`js/layout.js`)에 링크를 더한다
 
 ---
 

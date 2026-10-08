@@ -51,6 +51,11 @@ abstract class BlogTestBase extends IntegrationTestBase {
         return new Member(id, email, loginAs(email, PW, false), new ArrayList<>());
     }
 
+    /** 시계를 크게 옮긴 뒤 만료된 액세스 토큰 대신 다시 로그인한다. */
+    Member relogin(Member m) throws Exception {
+        return new Member(m.id(), m.email(), loginAs(m.email(), PW, false), m.extraCookies());
+    }
+
     Member admin(String nickname) throws Exception {
         Member m = member(nickname);
         jdbc.update("UPDATE users SET role = 'ADMIN' WHERE id = ?", m.id());
@@ -67,7 +72,7 @@ abstract class BlogTestBase extends IntegrationTestBase {
     }
 
     Res getAs(Member who, String url) throws Exception {
-        return call(who, get(url));
+        return call(who, get(java.net.URI.create(url))); // 이미 인코딩된 주소를 다시 인코딩하지 않는다
     }
 
     Res postAs(Member who, String url, String json) throws Exception {

@@ -10,15 +10,19 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 /**
  * 블로그(blogs) (T004). 규칙은 data-model.md "blogs".
  * 주소는 만든 뒤 바꿀 수 없고(FR-009), 폐쇄 30일 뒤 정리에서만 NULL로 비운다(FR-008, D-86).
+ * member_count는 동시에 바뀌므로 BlogRepository.addMemberCount로만 고친다. 바뀐 컬럼만 UPDATE하게 해(@DynamicUpdate)
+ * 다른 필드를 고칠 때 예전 멤버 수로 덮어쓰지 않게 한다.
  */
 @Entity
 @Table(name = "blogs")
+@DynamicUpdate
 public class Blog extends BaseTimeEntity {
 
     @Id
@@ -100,14 +104,6 @@ public class Blog extends BaseTimeEntity {
 
     public void changeJoinPolicy(JoinPolicy joinPolicy) {
         this.joinPolicy = joinPolicy;
-    }
-
-    public void memberJoined() {
-        this.memberCount++;
-    }
-
-    public void memberLeft() {
-        this.memberCount = Math.max(0, memberCount - 1);
     }
 
     /** 폐쇄 예약(FR-073). 예정 시각 계산은 BlogClosingService가 한다. */

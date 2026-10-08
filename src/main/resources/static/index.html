@@ -9,11 +9,32 @@
 <body>
   <main>
     <h1>메인블로그</h1>
-    <!-- 메인 화면(블로그 목록·피드)은 002·004 명세에서 만든다. 지금은 회원 기능 확인용 자리 표시. -->
-    <p>메인 화면은 준비 중입니다.</p>
+    <form id="search-form" class="blog-search" role="search">
+      <label for="q" class="sr-only">블로그 검색</label>
+      <input id="q" name="q" type="search" maxlength="20" placeholder="블로그 이름·소개·태그 검색">
+      <button type="submit">검색</button>
+    </form>
+    <div class="blog-toolbar">
+      <div class="tabs" role="tablist">
+        <button type="button" role="tab" data-sort="latest">최신</button>
+        <button type="button" role="tab" data-sort="popular">인기</button>
+      </div>
+      <label>보기
+        <select id="size">
+          <option value="10">10개</option>
+          <option value="20">20개</option>
+          <option value="30">30개</option>
+        </select>
+      </label>
+    </div>
+    <p id="result-title" class="blog-list__meta"></p>
+    <p id="message" class="message" role="alert"></p>
+    <ul id="blogs" class="blog-list"></ul>
+    <nav id="pages" class="pagination" aria-label="페이지"></nav>
   </main>
   <script src="/js/api.js"></script>
   <script src="/js/session.js"></script>
   <script src="/js/layout.js"></script>
+  <script src="/js/blog-list.js"></script>
 </body>
 </html>

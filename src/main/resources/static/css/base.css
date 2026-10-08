@@ -95,3 +95,18 @@ select, textarea {
 table.data { width: 100%; border-collapse: collapse; background: #fff; font-size: 0.9rem; }
 table.data th, table.data td { border-bottom: 1px solid #eee; padding: 6px; text-align: left; vertical-align: top; }
 .table-wrap { overflow-x: auto; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.blog-search { display: flex; gap: 8px; }
+.blog-search input { flex: 1; min-width: 0; }
+.blog-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.blog-card { display: flex; gap: 12px; }
+.blog-card__cover { width: 72px; height: 72px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
+.blog-card__body { min-width: 0; }
+.blog-card__name { font-weight: 600; }
+.blog-card__desc { margin: 4px 0; overflow-wrap: anywhere; }
+.blog-card__tags .tag { margin-right: 6px; color: #1a5fb4; font-size: 0.875rem; }
+.blog-list__empty { color: #666; text-align: center; }
+.badge { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 4px; background: #e8f0fb; color: #1a5fb4; font-size: 0.75rem; }
+.pagination { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
+.pagination button { margin: 0; min-width: 36px; background: #e5e5e5; color: #222; }
+.pagination button.is-current { background: #1a5fb4; color: #fff; }

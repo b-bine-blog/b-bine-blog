@@ -22,6 +22,8 @@
       name.className = 'site-header__nickname';
       name.textContent = me.nickname;
       right.appendChild(name);
+      right.appendChild(link('/blogs/new.html', '블로그 만들기'));
+      right.appendChild(link('/me/blogs.html', '내 블로그'));
       right.appendChild(link('/me/index.html', '내 정보'));
       var logout = document.createElement('button');
       logout.type = 'button';
