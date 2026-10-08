@@ -28,11 +28,11 @@ description: "005 메인 관리자·제재 구현 작업 목록"
 
 ## 1단계: 준비 (Setup)
 
-- [ ] T001 `application.yml`에 data-model "설정값"의 `admin.*`를 `${ENV:기본값}`으로 더한다 (D-68)
-- [ ] T002 [P] `common/config/AdminProperties.java`를 `@ConfigurationProperties("admin")`로 만든다
-- [ ] T003 [P] `common/error/ErrorCode`에 `OWNER_CHANGED`, `ALREADY_HIDDEN`, `NOT_HIDDEN`, `NOT_RESTORABLE`, `BLOG_ALREADY_CLOSED`(모두 409)를 더한다 (research R-14)
-- [ ] T004 [P] `common/notification/NotificationType`에 `OWNER_WARNED`, `OWNER_REVOKED`, `BLOG_HIDDEN`, `POST_HIDDEN`, `POST_RESTORED`(모두 OPERATION, 끌 수 없음)를 더한다 (data-model 알림 종류)
-- [ ] T005 [P] `admin/application/ActionType.java`(research R-06의 16가지)와 `TargetType.java`를 만든다
+- [X] T001 `application.yml`에 data-model "설정값"의 `admin.*`를 `${ENV:기본값}`으로 더한다 (D-68)
+- [X] T002 [P] `common/config/AdminProperties.java`를 `@ConfigurationProperties("admin")`로 만든다
+- [X] T003 [P] `common/error/ErrorCode`에 `OWNER_CHANGED`, `ALREADY_HIDDEN`, `NOT_HIDDEN`, `NOT_RESTORABLE`, `BLOG_ALREADY_CLOSED`(모두 409)를 더한다 (research R-14)
+- [X] T004 [P] `common/notification/NotificationType`에 `OWNER_WARNED`, `OWNER_REVOKED`, `BLOG_HIDDEN`, `POST_HIDDEN`, `POST_RESTORED`(모두 OPERATION, 끌 수 없음)를 더한다 (data-model 알림 종류)
+- [X] T005 [P] `admin/application/ActionType.java`(research R-06의 16가지)와 `TargetType.java`를 만든다
 
 ---
 
@@ -40,19 +40,19 @@ description: "005 메인 관리자·제재 구현 작업 목록"
 
 **⚠️ 중요**: 이 단계를 끝내기 전에는 어떤 사용자 스토리도 시작하지 않는다.
 
-- [ ] T006 `auth/security/JwtAuthenticationFilter`가 DB에서 읽은 role이 ADMIN이면 `ADMIN` 권한을 붙인다. `common/config/SecurityConfig`에 다음을 더한다 (FR-001~FR-003, SEC-11, research R-02)
+- [X] T006 `auth/security/JwtAuthenticationFilter`가 DB에서 읽은 role이 ADMIN이면 `ADMIN` 권한을 붙인다. `common/config/SecurityConfig`에 다음을 더한다 (FR-001~FR-003, SEC-11, research R-02)
   - `/api/admin/**` `hasAuthority("ADMIN")`
   - `AccessDeniedHandler`: 403 `ADMIN_ONLY` JSON. CSRF 거부는 지금처럼 403
-- [ ] T007 [P] `admin/application/AdminGuard.java`(DB role 확인, `ADMIN_ONLY`)와 `AdminGuardTest`를 만든다
-- [ ] T008 [P] `admin/application/AdminActionLog.java`(조치와 같은 트랜잭션에서 `admin_actions` 쓰기, memo 500자 자르기)와 `AdminPaging.java`(10·20·50, 기본 20)를 만든다 (FR-039, research R-06)
-- [ ] T009 화면 틀을 만든다 (D-103 #1, research R-03)
+- [X] T007 [P] `admin/application/AdminGuard.java`(DB role 확인, `ADMIN_ONLY`)와 `AdminGuardTest`를 만든다
+- [X] T008 [P] `admin/application/AdminActionLog.java`(조치와 같은 트랜잭션에서 `admin_actions` 쓰기, memo 500자 자르기)와 `AdminPaging.java`(10·20·50, 기본 20)를 만든다 (FR-039, research R-06)
+- [X] T009 화면 틀을 만든다 (D-103 #1, research R-03)
   - `admin/api/AdminPageController.java`: `GET /admin`, `/admin/**`에서 role 확인 뒤 `src/main/resources/admin/index.html`. 비로그인은 로그인 화면, 관리자가 아니면 404
   - `admin/index.html`: 탭 6개 틀
   - `static/js/admin-common.js`: 세션 확인, 탭, 표/카드 그리기를 모두 textContent로
   - `css/base.css`: 관리자 표·탭, 좁은 화면은 카드
-- [ ] T010 [P] `static/js/layout.js`: 세션 `admin`이 true면 "관리자" 링크를 보이고 "블로그 만들기·내 블로그"를 숨긴다 (D-90)
-- [ ] T011 `src/test/java/com/mainblog/admin/AdminTestBase.java`를 `BoardTestBase` 확장으로 만든다. 관리자 로그인, 관리자 신고 행 직접 넣기(003 없이), 경고 행 넣기, 활동 기록 읽기 도우미를 둔다 (research R-16)
-- [ ] T012 [P] `admin/AdminAccessIntegrationTest`: 아래를 확인한다 (SC-002, FR-002)
+- [X] T010 [P] `static/js/layout.js`: 세션 `admin`이 true면 "관리자" 링크를 보이고 "블로그 만들기·내 블로그"를 숨긴다 (D-90)
+- [X] T011 `src/test/java/com/mainblog/admin/AdminTestBase.java`를 `BoardTestBase` 확장으로 만든다. 관리자 로그인, 관리자 신고 행 직접 넣기(003 없이), 경고 행 넣기, 활동 기록 읽기 도우미를 둔다 (research R-16)
+- [X] T012 [P] `admin/AdminAccessIntegrationTest`: 아래를 확인한다 (SC-002, FR-002)
   - `/admin`: 비로그인 → 로그인 화면, 회원·블로그장 404, 관리자 200
   - `/api/admin/stats`: 비회원 401, 회원 403 `ADMIN_ONLY`(본문에 회원 정보 없음)
   - 관리자 role을 USER로 바꾸면 다음 요청부터 403
@@ -65,14 +65,14 @@ description: "005 메인 관리자·제재 구현 작업 목록"
 
 **독립 테스트**: 관리자로 회원을 찾고 상세·"전체 보기"를 확인하고, 다른 계정으로 같은 요청이 거부되는지 본다.
 
-- [ ] T013 [P] [US1] `admin/AdminMemberIntegrationTest` (US1-1~5, SC-003, D-103 #2~#5)
+- [X] T013 [P] [US1] `admin/AdminMemberIntegrationTest` (US1-1~5, SC-003, D-103 #2~#5)
   - 검색: 닉네임 일부, 이메일 전체(대소문자 무시), 이메일 일부는 0건, 탈퇴 회원·관리자 계정 제외, size 10·20·50·30(400)
   - 상세: `abcdef@gmail.com` → `ab***@gmail.com`, `ab@x.com` → `a***@x.com`, `010-****-5678`, 이름 보임, 응답에 원문·비밀번호 칸 없음, 비공개 블로그 포함 운영·참여 블로그와 역할, 블로그별 경고 이력. 탈퇴 회원은 404
   - "전체 보기": 원문, `PRIVACY_VIEW` 1건(관리자·시각·대상), `Cache-Control: no-store`, 31번째 429 `RATE_LIMITED`, CSRF 없으면 403
-- [ ] T014 [P] [US1] `admin/AdminBlogActivityDeniedTest`: 관리자의 블로그 만들기·참여 신청·글쓰기·댓글·좋아요가 403 `ADMIN_NOT_ALLOWED`, 공지 쓰기는 성공. 003 팔로우 API가 있으면 팔로우도 403 (US1-8, FR-004, SC-008)
-- [ ] T015 [US1] `admin/application/AdminMemberService.java`를 만든다. 검색(LIKE 이스케이프), 상세(`EmailMasker`·`PhoneMasker`), 전체 보기(`RateLimiter` + `AdminActionLog` 같은 트랜잭션) (FR-005~FR-009)
-- [ ] T016 [US1] `admin/api/AdminMemberController.java`를 만든다. `GET /api/admin/members`, `GET /api/admin/members/{userId}`, `POST /api/admin/members/{userId}/privacy-view` (contracts)
-- [ ] T017 [US1] 화면 `static/js/admin-members.js`: 회원 탭을 만든다. 검색 종류 선택, 목록, 상세 패널, "전체 보기" 버튼은 그 상세에서만 원문 표시. 상세를 다시 열면 API를 새로 불러 다시 가린다 (D-103 #5)
+- [X] T014 [P] [US1] `admin/AdminBlogActivityDeniedTest`: 관리자의 블로그 만들기·참여 신청·글쓰기·댓글·좋아요가 403 `ADMIN_NOT_ALLOWED`, 공지 쓰기는 성공. 003 팔로우 API가 있으면 팔로우도 403 (US1-8, FR-004, SC-008)
+- [X] T015 [US1] `admin/application/AdminMemberService.java`를 만든다. 검색(LIKE 이스케이프), 상세(`EmailMasker`·`PhoneMasker`), 전체 보기(`RateLimiter` + `AdminActionLog` 같은 트랜잭션) (FR-005~FR-009)
+- [X] T016 [US1] `admin/api/AdminMemberController.java`를 만든다. `GET /api/admin/members`, `GET /api/admin/members/{userId}`, `POST /api/admin/members/{userId}/privacy-view` (contracts)
+- [X] T017 [US1] 화면 `static/js/admin-members.js`: 회원 탭을 만든다. 검색 종류 선택, 목록, 상세 패널, "전체 보기" 버튼은 그 상세에서만 원문 표시. 상세를 다시 열면 API를 새로 불러 다시 가린다 (D-103 #5)
 
 **체크포인트**: 관리자 회원 조회 동작.
 
@@ -271,3 +271,15 @@ description: "005 메인 관리자·제재 구현 작업 목록"
 - US7은 2단계 뒤 언제든 된다.
 - 10단계는 모든 스토리 뒤. T057은 사용자 승인이 난 뒤에만 한다.
 - 같은 파일을 고치는 작업은 차례로 한다: `admin-blogs.js`(T025·T032), `BlogClosingService`(T022·T029), `board-api.yaml`(T041·T042), `DailyCleanupJob`(T048).
+
+---
+
+## 구현하며 바뀐 점
+
+구현 중에 계획과 달라진 것을 적는다. "사용자 확인 필요"로 표시한 것은 문서·D-103으로 정해지지 않아 가장 덜 바꾸는 쪽을 고른 것이다.
+
+1. **T057 스키마 반영을 1단계로 당겼다.** `comments.deleted_by`, `owner_warnings.reason`, `admin_actions.action_type` 설명은 개발 DB(Crowfoot 문서 654)에 이미 반영되어 있어 `docs/04-design/schema.sql`을 손으로 맞추고 시작했다. 그래서 경고는 처음부터 `reason`에 저장하고(T030), 댓글 복구는 처음부터 `deleted_by`로 판단한다(T040). `admin_actions`의 `COMMENT_DELETE`로 판단하는 임시 방식은 만들지 않았다.
+2. **T011** `AdminTestBase`는 `BoardTestBase` 대신 003의 `SocialTestBase`(BoardTestBase를 확장)를 확장했다. 탈퇴 처리·알림 도우미를 같이 쓰려고.
+3. **T053 일부를 2단계에서 했다.** 관리자 API가 생기면 바로 `OpenApiConformanceTest`의 "계약에 없는 API 없음"이 깨지므로 `ADMIN_CONTRACT`를 그 검사에 먼저 넣었다. 계약의 모든 경로가 매핑됐는지 보는 검사는 10단계에서 더했다.
+4. **T009** 관리자 화면을 열 때 액세스 토큰(15분)만 만료되고 로그인 유지 토큰(RT)이 있으면 로그인 화면으로 보내지 않고 `js/admin-refresh.js`가 토큰을 한 번 새로 받아 다시 연다. 다른 화면은 `api.js`가 같은 일을 하지만 `/admin`은 서버가 먼저 role을 봐서 따로 두었다. 실패하면 `/login.html?next=/admin`으로 간다.
+5. **T006** CSRF 거부는 지금처럼 본문 없는 403이고, 로그인했지만 관리자가 아닌 `/api/admin/**` 요청만 403 `ADMIN_ONLY` JSON이다.
