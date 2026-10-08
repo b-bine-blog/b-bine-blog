@@ -185,3 +185,5 @@
 | 04:00 처리 | ShedLock + 블로그마다 블로그 행 |
 
 잠금 순서는 항상 users → blogs로 한다(교착 방지).
+
+**구현에서 확인한 것 (2026-10-08)**: MySQL 기본 격리 수준(REPEATABLE READ)은 트랜잭션의 첫 일반 SELECT 때 스냅샷을 잡는다. 잠금(`SELECT ... FOR UPDATE`) 전에 다른 일반 읽기를 하면, 잠금을 기다린 뒤에도 그 뒤 일반 읽기는 예전 스냅샷을 본다(동시 생성 10번에 10개가 만들어진 원인). 그래서 잠그는 동작은 **잠금을 트랜잭션의 첫 읽기로** 둔다(`BlogLimitPolicy.lockUser`, `findByIdForUpdate`). 멤버 수는 엔티티 값이 아니라 `UPDATE blogs SET member_count = member_count + ?`로만 바꾼다.

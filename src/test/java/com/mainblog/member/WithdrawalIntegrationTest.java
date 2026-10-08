@@ -10,7 +10,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.mainblog.batch.DailyCleanupJob;
 import com.mainblog.support.IntegrationTestBase;
+import org.springframework.beans.factory.annotation.Autowired;
 import jakarta.servlet.http.Cookie;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -95,6 +97,32 @@ class WithdrawalIntegrationTest extends IntegrationTestBase {
                 .andExpect(jsonPath("$.ownedBlogs[0].status").value("CLOSING"))
                 .andExpect(jsonPath("$.ownedBlogs[0].closeScheduledAt").value("2026-10-15T04:00:00+09:00"));
         assertThat(withdraw(login, PASSWORD).getStatus()).isEqualTo(409);
+    }
+
+    @Autowired
+    DailyCleanupJob dailyCleanupJob;
+
+    /** 002 T052, FR-080: API로 만든 블로그를 폐쇄 예약하면 탈퇴가 막히고, 04:00에 폐쇄된 뒤에는 탈퇴된다. */
+    @Test
+    void 실제_블로그를_폐쇄_예약하면_폐쇄가_끝날_때까지_탈퇴할_수_없다() throws Exception {
+        createUser("owner@x.com", PASSWORD, "블로그장");
+        LoginCookies login = loginAs("owner@x.com", PASSWORD, false);
+        String created = mvc.perform(withCsrf(post("/api/blogs")).cookie(login.cookies())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"탈퇴\",\"address\":\"bye-blog\",\"visibility\":\"PUBLIC\","
+                                + "\"joinPolicy\":\"FREE\"}"))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        long blogId = Long.parseLong(created.replaceAll(".*\"id\":(\\d+).*", "$1"));
+        mvc.perform(withCsrf(post("/api/blogs/" + blogId + "/closing")).cookie(login.cookies()))
+                .andExpect(status().isOk());
+        assertThat(withdraw(login, PASSWORD).getStatus()).isEqualTo(409);
+
+        clock.advance(java.time.Duration.ofDays(8));
+        dailyCleanupJob.runOnce();
+        assertThat(jdbc.queryForObject("SELECT status FROM blogs WHERE id = ?", String.class, blogId))
+                .isEqualTo("CLOSED");
+        LoginCookies again = loginAs("owner@x.com", PASSWORD, false);
+        assertThat(withdraw(again, PASSWORD).getStatus()).isEqualTo(204);
     }
 
     @Test

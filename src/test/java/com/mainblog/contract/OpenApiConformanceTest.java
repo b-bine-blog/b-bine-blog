@@ -23,6 +23,8 @@ import org.yaml.snakeyaml.Yaml;
 class OpenApiConformanceTest extends IntegrationTestBase {
 
     static final Path CONTRACT = Path.of("specs/001-member-auth/contracts/member-auth-api.yaml");
+    /** 002 블로그 관리 계약. 모든 경로가 매핑됐는지는 002 T072에서 확인한다. */
+    static final Path BLOG_CONTRACT = Path.of("specs/002-blog-management/contracts/blog-api.yaml");
     static final Set<String> HTTP_METHODS = Set.of("get", "post", "put", "patch", "delete");
     /** 화면이 Turnstile 사이트 키를 읽는 설정 조회. 회원 기능 계약 밖이다(T040). */
     static final Set<String> OUTSIDE_CONTRACT = Set.of("GET /api/public-config");
@@ -33,7 +35,12 @@ class OpenApiConformanceTest extends IntegrationTestBase {
 
     @SuppressWarnings("unchecked")
     private static Set<String> contractOperations() throws Exception {
-        try (InputStream in = Files.newInputStream(CONTRACT)) {
+        return contractOperations(CONTRACT);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Set<String> contractOperations(Path contract) throws Exception {
+        try (InputStream in = Files.newInputStream(contract)) {
             Map<String, Object> root = new Yaml().load(in);
             Map<String, Map<String, Object>> paths = (Map<String, Map<String, Object>>) root.get("paths");
             Set<String> ops = new TreeSet<>();
@@ -65,6 +72,7 @@ class OpenApiConformanceTest extends IntegrationTestBase {
     void 계약에_없는_API가_없다() throws Exception {
         Set<String> extra = new TreeSet<>(mappedOperations());
         extra.removeAll(contractOperations());
+        extra.removeAll(contractOperations(BLOG_CONTRACT));
         extra.removeAll(OUTSIDE_CONTRACT);
         assertThat(extra).isEmpty();
     }

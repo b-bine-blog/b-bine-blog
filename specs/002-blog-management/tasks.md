@@ -175,7 +175,7 @@ description: "002 블로그 생성·참여·운영 구현 작업 목록"
 
 ### 테스트
 
-- [ ] T046 [P] [US5] `src/test/java/com/mainblog/blog/BlogClosingIntegrationTest.java`를 만든다 (SC-006)
+- [X] T046 [P] [US5] `src/test/java/com/mainblog/blog/BlogClosingIntegrationTest.java`를 만든다 (SC-006)
   - US5 시나리오 1~6과 8~9를 다룬다.
   - MutableClock을 10/2 15:00, 10/6 04:00, 10/8 04:00, 10/9 04:00으로 옮기며 `runDaily()`를 부른다.
   - 받는 사람 1명당 알림이 정확히 3번(철회하면 철회 1번) 가는지 확인한다.
@@ -183,7 +183,7 @@ description: "002 블로그 생성·참여·운영 구현 작업 목록"
   - 10/9 실행을 건너뛰어도 밀린 것까지 처리되는지 확인한다.
   - 23:59와 00:01 경계를 확인한다.
   - 폐쇄될 때 대기 중 신청·문의가 자동 거절되는지 확인한다.
-- [ ] T047 [P] [US5] `src/test/java/com/mainblog/blog/BlogPurgeIntegrationTest.java`를 만든다 (SC-009)
+- [X] T047 [P] [US5] `src/test/java/com/mainblog/blog/BlogPurgeIntegrationTest.java`를 만든다 (SC-009)
   - US5 시나리오 7을 다룬다.
   - 글·대댓글·댓글·좋아요·글 사진·대표 이미지·카테고리·블랙리스트·문의 행을 넣은 뒤 폐쇄하고 29일·31일 뒤를 확인한다.
   - 31일 뒤에는 내용이 0건, `address` NULL, blogs 행·blog_sanctions·reports가 남아 있어야 한다.
@@ -191,19 +191,19 @@ description: "002 블로그 생성·참여·운영 구현 작업 목록"
 
 ### 구현
 
-- [ ] T048 [US5] `src/main/java/com/mainblog/blog/application/BlogClosingService.java`를 만든다 (FR-072~FR-078, FR-084, research R-13)
+- [X] T048 [US5] `src/main/java/com/mainblog/blog/application/BlogClosingService.java`를 만든다 (FR-072~FR-078, FR-084, research R-13)
   - `scheduleClose(blogId, reason)`: 블로그 행을 잠그고, 날짜 + 7일 04:00을 계산하고, 대기 중 위임을 취소하고, IMMEDIATE 알림을 보낸다.
   - `withdraw(blogId)`: OWNER만 할 수 있고, WITHDRAWN 알림을 보낸다.
   - `sendDueNotices(now)`: D3·D1을 보낸다.
   - `closeDue(now)`: 폐쇄하고 자동 거절·알림을 보낸다.
   - 알림 대상은 블로그장을 뺀 멤버와 구독자이고, 중복은 `blog_closing_notices` INSERT IGNORE로 막는다.
-- [ ] T049 [US5] `src/main/java/com/mainblog/blog/application/BlogPurgeService.java`를 만든다. 30일 정리의 지우는 순서는 research R-13이다: 대댓글 → 댓글 → 글 → 이미지 파일·행 → 카테고리 → 문의 → 블랙리스트 → 공유 링크 → 블로그 태그 → address NULL. 블로그마다 트랜잭션을 따로 쓴다 (FR-008, FR-060, FR-081)
-- [ ] T050 [US5] `src/main/java/com/mainblog/blog/application/BlogDailyTasks.java`를 만들고 `src/main/java/com/mainblog/batch/DailyCleanupJob.java`에서 부른다 (FR-074, FR-075)
+- [X] T049 [US5] `src/main/java/com/mainblog/blog/application/BlogPurgeService.java`를 만든다. 30일 정리의 지우는 순서는 research R-13이다: 대댓글 → 댓글 → 글 → 이미지 파일·행 → 카테고리 → 문의 → 블랙리스트 → 공유 링크 → 블로그 태그 → address NULL. 블로그마다 트랜잭션을 따로 쓴다 (FR-008, FR-060, FR-081)
+- [X] T050 [US5] `src/main/java/com/mainblog/blog/application/BlogDailyTasks.java`를 만들고 `src/main/java/com/mainblog/batch/DailyCleanupJob.java`에서 부른다 (FR-074, FR-075)
   - 순서: 위임 만료 → D3·D1 알림 → 폐쇄 → 30일 정리 → 지운 대표 이미지 30일 정리
   - 단계마다 트랜잭션을 따로 쓰고 실패를 로그로 남긴다.
   - Result에 블로그 항목을 더한다.
-- [ ] T051 [US5] `src/main/java/com/mainblog/blog/api/ClosingController.java`에 `POST`·`DELETE /api/blogs/{blogId}/closing`(OWNER)을 만든다
-- [ ] T052 [US5] 001의 탈퇴 확인(`OwnedBlogQuery`)이 폐쇄 예정을 막고 폐쇄 뒤 허용하는지 `src/test/java/com/mainblog/member/WithdrawalIntegrationTest.java`에 실제 블로그로 한 경우를 더한다 (FR-080)
+- [X] T051 [US5] `src/main/java/com/mainblog/blog/api/ClosingController.java`에 `POST`·`DELETE /api/blogs/{blogId}/closing`(OWNER)을 만든다
+- [X] T052 [US5] 001의 탈퇴 확인(`OwnedBlogQuery`)이 폐쇄 예정을 막고 폐쇄 뒤 허용하는지 `src/test/java/com/mainblog/member/WithdrawalIntegrationTest.java`에 실제 블로그로 한 경우를 더한다 (FR-080)
 
 ---
 

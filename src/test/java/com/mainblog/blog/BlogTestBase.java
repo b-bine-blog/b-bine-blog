@@ -110,6 +110,22 @@ abstract class BlogTestBase extends IntegrationTestBase {
         dailyCleanupJob.runOnce();
     }
 
+    /** 강퇴 기록과 블랙리스트 행을 직접 넣는다(해시 값은 비교하지 않는 테스트용). 블랙리스트 번호를 돌려준다. */
+    long insertBlacklist(long blogId, long userId, long handledBy) {
+        jdbc.update("INSERT INTO blog_sanctions (blog_id, user_id, handled_by, sanction_type, starts_at) "
+                + "VALUES (?, ?, ?, 'KICK', ?)", blogId, userId, handledBy, clock.now());
+        Long sanctionId = jdbc.queryForObject("SELECT MAX(id) FROM blog_sanctions", Long.class);
+        jdbc.update("INSERT INTO blog_blacklists (sanction_id, blog_id, name_hash, email_hash, phone_hash) "
+                + "VALUES (?, ?, 'n', 'e', 'p')", sanctionId, blogId);
+        return jdbc.queryForObject("SELECT MAX(id) FROM blog_blacklists", Long.class);
+    }
+
+    long insertAppeal(long blacklistId, long userId) {
+        jdbc.update("INSERT INTO blacklist_appeals (blacklist_id, user_id, content, name_matched, phone_matched) "
+                + "VALUES (?, ?, '풀어 주세요', TRUE, FALSE)", blacklistId, userId);
+        return jdbc.queryForObject("SELECT MAX(id) FROM blacklist_appeals", Long.class);
+    }
+
     String role(long blogId, long userId) {
         List<String> r = jdbc.queryForList("SELECT role FROM blog_members WHERE blog_id = ? AND user_id = ?",
                 String.class, blogId, userId);
