@@ -115,9 +115,9 @@ description: "003 소셜·알림 구현 작업 목록"
 
 ## 9단계: 사용자 스토리 7 - 팔로워·팔로잉 목록 보기 (P3)
 
-- [ ] T038 [P] [US7] `src/test/java/com/mainblog/social/FollowListIntegrationTest.java`: P의 팔로워 A·B, 팔로잉 C, 최근 팔로우 순, 25명이면 20·5 두 페이지, 항목은 id·닉네임·사진만(이메일·이름·전화번호 없음), A가 언팔로우하면 빠짐, 비회원 200, 탈퇴 회원 안 나옴, 없는 회원 404 (US7, D-102 #9)
-- [ ] T039 [US7] `FollowService`·`FollowController`에 `GET /api/users/{userId}/followers`, `GET /api/users/{userId}/following`(번호 페이지 20명)을 더한다 (FR-015, research R-12)
-- [ ] T040 [US7] `src/main/resources/static/js/profile.js`에 팔로워·팔로잉 탭과 번호 페이지를 붙인다(닉네임은 프로필 링크, textContent)
+- [X] T038 [P] [US7] `src/test/java/com/mainblog/social/FollowListIntegrationTest.java`: P의 팔로워 A·B, 팔로잉 C, 최근 팔로우 순, 25명이면 20·5 두 페이지, 항목은 id·닉네임·사진만(이메일·이름·전화번호 없음), A가 언팔로우하면 빠짐, 비회원 200, 탈퇴 회원 안 나옴, 없는 회원 404 (US7, D-102 #9)
+- [X] T039 [US7] `FollowService`·`FollowController`에 `GET /api/users/{userId}/followers`, `GET /api/users/{userId}/following`(번호 페이지 20명)을 더한다 (FR-015, research R-12)
+- [X] T040 [US7] `src/main/resources/static/js/profile.js`에 팔로워·팔로잉 탭과 번호 페이지를 붙인다(닉네임은 프로필 링크, textContent)
 
 ---
 
