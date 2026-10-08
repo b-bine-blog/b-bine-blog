@@ -1,0 +1,567 @@
+openapi: 3.0.3
+info:
+  title: 메인블로그 게시판 API (004-board)
+  version: 0.1.0
+  description: |
+    글·카테고리·태그·이미지·댓글·좋아요·조회수·검색·피드·공지 API. 근거는 specs/004-board/spec.md의 FR 번호와 D-100.
+
+    공통 규칙 (001·002 계약과 같음)
+    - 상태를 바꾸는 요청은 `X-XSRF-TOKEN` 헤더가 있어야 한다(SEC-10).
+    - 블로그별 역할은 요청마다 DB에서 확인한다(FR-010, 002 R-01).
+    - 볼 수 없는 글과 없는 글은 모두 404 `POST_NOT_FOUND`. 볼 수 없는 블로그는 404 `BLOG_NOT_FOUND`.
+    - 그 블로그에서 정지 중이면 403 `BLOG_SUSPENDED`. 메인 관리자의 블로그 활동은 403 `ADMIN_NOT_ALLOWED`(D-90).
+    - 본문은 `contentHtml`(서버에서 변환·걸러냄)만 HTML이다. 그 밖의 문자열은 화면이 글자 그대로 표시한다(FR-005, FR-006).
+    - 작성자 정보는 `Author`(닉네임·프로필 사진만)이고 이메일·이름·전화번호는 어느 응답에도 없다(FR-073).
+    - 한 페이지 개수는 10·20·30만 받는다. 다른 값은 400 `VALIDATION_FAILED`(FR-017).
+servers:
+  - url: /
+tags:
+  - name: post
+  - name: category
+  - name: image
+  - name: comment
+  - name: like
+  - name: tag
+  - name: search
+  - name: feed
+  - name: notice
+
+paths:
+  /api/blogs/{blogId}/posts:
+    parameters: [ { $ref: '#/components/parameters/BlogId' } ]
+    get:
+      tags: [post]
+      summary: 블로그 글 목록 (FR-017~FR-021)
+      description: 최신순 번호 페이지. categoryId=0이면 미분류. 블로그 열람 규칙(002 R-06)을 따른다.
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - { name: categoryId, in: query, schema: { type: integer, format: int64 } }
+      responses:
+        '200': { description: 목록, content: { application/json: { schema: { $ref: '#/components/schemas/PostPage' } } } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      tags: [post]
+      summary: 글 쓰기 (FR-002~FR-005, FR-015, FR-022~FR-027, FR-031)
+      description: 그 블로그의 멤버(정지 아님)만. 폐쇄 예정 블로그도 된다. 본문 이미지(/files/..)는 올린 사람 본인 것만 이 글에 연결된다.
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/PostWriteRequest' } } }
+      responses:
+        '201': { description: 생성됨, content: { application/json: { schema: { $ref: '#/components/schemas/PostDetail' } } } }
+        '400': { description: VALIDATION_FAILED(title·content·tags), CATEGORY_NOT_FOUND, POST_IMAGE_LIMIT, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/posts/{postId}:
+    parameters: [ { $ref: '#/components/parameters/PostId' } ]
+    get:
+      tags: [post]
+      summary: 글 상세 (FR-005, FR-016, FR-020, FR-066~FR-068)
+      description: |
+        볼 수 있는 글만. 열 때 조회수를 센다(같은 사람 하루 1번, 작성자·봇 제외, D-100 #20·#21).
+        비회원은 VID 쿠키(1년)가 없으면 응답에 Set-Cookie로 굽는다.
+      security: []
+      responses:
+        '200': { description: 상세, content: { application/json: { schema: { $ref: '#/components/schemas/PostDetail' } } } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [post]
+      summary: 글 수정 (FR-008, FR-010)
+      description: 작성자 본인이면서 지금 그 블로그의 멤버일 때만(D-100 #1). 공지는 메인 관리자 누구나(D-100 #19).
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/PostWriteRequest' } } }
+      responses:
+        '200': { description: 수정됨, content: { application/json: { schema: { $ref: '#/components/schemas/PostDetail' } } } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: POST_FORBIDDEN, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [post]
+      summary: 글 삭제 (FR-009~FR-013)
+      description: 작성자(지금 멤버), 그 블로그의 POST_MANAGE 권한자, 메인 관리자. 남이 지우면 작성자에게 끌 수 없는 POST_DELETED 알림.
+      responses:
+        '204': { description: 삭제됨(30일 보관) }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: POST_FORBIDDEN, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/blogs/{blogId}/categories:
+    parameters: [ { $ref: '#/components/parameters/BlogId' } ]
+    get:
+      tags: [category]
+      summary: 카테고리 목록 (FR-021)
+      description: 순서대로. 각 카테고리의 보이는 글 수와 미분류 글 수를 함께 준다.
+      security: []
+      responses:
+        '200': { description: 목록, content: { application/json: { schema: { $ref: '#/components/schemas/CategoryList' } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      tags: [category]
+      summary: 카테고리 추가 (FR-022, D-100 #8)
+      description: POST_MANAGE 권한자만. 블로그당 30개, 이름 1~30자, 블로그 안에서 중복 불가.
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/CategoryRequest' } } }
+      responses:
+        '201': { description: 생성됨, content: { application/json: { schema: { $ref: '#/components/schemas/Category' } } } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { description: CATEGORY_DUPLICATE, CATEGORY_LIMIT_EXCEEDED, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+
+  /api/blogs/{blogId}/categories/order:
+    parameters: [ { $ref: '#/components/parameters/BlogId' } ]
+    put:
+      tags: [category]
+      summary: 카테고리 순서 바꾸기 (FR-022)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [categoryIds]
+              properties:
+                categoryIds: { type: array, items: { type: integer, format: int64 }, description: 그 블로그의 카테고리 전부를 원하는 순서로 }
+      responses:
+        '204': { description: 바뀜 }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /api/blogs/{blogId}/categories/{categoryId}:
+    parameters:
+      - $ref: '#/components/parameters/BlogId'
+      - { name: categoryId, in: path, required: true, schema: { type: integer, format: int64 } }
+    patch:
+      tags: [category]
+      summary: 카테고리 이름 바꾸기 (FR-022)
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/CategoryRequest' } } }
+      responses:
+        '200': { description: 바뀜, content: { application/json: { schema: { $ref: '#/components/schemas/Category' } } } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { description: CATEGORY_NOT_FOUND, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '409': { description: CATEGORY_DUPLICATE, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+    delete:
+      tags: [category]
+      summary: 카테고리 삭제 (FR-022, D-100 #8)
+      description: 그 카테고리의 글은 미분류로 옮긴다.
+      responses:
+        '204': { description: 삭제됨 }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { description: CATEGORY_NOT_FOUND, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+
+  /api/blogs/{blogId}/images:
+    parameters: [ { $ref: '#/components/parameters/BlogId' } ]
+    post:
+      tags: [image]
+      summary: 글 이미지 올리기 (FR-029~FR-035)
+      description: 그 블로그에 글을 쓸 수 있는 멤버만. 장당 3MB, 한 번에 10MB·10장. 확장자·MIME·시그니처 확인, EXIF 제거, UUID 이름.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [files]
+              properties:
+                files: { type: array, maxItems: 10, items: { type: string, format: binary } }
+      responses:
+        '201': { description: 올라감, content: { application/json: { schema: { $ref: '#/components/schemas/UploadedImages' } } } }
+        '400': { description: FILE_TYPE_NOT_ALLOWED, POST_IMAGE_LIMIT, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '413': { description: FILE_TOO_LARGE(장당 3MB 또는 요청 10MB 초과), content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+
+  /api/posts/{postId}/comments:
+    parameters: [ { $ref: '#/components/parameters/PostId' } ]
+    get:
+      tags: [comment]
+      summary: 댓글 목록 (FR-038, FR-040, FR-041, FR-045)
+      description: 최상위 댓글은 작성순 페이지(20개), 각 댓글의 답글은 모두 함께. 차단한 회원의 댓글은 빠진다(같은 블로그 멤버 예외).
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+      responses:
+        '200': { description: 목록, content: { application/json: { schema: { $ref: '#/components/schemas/CommentPage' } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      tags: [comment]
+      summary: 댓글·답글 쓰기 (FR-036~FR-038, FR-044)
+      description: |
+        글을 볼 수 있는 로그인 회원(공유 링크로 보는 회원 포함, D-100 #9). 메인 관리자·정지 회원은 403, 공지에는 400 COMMENT_NOT_ALLOWED.
+        parentId가 답글이면 그 답글의 부모 아래에 같은 단계로 달고 replyTo는 그 답글의 작성자(D-100 #10).
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/CommentWriteRequest' } } }
+      responses:
+        '201': { description: 생성됨, content: { application/json: { schema: { $ref: '#/components/schemas/Comment' } } } }
+        '400': { description: VALIDATION_FAILED, COMMENT_NOT_ALLOWED, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { description: POST_NOT_FOUND, COMMENT_NOT_FOUND, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+
+  /api/comments/{commentId}:
+    parameters:
+      - { name: commentId, in: path, required: true, schema: { type: integer, format: int64 } }
+    patch:
+      tags: [comment]
+      summary: 댓글 수정 (FR-039, FR-040)
+      description: 작성자 본인만. edited = true.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                content: { type: string, description: 1~500자 }
+      responses:
+        '200': { description: 수정됨, content: { application/json: { schema: { $ref: '#/components/schemas/Comment' } } } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '403': { description: COMMENT_FORBIDDEN, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '404': { description: COMMENT_NOT_FOUND, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+    delete:
+      tags: [comment]
+      summary: 댓글 삭제 (FR-039, FR-041, D-100 #3·#11)
+      description: 작성자, 그 블로그의 POST_MANAGE 권한자. 답글이 있으면 "삭제된 댓글입니다"로 남는다.
+      responses:
+        '204': { description: 삭제됨 }
+        '403': { description: COMMENT_FORBIDDEN, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '404': { description: COMMENT_NOT_FOUND, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+
+  /api/posts/{postId}/like:
+    parameters: [ { $ref: '#/components/parameters/PostId' } ]
+    put:
+      tags: [like]
+      summary: 좋아요 누르기·취소 (FR-042~FR-044)
+      description: 없으면 누르고 있으면 취소. 회원당 1분 30번(D-100 #12). 처음 누를 때만 작성자에게 알림(D-100 #13). 공지는 400.
+      responses:
+        '200': { description: 결과, content: { application/json: { schema: { $ref: '#/components/schemas/LikeResult' } } } }
+        '400': { description: LIKE_NOT_ALLOWED(공지), content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { description: TOO_MANY_REQUESTS, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+
+  /api/tags/{name}/posts:
+    parameters:
+      - { name: name, in: path, required: true, schema: { type: string } }
+    get:
+      tags: [tag]
+      summary: 태그 글 목록 (FR-023)
+      description: 태그 정리 규칙을 거친 이름이 정확히 같은 글. 공개 블로그의 보이는 글만, 차단 제외. 최신순 번호 페이지.
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200': { description: 목록, content: { application/json: { schema: { $ref: '#/components/schemas/PostPage' } } } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+
+  /api/search:
+    get:
+      tags: [search]
+      summary: 통합 검색 (FR-052~FR-058)
+      description: |
+        type=ALL이면 blogs(앞 5개 + 전체 수)와 posts(번호 페이지)를 함께, 다른 type이면 그 결과만 페이지로 준다(research R-13).
+        로그인 회원이면 최근 검색어에 저장한다(D-100 #17).
+      security: []
+      parameters:
+        - { name: q, in: query, required: true, schema: { type: string, minLength: 2, maxLength: 20 } }
+        - { name: type, in: query, schema: { type: string, enum: [ALL, BLOG, TITLE, TAG, NICKNAME], default: ALL } }
+        - { name: sort, in: query, schema: { type: string, enum: [RELEVANCE, LATEST, POPULAR], default: RELEVANCE } }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200': { description: 결과, content: { application/json: { schema: { $ref: '#/components/schemas/SearchResult' } } } }
+        '400': { description: SEARCH_KEYWORD_INVALID, VALIDATION_FAILED, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+
+  /api/me/recent-searches:
+    get:
+      tags: [search]
+      summary: 내 최근 검색어 (FR-059)
+      description: 본인 것만 최근 10개, 최근 것부터.
+      responses:
+        '200':
+          description: 목록
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/RecentSearch' } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    delete:
+      tags: [search]
+      summary: 최근 검색어 전체 삭제 (FR-059)
+      responses:
+        '204': { description: 삭제됨 }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /api/me/recent-searches/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: integer, format: int64 } }
+    delete:
+      tags: [search]
+      summary: 최근 검색어 하나 삭제 (FR-059)
+      description: 남의 것이면 404.
+      responses:
+        '204': { description: 삭제됨 }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/feed:
+    get:
+      tags: [feed]
+      summary: 메인 피드 (FR-061~FR-064)
+      description: |
+        LATEST·POPULAR는 공개 블로그 글의 번호 페이지(비회원 가능).
+        SUBSCRIBED·FOLLOWING은 최근 30일 글을 20개씩 cursor로 이어 받는다(D-100 #18). 비회원은 401.
+      security: []
+      parameters:
+        - { name: tab, in: query, schema: { type: string, enum: [LATEST, POPULAR, SUBSCRIBED, FOLLOWING], default: LATEST } }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - { name: cursor, in: query, schema: { type: string }, description: SUBSCRIBED·FOLLOWING에서 이전 응답의 nextCursor }
+      responses:
+        '200': { description: 피드, content: { application/json: { schema: { $ref: '#/components/schemas/FeedResult' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /api/notices:
+    get:
+      tags: [notice]
+      summary: 공지사항 목록 (FR-065)
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200': { description: 목록, content: { application/json: { schema: { $ref: '#/components/schemas/PostPage' } } } }
+    post:
+      tags: [notice]
+      summary: 공지 쓰기 (FR-065)
+      description: 메인 관리자만. 공지 알림을 켠 회원 전원에게 NOTICE 알림. 카테고리·태그는 받지 않는다.
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/PostWriteRequest' } } }
+      responses:
+        '201': { description: 생성됨, content: { application/json: { schema: { $ref: '#/components/schemas/PostDetail' } } } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: ADMIN_ONLY, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+
+  /api/notices/images:
+    post:
+      tags: [notice]
+      summary: 공지 이미지 올리기 (FR-029~FR-035)
+      description: 메인 관리자만. 규칙은 글 이미지와 같다.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [files]
+              properties:
+                files: { type: array, maxItems: 10, items: { type: string, format: binary } }
+      responses:
+        '201': { description: 올라감, content: { application/json: { schema: { $ref: '#/components/schemas/UploadedImages' } } } }
+        '400': { description: FILE_TYPE_NOT_ALLOWED, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '403': { description: ADMIN_ONLY, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '413': { description: FILE_TOO_LARGE, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+
+components:
+  parameters:
+    BlogId: { name: blogId, in: path, required: true, schema: { type: integer, format: int64 } }
+    PostId: { name: postId, in: path, required: true, schema: { type: integer, format: int64 } }
+    Page: { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+    Size: { name: size, in: query, schema: { type: integer, enum: [10, 20, 30], default: 10 } }
+  responses:
+    ValidationError:
+      description: VALIDATION_FAILED(fieldErrors 포함)
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    Unauthorized:
+      description: UNAUTHENTICATED
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    Forbidden:
+      description: BLOG_FORBIDDEN, BLOG_SUSPENDED, ADMIN_NOT_ALLOWED
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    NotFound:
+      description: POST_NOT_FOUND, BLOG_NOT_FOUND
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+  schemas:
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: string }
+        message: { type: string }
+        fieldErrors:
+          type: array
+          items:
+            type: object
+            properties:
+              field: { type: string }
+              code: { type: string }
+    Author:
+      type: object
+      description: 닉네임·프로필 사진만(FR-073). LEFT_BLOG는 "탈퇴한 계정", WITHDRAWN은 "탈퇴한 회원"이며 id·사진은 null.
+      properties:
+        id: { type: integer, format: int64, nullable: true }
+        nickname: { type: string }
+        profileImageUrl: { type: string, nullable: true }
+        state: { type: string, enum: [ACTIVE, LEFT_BLOG, WITHDRAWN] }
+    BlogRef:
+      type: object
+      nullable: true
+      description: 공지면 null
+      properties:
+        id: { type: integer, format: int64 }
+        address: { type: string }
+        name: { type: string }
+        visibility: { type: string, enum: [PUBLIC, LINK, PRIVATE] }
+    PostWriteRequest:
+      type: object
+      required: [title, content]
+      properties:
+        title: { type: string, description: 앞뒤 공백 제거 후 1~30자 }
+        content: { type: string, description: 마크다운 원문 1~5,000자(공백·기호 포함, D-92) }
+        categoryId: { type: integer, format: int64, nullable: true, description: null이면 미분류 }
+        tags: { type: array, items: { type: string }, description: 정리 후 최대 10개 }
+    PostSummary:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        boardType: { type: string, enum: [BLOG, NOTICE] }
+        blog: { $ref: '#/components/schemas/BlogRef' }
+        title: { type: string }
+        author: { $ref: '#/components/schemas/Author' }
+        categoryName: { type: string, nullable: true }
+        thumbnailUrl: { type: string, nullable: true, description: 본문 첫 이미지(D-100 #7) }
+        likeCount: { type: integer }
+        viewCount: { type: integer }
+        commentCount: { type: integer }
+        createdAt: { type: string, format: date-time }
+    PostDetail:
+      allOf:
+        - $ref: '#/components/schemas/PostSummary'
+        - type: object
+          properties:
+            content: { type: string, description: 마크다운 원문. 작성자 본인(수정 화면)에게만 채운다 }
+            contentHtml: { type: string, description: 서버에서 변환·걸러낸 HTML }
+            categoryId: { type: integer, format: int64, nullable: true }
+            tags: { type: array, items: { type: string } }
+            liked: { type: boolean, description: 로그인한 회원이 눌렀는지 }
+            canEdit: { type: boolean }
+            canDelete: { type: boolean }
+            canComment: { type: boolean }
+            shareable: { type: boolean, description: 비공개 블로그면 false(FR-047) }
+    PostPage:
+      type: object
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/PostSummary' } }
+        page: { type: integer }
+        size: { type: integer }
+        totalElements: { type: integer, format: int64 }
+        totalPages: { type: integer }
+    Category:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        name: { type: string }
+        sortOrder: { type: integer }
+        postCount: { type: integer }
+    CategoryList:
+      type: object
+      properties:
+        categories: { type: array, items: { $ref: '#/components/schemas/Category' } }
+        uncategorizedCount: { type: integer }
+        canManage: { type: boolean }
+    CategoryRequest:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, description: 1~30자 }
+    UploadedImages:
+      type: object
+      properties:
+        images:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: integer, format: int64 }
+              url: { type: string, example: /files/3f2c...webp }
+    CommentWriteRequest:
+      type: object
+      required: [content]
+      properties:
+        content: { type: string, description: 1~500자 }
+        parentId: { type: integer, format: int64, nullable: true, description: 답할 댓글(최상위 또는 답글) }
+    Comment:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        parentId: { type: integer, format: int64, nullable: true }
+        deleted: { type: boolean, description: true면 "삭제된 댓글입니다" 자리(content·author null) }
+        content: { type: string, nullable: true }
+        author: { allOf: [ { $ref: '#/components/schemas/Author' } ], nullable: true }
+        replyToNickname: { type: string, nullable: true, description: 대상의 지금 닉네임(D-87) }
+        edited: { type: boolean }
+        canEdit: { type: boolean }
+        canDelete: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        replies: { type: array, items: { $ref: '#/components/schemas/Comment' } }
+    CommentPage:
+      type: object
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/Comment' } }
+        page: { type: integer }
+        totalPages: { type: integer }
+        totalElements: { type: integer, format: int64 }
+    LikeResult:
+      type: object
+      properties:
+        liked: { type: boolean }
+        likeCount: { type: integer }
+    BlogSearchItem:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        address: { type: string }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        coverImageUrl: { type: string, nullable: true }
+        memberCount: { type: integer }
+    SearchResult:
+      type: object
+      properties:
+        type: { type: string }
+        blogs:
+          type: object
+          nullable: true
+          properties:
+            items: { type: array, items: { $ref: '#/components/schemas/BlogSearchItem' } }
+            totalElements: { type: integer, format: int64 }
+            totalPages: { type: integer }
+        posts: { allOf: [ { $ref: '#/components/schemas/PostPage' } ], nullable: true }
+    RecentSearch:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        keyword: { type: string }
+        searchedAt: { type: string, format: date-time }
+    FeedResult:
+      type: object
+      properties:
+        tab: { type: string }
+        items: { type: array, items: { $ref: '#/components/schemas/PostSummary' } }
+        page: { type: integer, nullable: true }
+        totalPages: { type: integer, nullable: true }
+        nextCursor: { type: string, nullable: true, description: SUBSCRIBED·FOLLOWING에서 더 있으면 값 }

@@ -309,7 +309,7 @@ CREATE TABLE categories (
     created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) COMMENT '생성 일시',
     updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6) COMMENT '수정 일시',
     PRIMARY KEY (id)
-) COMMENT='카테고리-----개수·이름 길이, 지울 때 글 처리 미정';
+) COMMENT='카테고리-----블로그당 최대 30개, 이름 1~30자(설정값). 지우면 그 글은 미분류(category_id NULL)로 옮김(D-100 #8)';
 CREATE TABLE posts (
     id BIGINT NOT NULL AUTO_INCREMENT COMMENT '글 번호',
     blog_id BIGINT COMMENT '블로그 번호',
@@ -405,17 +405,17 @@ CREATE TABLE recent_searches (
     created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) COMMENT '생성 일시',
     updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6) COMMENT '수정 일시',
     PRIMARY KEY (id)
-) COMMENT='최근 검색어-----본인에게만 최근 10개. 중복 처리 방식 미정';
+) COMMENT='최근 검색어-----본인에게만 최근 10개. 같은 검색어는 searched_at만 바꿔 맨 앞으로(중복 없음), 비회원은 저장 안 함(D-100 #17)';
 CREATE TABLE post_views (
     id BIGINT NOT NULL AUTO_INCREMENT COMMENT '번호',
     post_id BIGINT NOT NULL COMMENT '글 번호',
-    viewer_key VARCHAR(64) NOT NULL COMMENT '본 사람 구분값-----회원은 U:{회원 번호}, 비회원 구분값은 미정',
+    viewer_key VARCHAR(64) NOT NULL COMMENT '본 사람 구분값-----회원은 U:{회원 번호}, 비회원은 G:{무작위 쿠키 값, 1년}(D-100 #20)',
     view_date DATE NOT NULL COMMENT '본 날짜',
     created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) COMMENT '생성 일시',
     updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6) COMMENT '수정 일시',
     PRIMARY KEY (id),
     CONSTRAINT uk_post_views_post_id_viewer_key_view_date UNIQUE (post_id, viewer_key, view_date)
-) COMMENT='조회 기록-----같은 글·같은 사람·같은 날은 한 건(D-77). 보관 기간 미정';
+) COMMENT='조회 기록-----같은 글·같은 사람·같은 날은 한 건(D-77). 작성자 본인·봇은 세지 않음(D-100 #20·#21). 7일 지난 행은 04:00 정리(설정값)';
 CREATE TABLE admin_actions (
     id BIGINT NOT NULL AUTO_INCREMENT COMMENT '번호',
     admin_id BIGINT NOT NULL COMMENT '관리자 회원 번호',
