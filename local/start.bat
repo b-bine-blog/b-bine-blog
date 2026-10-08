@@ -10,9 +10,11 @@ if not exist .env (
     "@('DB_URL=jdbc:mysql://localhost:3306/mainblog','DB_USERNAME=root','DB_PASSWORD=root'," ^
     "'JWT_SECRET=' + (& $r),'CODE_HASH_SECRET=' + (& $r),'BLACKLIST_HASH_SECRET=' + (& $r)," ^
     "'TURNSTILE_SITE_KEY=1x00000000000000000000AA','TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA'," ^
-    "'FILE_STORAGE_ROOT=./uploads','MAIL_USERNAME=','MAIL_PASSWORD=') | Set-Content -Encoding ascii .env"
+    "'FILE_STORAGE_ROOT=./uploads','AUTH_COOKIE_SECURE=false','MAIL_USERNAME=','MAIL_PASSWORD=') | Set-Content -Encoding ascii .env"
   echo .env를 만들었습니다.
 )
+
+findstr /b "AUTH_COOKIE_SECURE=" .env >nul || echo AUTH_COOKIE_SECURE=false>> .env
 
 docker compose -f local\docker-compose.yml up -d --wait || exit /b 1
 echo DB 준비 완료. 앱을 띄웁니다. 다 뜨면 http://localhost:8080 으로 들어가세요.

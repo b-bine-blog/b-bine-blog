@@ -1,5 +1,6 @@
 package com.mainblog.blog.api;
 
+import com.mainblog.auth.security.AuthCookies;
 import com.mainblog.auth.security.AuthenticatedMember;
 import com.mainblog.blog.application.BlogAccessPolicy;
 import com.mainblog.blog.application.ShareLinkService;
@@ -23,8 +24,10 @@ import org.springframework.web.bind.annotation.RestController;
 public class ShareLinkController {
 
     private final ShareLinkService shareLinkService;
+    private final AuthCookies authCookies;
 
-    public ShareLinkController(ShareLinkService shareLinkService) {
+    public ShareLinkController(ShareLinkService shareLinkService, AuthCookies authCookies) {
+        this.authCookies = authCookies;
         this.shareLinkService = shareLinkService;
     }
 
@@ -49,7 +52,7 @@ public class ShareLinkController {
         Blog blog = shareLinkService.resolve(req.token());
         ResponseCookie cookie = ResponseCookie.from(BlogAccessPolicy.shareCookieName(blog.getId()), req.token())
                 .httpOnly(true)
-                .secure(true)
+                .secure(authCookies.secure())
                 .sameSite("Lax")
                 .path("/")
                 .build();

@@ -16,12 +16,17 @@ BLACKLIST_HASH_SECRET=$(rand)
 TURNSTILE_SITE_KEY=1x00000000000000000000AA
 TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
 FILE_STORAGE_ROOT=./uploads
+# http://localhost에서는 Safari가 Secure 쿠키를 버려 로그인이 안 되므로 끈다(운영은 켬)
+AUTH_COOKIE_SECURE=false
 # 회원가입 인증 메일을 받으려면 Gmail 주소와 앱 비밀번호를 넣는다
 MAIL_USERNAME=
 MAIL_PASSWORD=
 ENV
   echo ".env를 만들었습니다."
 fi
+
+# 예전에 만든 .env에 없으면 더한다
+grep -q '^AUTH_COOKIE_SECURE=' .env || echo 'AUTH_COOKIE_SECURE=false' >> .env
 
 docker compose -f local/docker-compose.yml up -d --wait
 echo "DB 준비 완료. 앱을 띄웁니다. 다 뜨면 http://localhost:8080 으로 들어가세요."

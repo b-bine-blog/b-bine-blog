@@ -51,6 +51,7 @@ auth:
   remember-me-ttl: ${AUTH_REMEMBER_ME_TTL:14d}          # D-61, 로그인 시각부터 고정(D-97)
   idle-timeout: ${AUTH_IDLE_TIMEOUT:30m}                # D-61
   extend-interval: ${AUTH_EXTEND_INTERVAL:5m}           # D-97, 글쓰기 화면 연장 주기
+  cookie-secure: ${AUTH_COOKIE_SECURE:true}             # 운영은 true. 내 컴퓨터 http://localhost에서 Safari로 볼 때만 false(local/start.sh)
   login:
     captcha-after: ${AUTH_LOGIN_CAPTCHA_AFTER:3}        # SEC-13, D-97
     lock-after: ${AUTH_LOGIN_LOCK_AFTER:5}              # SEC-03
