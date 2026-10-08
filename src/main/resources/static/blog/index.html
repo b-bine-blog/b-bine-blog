@@ -44,7 +44,25 @@
         <button type="submit">문의하기</button>
       </form>
 
-      <!-- 글 목록은 004에서 만든다 -->
+      <!-- 글 목록·카테고리 (004 T027, FR-017~FR-021) -->
+      <section id="posts">
+        <div class="blog-toolbar">
+          <h2>글</h2>
+          <div class="row">
+            <a id="write" hidden>글쓰기</a>
+            <label>보기
+              <select id="post-size">
+                <option value="10">10개</option>
+                <option value="20">20개</option>
+                <option value="30">30개</option>
+              </select>
+            </label>
+          </div>
+        </div>
+        <div class="tabs" id="categories" role="tablist"></div>
+        <ul class="post-list" id="post-list"></ul>
+        <nav class="pagination" id="post-pages" aria-label="글 페이지"></nav>
+      </section>
     </section>
     <!-- 정지된 회원 안내(FR-050) -->
     <section class="notice" id="suspended" hidden></section>
@@ -53,6 +71,7 @@
   <script src="/js/api.js"></script>
   <script src="/js/session.js"></script>
   <script src="/js/layout.js"></script>
+  <script src="/js/board-common.js"></script>
   <script src="/js/blog-home.js"></script>
 </body>
 </html>

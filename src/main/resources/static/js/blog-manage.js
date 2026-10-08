@@ -266,6 +266,54 @@
   }
 
   // 위임·폐쇄 (FR-066~FR-078). 위임할 멤버가 없거나 폐쇄 예정이면 위임을 숨긴다(FR-070, FR-071).
+  // 카테고리 (004 T028). 순서는 위·아래 버튼으로 바꾸고 전체 순서를 한 번에 보낸다.
+  loaders.categories = function () {
+    var base = '/api/blogs/' + blog.id + '/categories';
+    api.get(base).then(function (r) {
+      var rows = $('category-rows');
+      while (rows.firstChild) { rows.removeChild(rows.firstChild); }
+      var ids = r.categories.map(function (c) { return c.id; });
+      function move(index, delta) {
+        var next = ids.slice();
+        var t = next[index];
+        next[index] = next[index + delta];
+        next[index + delta] = t;
+        api.put(base + '/order', { categoryIds: next }, { activity: true })
+          .then(function () { loaders.categories(); }).catch(fail);
+      }
+      r.categories.forEach(function (c, i) {
+        var tr = el('tr');
+        var order = el('td');
+        if (i > 0) { order.appendChild(button('위', function () { move(i, -1); })); }
+        if (i < ids.length - 1) { order.appendChild(button('아래', function () { move(i, 1); })); }
+        tr.appendChild(order);
+        tr.appendChild(el('td', c.name));
+        tr.appendChild(el('td', String(c.postCount)));
+        var actions = el('td');
+        actions.appendChild(button('이름 바꾸기', function () {
+          var name = prompt('새 이름 (최대 30자)', c.name);
+          if (name === null) { return; }
+          api.patch(base + '/' + c.id, { name: name }, { activity: true })
+            .then(function () { say('이름을 바꿨습니다.'); loaders.categories(); }).catch(fail);
+        }));
+        actions.appendChild(button('삭제', function () {
+          if (!confirm('"' + c.name + '" 카테고리를 지울까요? 글은 미분류로 옮겨집니다.')) { return; }
+          api.del(base + '/' + c.id, null, { activity: true })
+            .then(function () { say('지웠습니다.'); loaders.categories(); }).catch(fail);
+        }));
+        tr.appendChild(actions);
+        rows.appendChild(tr);
+      });
+    }).catch(fail);
+  };
+
+  $('category-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    api.post('/api/blogs/' + blog.id + '/categories', { name: $('category-name').value }, { activity: true })
+      .then(function () { $('category-name').value = ''; say('추가했습니다.'); loaders.categories(); })
+      .catch(fail);
+  });
+
   loaders.owner = function () {
     var closing = blog.status === 'CLOSING';
     $('close').hidden = closing;

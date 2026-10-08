@@ -22,7 +22,14 @@ public enum NotificationType {
     DELEGATION_CANCELED("OPERATION", null),
     BLOG_CLOSING("BLOG", null),
     BLOG_CLOSING_WITHDRAWN("BLOG", null),
-    BLOG_CLOSED_REQUEST_REJECTED("BLOG", null);
+    BLOG_CLOSED_REQUEST_REJECTED("BLOG", null),
+
+    // 004 게시판 (specs/004-board/data-model.md "알림 종류")
+    POST_COMMENT("COMMENT", "post_comment"),
+    COMMENT_REPLY("COMMENT", "comment_reply"),
+    POST_LIKE("LIKE", "post_like"),
+    POST_DELETED("OPERATION", null),
+    NOTICE("OPERATION", "notice");
 
     private final String tab;
     private final String settingColumn;

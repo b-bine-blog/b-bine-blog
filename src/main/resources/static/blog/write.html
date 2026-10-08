@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>글쓰기 - 메인블로그</title>
+  <link rel="stylesheet" href="/vendor/toastui/toastui-editor.min.css">
+  <link rel="stylesheet" href="/css/base.css">
+</head>
+<body>
+  <main class="wide">
+    <p class="hint"><a id="back"></a></p>
+    <h1 id="heading">글쓰기</h1>
+    <form id="write-form" hidden>
+      <label for="title">제목</label>
+      <input type="text" id="title" maxlength="30" required>
+      <div class="counter"><span id="title-length">0</span>/30</div>
+
+      <div id="category-box">
+        <label for="category">카테고리</label>
+        <select id="category"><option value="">미분류</option></select>
+      </div>
+
+      <label for="editor">본문</label>
+      <div id="editor" class="editor-box"></div>
+      <div class="counter"><span id="content-length">0</span>/5,000</div>
+
+      <div id="tag-box">
+        <label for="tags">태그 (쉼표로 나눔, 최대 10개)</label>
+        <input type="text" id="tags" placeholder="예: 여행, 맛집">
+      </div>
+
+      <p class="hint" id="draft-info"></p>
+      <div class="row">
+        <button type="submit" id="submit">저장</button>
+        <button type="button" id="discard-draft" hidden>임시 저장 지우기</button>
+      </div>
+    </form>
+    <p class="message message--error" id="message" role="alert"></p>
+  </main>
+  <script src="/js/api.js"></script>
+  <script src="/js/session.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/board-common.js"></script>
+  <script src="/vendor/toastui/toastui-editor-all.min.js"></script>
+  <script src="/js/board-write.js"></script>
+</body>
+</html>

@@ -114,6 +114,10 @@
       api.setText($('message'), '검색어는 2~20자로, 글자나 숫자를 하나 이상 넣어 주세요.');
       return;
     }
+    if (q) {
+      location.href = '/search?q=' + encodeURIComponent(q); // 메인 검색창은 통합 검색으로(004 T045)
+      return;
+    }
     go({ q: q, page: 1 });
   });
   document.querySelectorAll('[data-sort]').forEach(function (b) {

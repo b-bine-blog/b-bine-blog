@@ -1,0 +1,101 @@
+// 게시판 화면 공통 (004 T027·T031·T045). 글 목록 한 줄, 번호 페이지, 시각 표시.
+// 값은 모두 textContent로 넣는다. 글 본문(contentHtml)만 board-post.js가 innerHTML로 넣는다(D-64).
+(function (global) {
+  'use strict';
+
+  function el(tag, className, text) {
+    var e = document.createElement(tag);
+    if (className) { e.className = className; }
+    if (text !== undefined && text !== null) { e.textContent = String(text); }
+    return e;
+  }
+
+  function clear(node) {
+    while (node.firstChild) { node.removeChild(node.firstChild); }
+  }
+
+  function formatTime(value) {
+    return value ? String(value).replace('T', ' ').substring(0, 16) : '';
+  }
+
+  function postUrl(p) {
+    if (p.boardType === 'NOTICE' || !p.blog) {
+      return '/notices/' + p.id;
+    }
+    return '/blog/' + encodeURIComponent(p.blog.address) + '/posts/' + p.id;
+  }
+
+  // PostSummary 목록을 그린다. options.showBlog면 블로그 이름을 함께 보인다.
+  function renderPosts(list, items, options) {
+    options = options || {};
+    clear(list);
+    if (!items || items.length === 0) {
+      list.appendChild(el('li', 'blog-list__empty', options.empty || '글이 없습니다.'));
+      return;
+    }
+    items.forEach(function (p) {
+      var li = el('li', 'post-item');
+      var body = el('div', 'post-item__body');
+      var a = el('a', 'post-item__title', p.title);
+      a.href = postUrl(p);
+      body.appendChild(a);
+      var meta = [];
+      if (options.showBlog && p.blog) { meta.push(p.blog.name); }
+      if (p.categoryName) { meta.push(p.categoryName); }
+      meta.push(p.author ? p.author.nickname : '');
+      meta.push(formatTime(p.createdAt));
+      meta.push('좋아요 ' + p.likeCount + ' · 댓글 ' + p.commentCount + ' · 조회 ' + p.viewCount);
+      body.appendChild(el('div', 'post-item__meta', meta.join(' · ')));
+      li.appendChild(body);
+      if (p.thumbnailUrl) {
+        var img = el('img', 'post-item__thumb');
+        img.src = p.thumbnailUrl;
+        img.alt = '';
+        img.loading = 'lazy';
+        li.appendChild(img);
+      }
+      list.appendChild(li);
+    });
+  }
+
+  // 번호 페이지. 다섯 개씩 보이고 처음·끝으로 바로 간다(FR-018).
+  function renderPager(nav, page, totalPages, onPick) {
+    clear(nav);
+    if (!totalPages || totalPages <= 1) { return; }
+    function btn(label, target, current) {
+      var b = el('button', current ? 'is-current' : '', label);
+      b.type = 'button';
+      if (current) { b.setAttribute('aria-current', 'page'); }
+      b.addEventListener('click', function () { onPick(target); });
+      nav.appendChild(b);
+    }
+    var start = Math.max(1, page - 2);
+    var end = Math.min(totalPages, start + 4);
+    start = Math.max(1, end - 4);
+    if (start > 1) { btn('처음', 1, false); }
+    for (var i = start; i <= end; i++) { btn(String(i), i, i === page); }
+    if (end < totalPages) { btn('끝', totalPages, false); }
+  }
+
+  function say(node, text, isError) {
+    node.className = 'message ' + (isError ? 'message--error' : 'message--info');
+    node.textContent = text || '';
+  }
+
+  // 응답이 늦어 멈췄으면 다시 시도 버튼을 붙인다(FR-070).
+  function sayError(node, err, retry) {
+    say(node, err && err.message ? err.message : '요청을 처리하지 못했습니다.', true);
+    if (retry && err && err.code === 'TIMEOUT') {
+      var b = el('button', 'link-button', '다시 시도');
+      b.type = 'button';
+      b.addEventListener('click', retry);
+      node.appendChild(document.createTextNode(' '));
+      node.appendChild(b);
+    }
+  }
+
+  global.board = {
+    el: el, clear: clear, formatTime: formatTime, postUrl: postUrl, renderPosts: renderPosts,
+    renderPager: renderPager, say: say, sayError: sayError
+  };
+})(window);

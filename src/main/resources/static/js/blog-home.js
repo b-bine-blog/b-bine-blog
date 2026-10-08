@@ -65,8 +65,48 @@
       $('manage').href = '/blog/' + encodeURIComponent(blog.address) + '/manage';
     }
     show('blog', true);
+    show('write', isMember && !(me && me.admin));
+    $('write').href = '/blog/' + encodeURIComponent(blog.address) + '/write';
     loadDelegation();
+    loadCategories();
+    loadPosts(1);
   }
+
+  // 글 목록과 카테고리 (004 T027). categoryId: '' 전체, '0' 미분류.
+  var postQuery = { categoryId: '', size: 10 };
+
+  function loadPosts(page) {
+    var url = '/api/blogs/' + blog.id + '/posts?page=' + page + '&size=' + postQuery.size
+      + (postQuery.categoryId !== '' ? '&categoryId=' + postQuery.categoryId : '');
+    api.get(url).then(function (r) {
+      board.renderPosts($('post-list'), r.items, { empty: '아직 글이 없습니다.' });
+      board.renderPager($('post-pages'), r.page, r.totalPages, loadPosts);
+    }, function (err) { board.sayError($('message'), err, function () { loadPosts(page); }); });
+  }
+
+  function loadCategories() {
+    api.get('/api/blogs/' + blog.id + '/categories').then(function (r) {
+      var box = $('categories');
+      board.clear(box);
+      function tab(label, value) {
+        var b = board.el('button', null, label);
+        b.type = 'button';
+        b.setAttribute('role', 'tab');
+        b.setAttribute('aria-selected', postQuery.categoryId === value ? 'true' : 'false');
+        b.addEventListener('click', function () { postQuery.categoryId = value; loadCategories(); loadPosts(1); });
+        box.appendChild(b);
+      }
+      if (r.categories.length === 0) { return; }
+      tab('전체', '');
+      r.categories.forEach(function (c) { tab(c.name + ' (' + c.postCount + ')', String(c.id)); });
+      tab('미분류 (' + r.uncategorizedCount + ')', '0');
+    }, function () { /* 카테고리를 못 읽어도 글 목록은 보인다 */ });
+  }
+
+  $('post-size').addEventListener('change', function () {
+    postQuery.size = Number($('post-size').value);
+    loadPosts(1);
+  });
 
   // 나에게 온 위임 요청이 있으면 수락·거절을 보여 준다. 없으면 204(FR-040, FR-041).
   function loadDelegation() {

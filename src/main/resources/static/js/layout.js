@@ -15,8 +15,11 @@
     header.className = 'site-header';
     var nav = document.createElement('nav');
     nav.appendChild(link('/', '메인블로그'));
+    var right0 = link('/notices', '공지사항'); // 004 US10
+    right0.className = 'site-header__notice';
     var right = document.createElement('div');
     right.className = 'site-header__right';
+    right.appendChild(right0);
     if (me) {
       var name = document.createElement('span');
       name.className = 'site-header__nickname';

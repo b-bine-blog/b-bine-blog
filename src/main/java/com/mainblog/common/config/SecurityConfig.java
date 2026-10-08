@@ -36,7 +36,11 @@ public class SecurityConfig {
 
     static final String CSP = "default-src 'self'; "
             + "script-src 'self' https://challenges.cloudflare.com; "
-            + "frame-src https://challenges.cloudflare.com";
+            + "frame-src https://challenges.cloudflare.com; "
+            // 글 본문의 바깥 이미지(https)와 에디터 CSS의 data: 아이콘(004 R-01, R-02)
+            + "img-src 'self' data: https:; "
+            // Toast UI 에디터가 style 속성으로 팝업 위치를 정한다. 스크립트는 그대로 막는다(D-101)
+            + "style-src 'self' 'unsafe-inline'";
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationEntryPoint entryPoint,
@@ -75,6 +79,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/blogs", "/api/blogs/search", "/api/blogs/address/*",
                                 "/api/blogs/*/share-link").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/blogs/share-access").permitAll()
+                        // 비회원도 보는 게시판 API(004 FR-005, FR-017, FR-023, FR-052, FR-061, FR-065). 볼 수 있는지는 서비스가 본다.
+                        .requestMatchers(HttpMethod.GET, "/api/blogs/*/posts", "/api/blogs/*/categories",
+                                "/api/posts/*", "/api/posts/*/comments", "/api/tags/*/posts", "/api/search",
+                                "/api/feed", "/api/notices").permitAll()
                         .requestMatchers("/api/**").authenticated()
                         // 정적 화면(D-66). 화면이 부르는 API에서 권한을 확인한다.
                         .anyRequest().permitAll());

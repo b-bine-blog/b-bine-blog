@@ -21,21 +21,21 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
-/** 002 블로그 통합 테스트 도우미. 회원을 만들고 로그인 쿠키로 API를 부른다. */
-abstract class BlogTestBase extends IntegrationTestBase {
+/** 002 블로그 통합 테스트 도우미(004 BoardTestBase도 확장한다). 회원을 만들고 로그인 쿠키로 API를 부른다. */
+public abstract class BlogTestBase extends IntegrationTestBase {
 
-    static final String PW = "Passw0rd!";
+    protected static final String PW = "Passw0rd!";
     private static final AtomicInteger SEQ = new AtomicInteger();
 
     @Autowired
-    ObjectMapper objectMapper;
+    protected ObjectMapper objectMapper;
 
     @Autowired
-    DailyCleanupJob dailyCleanupJob;
+    protected DailyCleanupJob dailyCleanupJob;
 
     /** 로그인한 회원. extraCookies는 공유 링크 쿠키 등. */
-    record Member(long id, String email, LoginCookies login, List<Cookie> extraCookies) {
-        Cookie[] cookies() {
+    protected record Member(long id, String email, LoginCookies login, List<Cookie> extraCookies) {
+        public Cookie[] cookies() {
             List<Cookie> all = new ArrayList<>(Arrays.asList(login.cookies()));
             all.addAll(extraCookies);
             return all.toArray(Cookie[]::new);
@@ -43,7 +43,7 @@ abstract class BlogTestBase extends IntegrationTestBase {
     }
 
     /** 전화번호가 겹치지 않는 회원(블랙리스트 비교가 섞이지 않게). */
-    Member member(String nickname) throws Exception {
+    protected Member member(String nickname) throws Exception {
         int n = SEQ.incrementAndGet();
         String email = "u" + n + "@test.com";
         String phone = "010" + String.format("%08d", 10000000 + n);
@@ -52,17 +52,17 @@ abstract class BlogTestBase extends IntegrationTestBase {
     }
 
     /** 시계를 크게 옮긴 뒤 만료된 액세스 토큰 대신 다시 로그인한다. */
-    Member relogin(Member m) throws Exception {
+    protected Member relogin(Member m) throws Exception {
         return new Member(m.id(), m.email(), loginAs(m.email(), PW, false), m.extraCookies());
     }
 
-    Member admin(String nickname) throws Exception {
+    protected Member admin(String nickname) throws Exception {
         Member m = member(nickname);
         jdbc.update("UPDATE users SET role = 'ADMIN' WHERE id = ?", m.id());
         return m;
     }
 
-    Res call(Member who, MockHttpServletRequestBuilder builder) throws Exception {
+    protected Res call(Member who, MockHttpServletRequestBuilder builder) throws Exception {
         MockHttpServletRequestBuilder b = AuthTestSupport.withCsrf(builder);
         if (who != null) {
             b.cookie(who.cookies());
@@ -71,28 +71,28 @@ abstract class BlogTestBase extends IntegrationTestBase {
         return new Res(res.getStatus(), res.getContentAsString(), res);
     }
 
-    Res getAs(Member who, String url) throws Exception {
+    protected Res getAs(Member who, String url) throws Exception {
         return call(who, get(java.net.URI.create(url))); // 이미 인코딩된 주소를 다시 인코딩하지 않는다
     }
 
-    Res postAs(Member who, String url, String json) throws Exception {
+    protected Res postAs(Member who, String url, String json) throws Exception {
         return call(who, post(url).contentType(MediaType.APPLICATION_JSON).content(json == null ? "{}" : json));
     }
 
-    Res putAs(Member who, String url, String json) throws Exception {
+    protected Res putAs(Member who, String url, String json) throws Exception {
         return call(who, put(url).contentType(MediaType.APPLICATION_JSON).content(json == null ? "{}" : json));
     }
 
-    Res patchAs(Member who, String url, String json) throws Exception {
+    protected Res patchAs(Member who, String url, String json) throws Exception {
         return call(who, patch(url).contentType(MediaType.APPLICATION_JSON).content(json));
     }
 
-    Res deleteAs(Member who, String url) throws Exception {
+    protected Res deleteAs(Member who, String url) throws Exception {
         return call(who, delete(url));
     }
 
     /** API로 블로그를 만들고 번호를 돌려준다. */
-    long createBlog(Member owner, String address, String visibility, String joinPolicy) throws Exception {
+    protected long createBlog(Member owner, String address, String visibility, String joinPolicy) throws Exception {
         Res r = postAs(owner, "/api/blogs", blogJson("블로그 " + address, address, visibility, joinPolicy));
         if (r.status() != 201) {
             throw new AssertionError("블로그 생성 실패: " + r.status() + " " + r.body());
@@ -100,18 +100,18 @@ abstract class BlogTestBase extends IntegrationTestBase {
         return r.json().get("id").asLong();
     }
 
-    static String blogJson(String name, String address, String visibility, String joinPolicy) {
+    protected static String blogJson(String name, String address, String visibility, String joinPolicy) {
         return "{\"name\":\"%s\",\"address\":\"%s\",\"visibility\":\"%s\",\"joinPolicy\":\"%s\"}"
                 .formatted(name, address, visibility, joinPolicy);
     }
 
     /** 04:00 처리를 지금 시계 시각으로 한 번 돌린다. */
-    void runDaily() {
+    protected void runDaily() {
         dailyCleanupJob.runOnce();
     }
 
     /** 강퇴 기록과 블랙리스트 행을 직접 넣는다(해시 값은 비교하지 않는 테스트용). 블랙리스트 번호를 돌려준다. */
-    long insertBlacklist(long blogId, long userId, long handledBy) {
+    protected long insertBlacklist(long blogId, long userId, long handledBy) {
         jdbc.update("INSERT INTO blog_sanctions (blog_id, user_id, handled_by, sanction_type, starts_at) "
                 + "VALUES (?, ?, ?, 'KICK', ?)", blogId, userId, handledBy, clock.now());
         Long sanctionId = jdbc.queryForObject("SELECT MAX(id) FROM blog_sanctions", Long.class);
@@ -120,46 +120,46 @@ abstract class BlogTestBase extends IntegrationTestBase {
         return jdbc.queryForObject("SELECT MAX(id) FROM blog_blacklists", Long.class);
     }
 
-    long insertAppeal(long blacklistId, long userId) {
+    protected long insertAppeal(long blacklistId, long userId) {
         jdbc.update("INSERT INTO blacklist_appeals (blacklist_id, user_id, content, name_matched, phone_matched) "
                 + "VALUES (?, ?, '풀어 주세요', TRUE, FALSE)", blacklistId, userId);
         return jdbc.queryForObject("SELECT MAX(id) FROM blacklist_appeals", Long.class);
     }
 
-    String role(long blogId, long userId) {
+    protected String role(long blogId, long userId) {
         List<String> r = jdbc.queryForList("SELECT role FROM blog_members WHERE blog_id = ? AND user_id = ?",
                 String.class, blogId, userId);
         return r.isEmpty() ? null : r.get(0);
     }
 
-    final class Res {
+    protected final class Res {
         private final int status;
         private final String body;
         private final MockHttpServletResponse raw;
 
-        Res(int status, String body, MockHttpServletResponse raw) {
+        public Res(int status, String body, MockHttpServletResponse raw) {
             this.status = status;
             this.body = body;
             this.raw = raw;
         }
 
-        int status() {
+        public int status() {
             return status;
         }
 
-        String body() {
+        public String body() {
             return body;
         }
 
-        MockHttpServletResponse raw() {
+        public MockHttpServletResponse raw() {
             return raw;
         }
 
-        JsonNode json() throws Exception {
+        public JsonNode json() throws Exception {
             return objectMapper.readTree(body);
         }
 
-        String code() throws Exception {
+        public String code() throws Exception {
             JsonNode c = json().get("code");
             return c == null ? null : c.asText();
         }

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>검색 - 메인블로그</title>
+  <link rel="stylesheet" href="/css/base.css">
+</head>
+<body>
+  <main class="wide">
+    <form id="search-form" class="blog-search" role="search">
+      <label for="q" class="sr-only">통합 검색</label>
+      <input id="q" name="q" type="search" maxlength="20" placeholder="블로그·글 제목·태그·닉네임 검색" autocomplete="off">
+      <button type="submit">검색</button>
+    </form>
+    <section id="recent" hidden>
+      <div class="row"><span class="hint">최근 검색어</span><button type="button" class="link-button" id="recent-clear">전체 삭제</button></div>
+      <ul class="chips" id="recent-list"></ul>
+    </section>
+    <div class="tabs" role="tablist" id="types">
+      <button type="button" role="tab" data-type="ALL">전체</button>
+      <button type="button" role="tab" data-type="BLOG">블로그</button>
+      <button type="button" role="tab" data-type="TITLE">글 제목</button>
+      <button type="button" role="tab" data-type="TAG">태그</button>
+      <button type="button" role="tab" data-type="NICKNAME">닉네임</button>
+    </div>
+    <div class="blog-toolbar">
+      <div class="tabs" role="tablist" id="sorts">
+        <button type="button" role="tab" data-sort="RELEVANCE">관련도</button>
+        <button type="button" role="tab" data-sort="LATEST">최신</button>
+        <button type="button" role="tab" data-sort="POPULAR">인기</button>
+      </div>
+      <label>보기
+        <select id="size">
+          <option value="10">10개</option>
+          <option value="20">20개</option>
+          <option value="30">30개</option>
+        </select>
+      </label>
+    </div>
+    <p id="message" class="message" role="alert"></p>
+    <section id="blog-result" hidden>
+      <h2>블로그 <span id="blog-count" class="hint"></span></h2>
+      <ul id="blog-list" class="post-list"></ul>
+      <button type="button" id="more-blogs" class="link-button" hidden>블로그 더 보기</button>
+      <nav id="blog-pages" class="pagination" aria-label="블로그 페이지"></nav>
+    </section>
+    <section id="post-result" hidden>
+      <h2>글 <span id="post-count" class="hint"></span></h2>
+      <ul id="post-list" class="post-list"></ul>
+      <nav id="post-pages" class="pagination" aria-label="글 페이지"></nav>
+    </section>
+  </main>
+  <script src="/js/api.js"></script>
+  <script src="/js/session.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/board-common.js"></script>
+  <script src="/js/board-search.js"></script>
+</body>
+</html>

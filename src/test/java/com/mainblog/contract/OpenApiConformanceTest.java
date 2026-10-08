@@ -25,6 +25,8 @@ class OpenApiConformanceTest extends IntegrationTestBase {
     static final Path CONTRACT = Path.of("specs/001-member-auth/contracts/member-auth-api.yaml");
     /** 002 블로그 관리 계약 (002 T072). */
     static final Path BLOG_CONTRACT = Path.of("specs/002-blog-management/contracts/blog-api.yaml");
+    /** 004 게시판 계약 (004 T055). */
+    static final Path BOARD_CONTRACT = Path.of("specs/004-board/contracts/board-api.yaml");
     static final Set<String> HTTP_METHODS = Set.of("get", "post", "put", "patch", "delete");
     /** 화면이 Turnstile 사이트 키를 읽는 설정 조회. 회원 기능 계약 밖이다(T040). */
     static final Set<String> OUTSIDE_CONTRACT = Set.of("GET /api/public-config");
@@ -78,10 +80,20 @@ class OpenApiConformanceTest extends IntegrationTestBase {
     }
 
     @Test
+    void 게시판_계약의_16개_경로와_모든_메서드가_매핑돼_있다() throws Exception {
+        Set<String> contract = contractOperations(BOARD_CONTRACT);
+        assertThat(contract.stream().map(op -> op.substring(op.indexOf(' ') + 1)).distinct()).hasSize(16);
+        Set<String> missing = new TreeSet<>(contract);
+        missing.removeAll(mappedOperations());
+        assertThat(missing).isEmpty();
+    }
+
+    @Test
     void 계약에_없는_API가_없다() throws Exception {
         Set<String> extra = new TreeSet<>(mappedOperations());
         extra.removeAll(contractOperations());
         extra.removeAll(contractOperations(BLOG_CONTRACT));
+        extra.removeAll(contractOperations(BOARD_CONTRACT));
         extra.removeAll(OUTSIDE_CONTRACT);
         assertThat(extra).isEmpty();
     }

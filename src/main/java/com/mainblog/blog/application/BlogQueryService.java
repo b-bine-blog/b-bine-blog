@@ -78,12 +78,18 @@ public class BlogQueryService {
                 || !HAS_WORD.matcher(query).find()) {
             throw new InvalidInputException("q", "Size");
         }
+        return searchAnySize(query, sort, page(page), size(size));
+    }
+
+    /** 검색어 확인을 마친 통합 검색(004)용. 페이지 크기 제한 없이 블로그 미리보기 개수를 받는다. */
+    @Transactional(readOnly = true)
+    public BlogPage searchAnySize(String query, String sort, int page, int size) {
         // 따옴표로 묶어 구절 검색으로 만든다. 불리언 연산자 문자가 해석되지 않게 한다.
         String phrase = "\"" + query.replace("\"", " ") + "\"";
         String tag = TagNormalizer.normalize(query, properties.tag().maxLength());
         String where = LISTED + " AND (MATCH(b.name, b.description) AGAINST (? IN BOOLEAN MODE)"
                 + " OR b.id IN (SELECT bt.blog_id FROM blog_tags bt JOIN tags t ON t.id = bt.tag_id WHERE t.name = ?))";
-        return query(where, List.of(phrase, tag == null ? "" : tag), Sort.parse(sort), page(page), size(size));
+        return query(where, List.of(phrase, tag == null ? "" : tag), Sort.parse(sort), page, size);
     }
 
     /** 구독한 블로그(폐쇄 제외, 숨김·일부 공개·비공개 포함). 구독 목록은 002에서 페이지 없이 준다(R-15). */

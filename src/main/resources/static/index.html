@@ -7,13 +7,29 @@
   <link rel="stylesheet" href="/css/base.css">
 </head>
 <body>
-  <main>
+  <main class="wide">
     <h1>메인블로그</h1>
     <form id="search-form" class="blog-search" role="search">
-      <label for="q" class="sr-only">블로그 검색</label>
-      <input id="q" name="q" type="search" maxlength="20" placeholder="블로그 이름·소개·태그 검색">
+      <label for="q" class="sr-only">통합 검색</label>
+      <input id="q" name="q" type="search" maxlength="20" placeholder="블로그·글 제목·태그·닉네임 검색">
       <button type="submit">검색</button>
     </form>
+    <!-- 메인 피드 (004 T031, FR-061~FR-064, D-100 #18) -->
+    <section id="feed">
+      <h2>글</h2>
+      <div class="tabs" role="tablist" id="feed-tabs">
+        <button type="button" role="tab" data-feed="LATEST">최신</button>
+        <button type="button" role="tab" data-feed="POPULAR">인기</button>
+        <button type="button" role="tab" data-feed="SUBSCRIBED" data-login hidden>구독</button>
+        <button type="button" role="tab" data-feed="FOLLOWING" data-login hidden>팔로우</button>
+      </div>
+      <p id="feed-message" class="message" role="alert"></p>
+      <ul id="feed-list" class="post-list"></ul>
+      <nav id="feed-pages" class="pagination" aria-label="글 페이지"></nav>
+      <button type="button" id="feed-more" class="feed-more" hidden>더 보기</button>
+    </section>
+
+    <h2>블로그</h2>
     <div class="blog-toolbar">
       <div class="tabs" role="tablist">
         <button type="button" role="tab" data-sort="latest">최신</button>
@@ -36,5 +52,7 @@
   <script src="/js/session.js"></script>
   <script src="/js/layout.js"></script>
   <script src="/js/blog-list.js"></script>
+  <script src="/js/board-common.js"></script>
+  <script src="/js/board-feed.js"></script>
 </body>
 </html>
