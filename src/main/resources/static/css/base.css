@@ -405,3 +405,12 @@ main.post-page .post-content { margin: 0; padding: 32px 40px 36px; border: 0; bo
   .post-card__spacer { display: none; }
 }
 
+
+/* 밝은 버튼은 마우스를 올려도 글자가 보이게(기본 button:hover는 짙은 초록 배경이라 글자색이 같아져 안 보였다) */
+.tabs button:hover:not(:disabled):not([aria-selected="true"]),
+.pagination button:hover:not(:disabled):not(.is-current) { background: var(--green-100); color: var(--green-900); }
+.tabs button[aria-selected="true"]:hover, .pagination button.is-current:hover { background: var(--green-800); color: #fff; }
+button.button-outline:hover:not(:disabled) { background: var(--green-50); color: var(--green-800); }
+.like-button:hover:not(:disabled):not([aria-pressed="true"]) { background: var(--green-50); color: var(--green-800); }
+.like-button[aria-pressed="true"]:hover { background: var(--green-800); color: #fff; }
+.comment__actions button:hover:not(:disabled), .link-button:hover:not(:disabled) { background: none; color: var(--green-900); text-decoration: underline; }
