@@ -263,3 +263,31 @@ main.reading .post-content { padding: 20px 24px; font-size: 1.02rem; line-height
 main.reading article > .row { margin: 12px 0; }
 main.reading article > .row > * { margin-top: 0; }
 @media (max-width: 640px) { main.reading .post-content { padding: 16px; } }
+
+/* 003 종 아이콘·알림 사이드바 (FR-028~FR-033). PC는 오른쪽 360px, 600px 이하는 화면 전체 */
+.site-header button.site-header__bell { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; padding: 0; border: 0; border-radius: 999px; background: rgba(255,255,255,.12); color: #fff; }
+.site-header button.site-header__bell:hover { background: rgba(255,255,255,.25); }
+.site-header button.site-header__bell[aria-expanded="true"] { background: #fff; color: var(--green-800); }
+.site-header__badge { position: absolute; top: -4px; right: -6px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--danger); color: #fff; font-size: 0.7rem; font-weight: 700; line-height: 18px; text-align: center; }
+.notif-panel { position: fixed; top: 0; right: 0; bottom: 0; z-index: 30; width: 360px; max-width: 100%; display: flex; flex-direction: column; background: var(--surface); border-left: 1px solid var(--line); box-shadow: -6px 0 24px rgba(15, 61, 38, .15); padding: 16px; overflow-y: auto; }
+.notif-panel__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.notif-panel__head h2 { margin: 0; }
+.notif-panel__close { margin: 0; padding: 4px 12px; background: var(--green-50); color: var(--green-800); }
+.notif-panel__close:hover:not(:disabled) { background: var(--green-100); }
+.notif-panel__tabs { margin: 12px 0 8px; gap: 6px; }
+.notif-panel__tabs button { padding: 4px 10px; font-size: 0.85rem; }
+.notif-panel__actions { justify-content: flex-end; }
+.notif-panel__actions button { margin: 0; padding: 4px 12px; font-size: 0.85rem; }
+.notif-list { list-style: none; padding: 0; margin: 8px 0 0; }
+.notif-list__empty { color: var(--muted); text-align: center; padding: 24px 0; }
+.notif-item { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 4px; border-bottom: 1px solid var(--line); padding: 8px 4px; }
+.notif-item.is-unread { background: var(--green-50); border-left: 3px solid var(--green-600); }
+.notif-item__main { flex: 1; min-width: 0; margin: 0; padding: 0; background: none; color: var(--text); font-weight: 400; font-size: 0.92rem; text-align: left; }
+.notif-item__main:hover:not(:disabled) { background: none; color: var(--green-800); }
+.notif-item.is-unread .notif-item__content { font-weight: 600; }
+.notif-item__content { display: block; overflow-wrap: anywhere; }
+.notif-item__time { display: block; color: var(--muted); font-size: 0.78rem; }
+.notif-item__delete { margin: 0; padding: 0 8px; background: none; color: var(--muted); font-size: 1.1rem; line-height: 1.4; }
+.notif-item__delete:hover:not(:disabled) { background: none; color: var(--danger); }
+.notif-item__detail { flex-basis: 100%; margin: 4px 0 0; color: var(--muted); font-size: 0.85rem; white-space: pre-line; overflow-wrap: anywhere; }
+@media (max-width: 600px) { .notif-panel { width: 100%; border-left: 0; } }

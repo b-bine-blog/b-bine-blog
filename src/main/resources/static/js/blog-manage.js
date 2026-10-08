@@ -384,7 +384,10 @@
         api.setText($('message'), '이 블로그를 운영할 권한이 없습니다.');
         return;
       }
-      open(first);
+      // 알림에서 온 주소의 ?tab= 값(예: requests)이 권한 있는 탭이면 그 탭을 먼저 연다(003 T013, research R-06)
+      var wanted = new URLSearchParams(location.search).get('tab');
+      var wantedBtn = wanted ? document.querySelector('[data-tab="' + wanted.replace(/[^a-z]/g, '') + '"]') : null;
+      open(wantedBtn && !wantedBtn.hidden ? wantedBtn.getAttribute('data-tab') : first);
     }, function (err) {
       if (err.status === 401) {
         location.href = '/login.html?next=' + encodeURIComponent(location.pathname);

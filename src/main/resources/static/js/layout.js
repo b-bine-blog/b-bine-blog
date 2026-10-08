@@ -1,5 +1,7 @@
 // 공통 화면 틀 (T021): 상단 메뉴와 모든 화면 아래의 개인정보 처리방침 링크(FR-017).
 // 메뉴 글자는 textContent로만 넣는다(D-64).
+// 로그인하면 오른쪽 내 메뉴에 종 아이콘을 넣고 알림 사이드바(notifications.js)를 시작한다(003 T012, FR-028).
+// 메인과 모든 개별 블로그 화면이 이 파일을 같이 써서 어디서나 같은 종 아이콘이 보인다(4.2).
 (function () {
   'use strict';
 
@@ -49,6 +51,7 @@
       create.className = 'button-light';
       right.appendChild(create);
       right.appendChild(link('/me/blogs.html', '내 블로그'));
+      right.appendChild(bellButton());
       var name = link('/me/index.html', me.nickname);
       name.className = 'site-header__nickname';
       name.title = '내 정보';
@@ -70,6 +73,43 @@
     nav.appendChild(right);
     header.appendChild(nav);
     document.body.insertBefore(header, document.body.firstChild);
+  }
+
+  // 종 아이콘 버튼. 그림은 SVG 요소로 만들고 안 읽은 개수는 배지에 textContent로 넣는다.
+  function bellButton() {
+    var ns = 'http://www.w3.org/2000/svg';
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'site-header__bell';
+    button.setAttribute('aria-label', '알림');
+    var svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('width', '20');
+    svg.setAttribute('height', '20');
+    svg.setAttribute('aria-hidden', 'true');
+    var path = document.createElementNS(ns, 'path');
+    path.setAttribute('d', 'M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2z');
+    path.setAttribute('fill', 'currentColor');
+    svg.appendChild(path);
+    button.appendChild(svg);
+    var badge = document.createElement('span');
+    badge.className = 'site-header__badge';
+    badge.hidden = true;
+    button.appendChild(badge);
+    loadNotifications(button, badge);
+    return button;
+  }
+
+  // 알림 스크립트는 로그인했을 때만 불러온다(화면마다 script 태그를 더하지 않게).
+  function loadNotifications(button, badge) {
+    if (window.notifications) {
+      window.notifications.start(button, badge);
+      return;
+    }
+    var script = document.createElement('script');
+    script.src = '/js/notifications.js';
+    script.onload = function () { window.notifications.start(button, badge); };
+    document.head.appendChild(script);
   }
 
   function renderFooter() {
