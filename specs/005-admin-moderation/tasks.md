@@ -225,15 +225,15 @@ description: "005 메인 관리자·제재 구현 작업 목록"
 
 ## 9단계: 사용자 스토리 7 - 운영 통계 (P3)
 
-- [ ] T050 [P] [US7] `admin/AdminStatsIntegrationTest` (US7-1~3, FR-040, D-103 #21)
+- [X] T050 [P] [US7] `admin/AdminStatsIntegrationTest` (US7-1~3, FR-040, D-103 #21)
   - 10/1 회원 3명, 10/2 회원 5명과 관리자 1명 가입
   - 회원 수 8 → 1명 탈퇴하면 7이고 10/2 가입 수는 그대로 5
   - 블로그 4(숨김 포함, 폐쇄 제외)
   - 10/2 글 7(그중 삭제·숨김도 셈, 공지 제외)
   - 30일 0 채우기, `admin.stats.daily-days` 바꾸면 개수가 바뀐다
   - 회원이 부르면 403
-- [ ] T051 [US7] `admin/application/AdminStatsService.java`와 `admin/api/AdminStatsController.java`(`GET /api/admin/stats`)를 만든다
-- [ ] T052 [US7] 화면 `static/js/admin-stats.js`: 통계 탭을 만든다. 숫자 카드 2개, 일별 표
+- [X] T051 [US7] `admin/application/AdminStatsService.java`와 `admin/api/AdminStatsController.java`(`GET /api/admin/stats`)를 만든다
+- [X] T052 [US7] 화면 `static/js/admin-stats.js`: 통계 탭을 만든다. 숫자 카드 2개, 일별 표
 
 ---
 
@@ -293,3 +293,4 @@ description: "005 메인 관리자·제재 구현 작업 목록"
 13. **T040 (사용자 확인 필요)** `deleted_by` 칸이 생기기 전에 지워진 댓글(`deleted_by` NULL)은 누가 지웠는지 알 수 없어 복구 대상에서 뺐다(`restorable: false`, 복구하면 409 `NOT_RESTORABLE`). 개발 DB에 그런 행이 있으면 30일 안에만 문제가 된다.
 14. **T048** 멤버 제재 기록(`blog_sanctions`)의 1년 기준은 `created_at` 대신 제재한 시각 `starts_at`으로 했다. 002가 `created_at`을 DB 기본값(DB 시계)으로 채워 서버 시계(`Clock`)와 어긋날 수 있어서다. 실제 운영에서는 두 값이 같다. 활동 기록·경고·박탈·신고는 서비스가 `created_at`을 서버 시계로 채우므로 그대로 `created_at`을 쓴다.
 15. **T045** "조치가 실패하면 기록도 없다"는 같은 트랜잭션에서 조치와 기록을 쓰고 일부러 실패시켜 둘 다 없는 것을 확인했다. `AdminActionLog.write`는 트랜잭션 밖에서 부르면 실패한다(`MANDATORY`).
+16. **T051** 일별 가입·글 수는 시작일 00:00부터 내일 00:00 전까지만 센다. `users.created_at`은 DB 기본값이라 서버 시계와 어긋난 행이 오늘 뒤 날짜로 잡히지 않게 위쪽 경계도 두었다. T050의 "설정값을 바꾸면 개수가 바뀐다"는 Spring 문맥을 새로 띄우지 않고 설정값만 바꾼 서비스를 만들어 확인했다.
