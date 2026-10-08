@@ -86,6 +86,14 @@ public class BlogQueryService {
         return query(where, List.of(phrase, tag == null ? "" : tag), Sort.parse(sort), page(page), size(size));
     }
 
+    /** 구독한 블로그(폐쇄 제외, 숨김·일부 공개·비공개 포함). 구독 목록은 002에서 페이지 없이 준다(R-15). */
+    @Transactional(readOnly = true)
+    public List<BlogSummary> subscribedBlogs(long userId) {
+        String where = "b.status IN ('ACTIVE', 'CLOSING') AND b.id IN "
+                + "(SELECT s.blog_id FROM blog_subscriptions s WHERE s.user_id = ?)";
+        return query(where, List.of(userId), Sort.LATEST, 1, Integer.MAX_VALUE).items();
+    }
+
     private BlogPage query(String where, List<Object> params, Sort sort, int page, int size) {
         Long total = jdbc.queryForObject("SELECT COUNT(*) FROM blogs b WHERE " + where, Long.class,
                 params.toArray());

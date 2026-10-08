@@ -149,7 +149,7 @@ description: "002 블로그 생성·참여·운영 구현 작업 목록"
 
 ### 테스트
 
-- [ ] T041 [P] [US4] `src/test/java/com/mainblog/blog/VisibilityIntegrationTest.java`를 만든다 (SC-007)
+- [X] T041 [P] [US4] `src/test/java/com/mainblog/blog/VisibilityIntegrationTest.java`를 만든다 (SC-007)
   - US4 시나리오 1~6을 다룬다.
   - 비공개로 바꿀 때 구독자 알림이 10건인지 확인한다.
   - 비공개 블로그를 공개로 바꿀 때도 개수 제한이 걸리는지 확인한다.
@@ -157,13 +157,13 @@ description: "002 블로그 생성·참여·운영 구현 작업 목록"
 
 ### 구현
 
-- [ ] T042 [US4] `src/main/java/com/mainblog/blog/application/ShareLinkService.java`를 만든다(만들기·다시 만들기·확인, 32바이트 base64url). `src/main/java/com/mainblog/blog/api/ShareLinkController.java`에 `GET`·`POST /api/blogs/{blogId}/share-link`와 `POST /api/blogs/share-access`(쿠키 굽기)를 만든다 (FR-026~FR-028)
-- [ ] T043 [US4] `src/main/java/com/mainblog/blog/application/SubscriptionService.java`와 `src/main/java/com/mainblog/blog/api/SubscriptionController.java`를 만든다. 대상은 `POST`·`DELETE /api/blogs/{blogId}/subscription`, `GET /api/me/subscriptions`다 (FR-029, research R-15)
-- [ ] T044 [US4] `BlogService.update`와 `PATCH /api/blogs/{blogId}`를 만든다 (FR-009, FR-013, FR-031, FR-032)
+- [X] T042 [US4] `src/main/java/com/mainblog/blog/application/ShareLinkService.java`를 만든다(만들기·다시 만들기·확인, 32바이트 base64url). `src/main/java/com/mainblog/blog/api/ShareLinkController.java`에 `GET`·`POST /api/blogs/{blogId}/share-link`와 `POST /api/blogs/share-access`(쿠키 굽기)를 만든다 (FR-026~FR-028)
+- [X] T043 [US4] `src/main/java/com/mainblog/blog/application/SubscriptionService.java`와 `src/main/java/com/mainblog/blog/api/SubscriptionController.java`를 만든다. 대상은 `POST`·`DELETE /api/blogs/{blogId}/subscription`, `GET /api/me/subscriptions`다 (FR-029, research R-15)
+- [X] T044 [US4] `BlogService.update`와 `PATCH /api/blogs/{blogId}`를 만든다 (FR-009, FR-013, FR-031, FR-032)
   - 요청은 JsonNode로 받고, 알 수 없는 필드나 address가 있으면 400이다.
   - name·description·tags는 BLOG_INFO, visibility·joinPolicy는 OWNER 권한이다.
   - visibility를 바꿀 때는 BlogLimitPolicy로 확인하고, 공유 링크를 전환하고, PRIVATE면 BLOG_PRIVATE 알림을 보낸다.
-- [ ] T045 [P] [US4] 블로그 홈 화면을 고친다. `?share=` 값을 `POST /api/blogs/share-access`로 보내고 replaceState로 주소에서 지운다. 일부 공개면 공유 버튼(링크 복사)을, 로그인한 회원에게만 구독하기 버튼을 보여 준다
+- [X] T045 [P] [US4] 블로그 홈 화면을 고친다. `?share=` 값을 `POST /api/blogs/share-access`로 보내고 replaceState로 주소에서 지운다. 일부 공개면 공유 버튼(링크 복사)을, 로그인한 회원에게만 구독하기 버튼을 보여 준다
 
 ---
 

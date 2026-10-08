@@ -14,6 +14,8 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import com.fasterxml.jackson.databind.JsonNode;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -58,6 +60,12 @@ public class BlogController {
     @GetMapping("/api/me/blogs")
     public MyBlogs myBlogs(@AuthenticationPrincipal AuthenticatedMember member) {
         return queryService.myBlogs(member.id());
+    }
+
+    @PatchMapping("/api/blogs/{blogId}")
+    public BlogDetail update(@PathVariable Long blogId, @AuthenticationPrincipal AuthenticatedMember member,
+                             @RequestBody JsonNode body) {
+        return blogService.update(blogId, member.id(), BlogUpdateRequests.parse(body));
     }
 
     @GetMapping("/api/blogs/address/{address}")

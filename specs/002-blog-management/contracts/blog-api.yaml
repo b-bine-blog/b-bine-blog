@@ -158,7 +158,7 @@ paths:
                 properties:
                   coverImageUrl: { type: string }
           description: 저장됨
-        '400': { description: IMAGE_INVALID·IMAGE_TOO_LARGE, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '400': { description: FILE_TYPE_NOT_ALLOWED·FILE_TOO_LARGE(001과 같음), content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
@@ -683,7 +683,7 @@ components:
       description: VALIDATION_FAILED(fieldErrors 포함)
       content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
     Unauthorized:
-      description: UNAUTHORIZED
+      description: UNAUTHENTICATED
       content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
     Forbidden:
       description: BLOG_FORBIDDEN, BLOG_SUSPENDED, ADMIN_NOT_ALLOWED
@@ -806,6 +806,7 @@ components:
       type: object
       properties:
         url: { type: string, example: '/blog/travel-log?share=abc...' }
+        token: { type: string, description: 링크 값(32바이트 base64url 43자). 복사·확인용 }
         createdAt: { type: string, format: date-time }
     MemberForManager:
       type: object
