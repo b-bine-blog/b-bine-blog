@@ -23,10 +23,10 @@ description: "003 소셜·알림 구현 작업 목록"
 
 ## 1단계: 준비 (Setup)
 
-- [ ] T001 `src/main/resources/application.yml`에 data-model "설정값"의 `social.*`, `notification.*`을 `${ENV:기본값}`으로 더한다 (D-68)
-- [ ] T002 [P] `src/main/java/com/mainblog/common/config/SocialProperties.java`, `NotificationProperties.java`를 `@ConfigurationProperties` + `@Validated`로 만든다. `social.bio.max-length`·`social.report.detail-max-length`는 `@Max(500)`(DB 칸 길이), `notification.retention.*`은 7·30만 받게 검사한다
-- [ ] T003 [P] `src/main/java/com/mainblog/common/config/SecurityConfig.java`에 비회원도 보는 `GET /api/users/*/profile`, `/api/users/*/followers`, `/api/users/*/following`을 permitAll로 더한다 (FR-005, D-102 #8·#9)
-- [ ] T004 [P] `src/main/java/com/mainblog/common/error/ErrorCode.java`에 `SELF_NOT_ALLOWED`(400), `FOLLOW_NOT_ALLOWED`(403, "이 회원을 팔로우할 수 없습니다."), `REPORT_TOO_SOON`(409)을 더한다. 나머지는 기존 코드(`ADMIN_NOT_ALLOWED`, `NOT_FOUND`, `RATE_LIMITED`, `VALIDATION_FAILED`, `POST_NOT_FOUND`, `COMMENT_NOT_FOUND`, `BLOG_NOT_FOUND`, `BLOG_SUSPENDED`)를 쓴다 (contracts)
+- [X] T001 `src/main/resources/application.yml`에 data-model "설정값"의 `social.*`, `notification.*`을 `${ENV:기본값}`으로 더한다 (D-68)
+- [X] T002 [P] `src/main/java/com/mainblog/common/config/SocialProperties.java`, `NotificationProperties.java`를 `@ConfigurationProperties` + `@Validated`로 만든다. `social.bio.max-length`·`social.report.detail-max-length`는 `@Max(500)`(DB 칸 길이), `notification.retention.*`은 7·30만 받게 검사한다
+- [X] T003 [P] `src/main/java/com/mainblog/common/config/SecurityConfig.java`에 비회원도 보는 `GET /api/users/*/profile`, `/api/users/*/followers`, `/api/users/*/following`을 permitAll로 더한다 (FR-005, D-102 #8·#9)
+- [X] T004 [P] `src/main/java/com/mainblog/common/error/ErrorCode.java`에 `SELF_NOT_ALLOWED`(400), `FOLLOW_NOT_ALLOWED`(403, "이 회원을 팔로우할 수 없습니다."), `REPORT_TOO_SOON`(409)을 더한다. 나머지는 기존 코드(`ADMIN_NOT_ALLOWED`, `NOT_FOUND`, `RATE_LIMITED`, `VALIDATION_FAILED`, `POST_NOT_FOUND`, `COMMENT_NOT_FOUND`, `BLOG_NOT_FOUND`, `BLOG_SUSPENDED`)를 쓴다 (contracts)
 
 ---
 
@@ -34,9 +34,9 @@ description: "003 소셜·알림 구현 작업 목록"
 
 **⚠️ 중요**: 이 단계를 끝내기 전에는 어떤 사용자 스토리도 시작하지 않는다.
 
-- [ ] T005 `src/main/java/com/mainblog/common/notification/NotificationType.java`에 `NEW_FOLLOWER`(FOLLOW, new_follower), `BLOG_SUBSCRIBED`(SUBSCRIBE, blog_subscribed)와 `blockable` 표시(POST_COMMENT, COMMENT_REPLY, POST_LIKE, NEW_FOLLOWER, BLOG_SUBSCRIBED, JOIN_REQUESTED)를 더하고, `NotificationWriter.java`가 받는 사람이 탈퇴했거나 `blockable` 알림의 행동한 회원을 차단했으면 만들지 않게 한다. `src/test/java/com/mainblog/common/notification/NotificationWriterTest.java`에 경우를 더한다 (research R-07, D-102 #11)
-- [ ] T006 [P] `src/main/java/com/mainblog/social/application/SocialGuard.java`: 로그인 회원이 관리자면 403 `ADMIN_NOT_ALLOWED`, 대상 회원이 없거나 탈퇴·관리자면 404 `NOT_FOUND`, 두 회원 사이 차단 여부(어느 방향이든)를 DB로 확인한다 (D-90, research 가정 1)
-- [ ] T007 [P] `src/test/java/com/mainblog/social/SocialTestBase.java`에 알림 넣기(받는 사람·종류·탭·받은 시각), 팔로우·차단·구독·신고 행 넣기, 알림 설정 바꾸기 도우미를 둔다(`BoardTestBase` 확장)
+- [X] T005 `src/main/java/com/mainblog/common/notification/NotificationType.java`에 `NEW_FOLLOWER`(FOLLOW, new_follower), `BLOG_SUBSCRIBED`(SUBSCRIBE, blog_subscribed)와 `blockable` 표시(POST_COMMENT, COMMENT_REPLY, POST_LIKE, NEW_FOLLOWER, BLOG_SUBSCRIBED, JOIN_REQUESTED)를 더하고, `NotificationWriter.java`가 받는 사람이 탈퇴했거나 `blockable` 알림의 행동한 회원을 차단했으면 만들지 않게 한다. `src/test/java/com/mainblog/common/notification/NotificationWriterTest.java`에 경우를 더한다 (research R-07, D-102 #11)
+- [X] T006 [P] `src/main/java/com/mainblog/social/application/SocialGuard.java`: 로그인 회원이 관리자면 403 `ADMIN_NOT_ALLOWED`, 대상 회원이 없거나 탈퇴·관리자면 404 `NOT_FOUND`, 두 회원 사이 차단 여부(어느 방향이든)를 DB로 확인한다 (D-90, research 가정 1)
+- [X] T007 [P] `src/test/java/com/mainblog/social/SocialTestBase.java`에 알림 넣기(받는 사람·종류·탭·받은 시각), 팔로우·차단·구독·신고 행 넣기, 알림 설정 바꾸기 도우미를 둔다(`BoardTestBase` 확장)
 
 **체크포인트**: 기반 준비 완료.
 

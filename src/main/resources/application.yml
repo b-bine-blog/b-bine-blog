@@ -171,6 +171,34 @@ board:
     summary-length: ${BOARD_OG_SUMMARY_LENGTH:100}               # D-100 #14
     default-image: ${BOARD_OG_DEFAULT_IMAGE:/img/og-default.png} # D-100 #15
 
+social:
+  # 003 소셜 설정값 (specs/003-social-notification/data-model.md "설정값", D-68)
+  follow:
+    rate-limit: ${SOCIAL_FOLLOW_RATE_LIMIT:30}                  # D-102 #4, 회원당
+    rate-window: ${SOCIAL_FOLLOW_RATE_WINDOW:1m}
+  subscribe:
+    rate-limit: ${SOCIAL_SUBSCRIBE_RATE_LIMIT:30}               # D-102 #4, 회원당(구독·취소 합쳐 셈)
+    rate-window: ${SOCIAL_SUBSCRIBE_RATE_WINDOW:1m}
+  list:
+    page-size: ${SOCIAL_LIST_PAGE_SIZE:20}                      # D-102 #9, 팔로워·팔로잉·차단 목록
+  bio:
+    max-length: ${SOCIAL_BIO_MAX_LENGTH:500}                    # D-102 #7, users.bio VARCHAR(500) 이하
+  report:
+    reasons: ${SOCIAL_REPORT_REASONS:SPAM=스팸·광고,ABUSE=욕설·비방,SEXUAL=음란·불쾌한 내용,PRIVACY=개인정보 노출,COPYRIGHT=저작권 침해,OTHER=기타}   # D-102 #14, 코드=이름
+    detail-required: ${SOCIAL_REPORT_DETAIL_REQUIRED:OTHER}     # D-102 #14, 설명이 꼭 있어야 하는 사유
+    detail-max-length: ${SOCIAL_REPORT_DETAIL_MAX_LENGTH:500}   # D-102 #14, reports.reason_detail VARCHAR(500) 이하
+    repeat-after: ${SOCIAL_REPORT_REPEAT_AFTER:14d}             # FR-025, 6.5
+
+notification:
+  # 003 알림 설정값 (D-68)
+  page-size: ${NOTIFICATION_PAGE_SIZE:20}                       # D-102 #17
+  poll-interval: ${NOTIFICATION_POLL_INTERVAL:30s}              # D-72
+  badge-max: ${NOTIFICATION_BADGE_MAX:99}                       # D-102 #20, 화면은 넘으면 "99+"
+  retention:
+    # DB CHECK retention_days IN (7, 30)과 같아야 한다. 바꾸려면 Crowfoot에서 CHECK도 바꾼다
+    default-days: ${NOTIFICATION_RETENTION_DEFAULT_DAYS:30}     # 4.5, FR-056
+    short-days: ${NOTIFICATION_RETENTION_SHORT_DAYS:7}          # 6.7, FR-057
+
 app:
   base-url: ${APP_BASE_URL:http://localhost:8080}                # og 절대 주소(004 research R-12)
 

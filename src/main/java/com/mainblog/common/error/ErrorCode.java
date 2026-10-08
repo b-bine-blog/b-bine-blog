@@ -63,7 +63,12 @@ public enum ErrorCode {
     COMMENT_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "공지사항에는 댓글을 달 수 없습니다."),
     LIKE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "공지사항에는 좋아요를 누를 수 없습니다."),
     SEARCH_KEYWORD_INVALID(HttpStatus.BAD_REQUEST, "검색어는 글자나 숫자를 넣어 2~20자로 입력해 주세요."),
-    ADMIN_ONLY(HttpStatus.FORBIDDEN, "메인 관리자만 할 수 있습니다.");
+    ADMIN_ONLY(HttpStatus.FORBIDDEN, "메인 관리자만 할 수 있습니다."),
+
+    // 003 소셜·알림 (contracts/social-api.yaml)
+    SELF_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "자기 자신에게는 할 수 없습니다."),
+    FOLLOW_NOT_ALLOWED(HttpStatus.FORBIDDEN, "이 회원을 팔로우할 수 없습니다."),
+    REPORT_TOO_SOON(HttpStatus.CONFLICT, "같은 대상은 2주에 한 번만 신고할 수 있습니다.");
 
     private final HttpStatus status;
     private final String message;

@@ -83,6 +83,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/blogs/*/posts", "/api/blogs/*/categories",
                                 "/api/posts/*", "/api/posts/*/comments", "/api/tags/*/posts", "/api/search",
                                 "/api/feed", "/api/notices").permitAll()
+                        // 비회원도 보는 프로필·팔로워·팔로잉 목록(003 FR-005, D-102 #8·#9). 나머지 소셜·알림 API는 로그인 필요
+                        .requestMatchers(HttpMethod.GET, "/api/users/*/profile", "/api/users/*/followers",
+                                "/api/users/*/following").permitAll()
                         .requestMatchers("/api/**").authenticated()
                         // 정적 화면(D-66). 화면이 부르는 API에서 권한을 확인한다.
                         .anyRequest().permitAll());

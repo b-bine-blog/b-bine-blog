@@ -17,7 +17,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 
 /** 004 게시판 통합 테스트 도우미 (T013). 002 BlogTestBase에 글·카테고리·차단·팔로우 데이터 만들기를 더한다. */
-abstract class BoardTestBase extends BlogTestBase {
+public abstract class BoardTestBase extends BlogTestBase {
 
     private static final java.util.concurrent.atomic.AtomicInteger OWNER_SEQ = new java.util.concurrent.atomic.AtomicInteger();
 

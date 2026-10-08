@@ -3,9 +3,10 @@ package com.mainblog.common.notification;
 /**
  * 알림 종류 (T013, 3.6, SOC-04). tab과 끌 수 있는지(설정 컬럼)를 함께 정한다. 설정 컬럼이 null이면 끌 수 없다.
  * 002가 쓰는 것은 specs/002-blog-management/data-model.md "알림 종류". 003·004가 종류를 더한다.
+ * blockable: 받는 사람이 행동한 회원을 차단했으면 만들지 않는 종류(003 research R-07, D-102 #11).
  */
 public enum NotificationType {
-    JOIN_REQUESTED("BLOG", "join_request"),
+    JOIN_REQUESTED("BLOG", "join_request", true),
     JOIN_APPROVED("BLOG", "join_result"),
     JOIN_REJECTED("BLOG", "join_result"),
     BLOG_PRIVATE("BLOG", null),
@@ -25,18 +26,33 @@ public enum NotificationType {
     BLOG_CLOSED_REQUEST_REJECTED("BLOG", null),
 
     // 004 게시판 (specs/004-board/data-model.md "알림 종류")
-    POST_COMMENT("COMMENT", "post_comment"),
-    COMMENT_REPLY("COMMENT", "comment_reply"),
-    POST_LIKE("LIKE", "post_like"),
+    POST_COMMENT("COMMENT", "post_comment", true),
+    COMMENT_REPLY("COMMENT", "comment_reply", true),
+    POST_LIKE("LIKE", "post_like", true),
     POST_DELETED("OPERATION", null),
-    NOTICE("OPERATION", "notice");
+    NOTICE("OPERATION", "notice"),
+
+    // 003 소셜 (specs/003-social-notification/data-model.md "알림 종류"). 화면의 팔로우·구독 탭은 FOLLOW·SUBSCRIBE를 함께 보여준다
+    NEW_FOLLOWER("FOLLOW", "new_follower", true),
+    BLOG_SUBSCRIBED("SUBSCRIBE", "blog_subscribed", true);
 
     private final String tab;
     private final String settingColumn;
+    private final boolean blockable;
 
     NotificationType(String tab, String settingColumn) {
+        this(tab, settingColumn, false);
+    }
+
+    NotificationType(String tab, String settingColumn, boolean blockable) {
         this.tab = tab;
         this.settingColumn = settingColumn;
+        this.blockable = blockable;
+    }
+
+    /** 받는 사람이 행동한 회원을 차단했으면 만들지 않는 종류인지(D-102 #11). 끌 수 없는 운영 알림은 false. */
+    public boolean blockable() {
+        return blockable;
     }
 
     public String tab() {
