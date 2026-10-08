@@ -191,16 +191,16 @@ description: "001 회원 가입·로그인·계정 관리 구현 작업 목록"
 
 ### US6 테스트
 
-- [ ] T065 [P] [US6] `src/test/java/com/mainblog/common/masking/EmailMaskerTest.java`: `abcdef@gmail.com` → `ab***@gmail.com`, `ab@x.com` → `a***@x.com`, `a@x.com` → `a***@x.com` (FR-036, 4.4)
-- [ ] T066 [P] [US6] `src/test/java/com/mainblog/auth/FindEmailIntegrationTest.java`: 인수 시나리오 1~7과 SC-006(응답 JSON 문자열 어디에도 원문 이메일 없음), SC-007(같은 IP 6번째 429), 10분 지난 resetToken 410, 다른 계정의 토큰으로 바꿔도 그 토큰의 계정에만 메일
+- [X] T065 [P] [US6] `src/test/java/com/mainblog/common/masking/EmailMaskerTest.java`: `abcdef@gmail.com` → `ab***@gmail.com`, `ab@x.com` → `a***@x.com`, `a@x.com` → `a***@x.com` (FR-036, 4.4)
+- [X] T066 [P] [US6] `src/test/java/com/mainblog/auth/FindEmailIntegrationTest.java`: 인수 시나리오 1~7과 SC-006(응답 JSON 문자열 어디에도 원문 이메일 없음), SC-007(같은 IP 6번째 429), 10분 지난 resetToken 410, 다른 계정의 토큰으로 바꿔도 그 토큰의 계정에만 메일
 
 ### US6 구현
 
-- [ ] T067 [P] [US6] `src/main/java/com/mainblog/common/masking/EmailMasker.java`: @ 앞 처음 2글자 + `***`, @ 앞이 2글자 이하면 첫 글자 + `***` (FR-036)
-- [ ] T068 [P] [US6] `src/main/java/com/mainblog/auth/domain/PasswordResetToken.java`, `PasswordResetTokenRepository.java`: token_hash UNIQUE, expires_at = 발급 + 10분, 쓰이거나 만료되면 삭제 (FR-038)
-- [ ] T069 [US6] `src/main/java/com/mainblog/auth/application/FindEmailService.java`: IP 제한(10분 5번) → 이름 trim·전화번호 숫자만 → status ACTIVE만 조회 → 계정마다 resetToken 발급 → maskedEmail·joinedOn(가입일)·resetToken. 재설정 코드 발송은 토큰 확인 후 PasswordResetService의 userId 메서드 호출 (FR-034~FR-039, D-23, D-26)
-- [ ] T070 [US6] `src/main/java/com/mainblog/auth/api/FindEmailController.java`: `POST /api/auth/find-email`(200/429), `POST /api/auth/find-email/reset-code`(202/410). PasswordResetController의 verify·저장이 `resetToken`도 받도록 요청 DTO와 서비스 분기를 더한다
-- [ ] T071 [US6] 화면 `src/main/resources/static/find-email.html`, `src/main/resources/static/js/find-email.js`: 결과 목록(가린 이메일, "2026.10.02 가입"), 없으면 "일치하는 회원 정보가 없습니다", 계정 옆 [비밀번호 재설정] → `find-password.html?resetToken=…`
+- [X] T067 [P] [US6] `src/main/java/com/mainblog/common/masking/EmailMasker.java`: @ 앞 처음 2글자 + `***`, @ 앞이 2글자 이하면 첫 글자 + `***` (FR-036)
+- [X] T068 [P] [US6] `src/main/java/com/mainblog/auth/domain/PasswordResetToken.java`, `PasswordResetTokenRepository.java`: token_hash UNIQUE, expires_at = 발급 + 10분, 쓰이거나 만료되면 삭제 (FR-038)
+- [X] T069 [US6] `src/main/java/com/mainblog/auth/application/FindEmailService.java`: IP 제한(10분 5번) → 이름 trim·전화번호 숫자만 → status ACTIVE만 조회 → 계정마다 resetToken 발급 → maskedEmail·joinedOn(가입일)·resetToken. 재설정 코드 발송은 토큰 확인 후 PasswordResetService의 userId 메서드 호출 (FR-034~FR-039, D-23, D-26)
+- [X] T070 [US6] `src/main/java/com/mainblog/auth/api/FindEmailController.java`: `POST /api/auth/find-email`(200/429), `POST /api/auth/find-email/reset-code`(202/410). PasswordResetController의 verify·저장이 `resetToken`도 받도록 요청 DTO와 서비스 분기를 더한다
+- [X] T071 [US6] 화면 `src/main/resources/static/find-email.html`, `src/main/resources/static/js/find-email.js`: 결과 목록(가린 이메일, "2026.10.02 가입"), 없으면 "일치하는 회원 정보가 없습니다", 계정 옆 [비밀번호 재설정] → `find-password.html?resetToken=…`
 
 **확인 지점**: 6개 스토리가 모두 따로 동작한다.
 

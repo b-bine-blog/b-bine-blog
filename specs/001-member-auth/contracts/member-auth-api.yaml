@@ -214,6 +214,11 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Error' }
+        '410':
+          description: TOKEN_EXPIRED (resetToken으로 왔고 10분 지남·없음) — 이메일 찾기를 다시 한다
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
 
   /api/auth/password-reset:
     post:
@@ -228,6 +233,11 @@ paths:
       responses:
         '204': { description: 바뀜 }
         '400': { $ref: '#/components/responses/ValidationError' }
+        '410':
+          description: TOKEN_EXPIRED (resetToken으로 왔고 10분 지남·없음)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
 
   /api/auth/find-email:
     post:

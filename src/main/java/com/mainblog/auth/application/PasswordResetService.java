@@ -136,12 +136,17 @@ public class PasswordResetService {
         return resetCode;
     }
 
-    /** 대상을 찾지 못하면 번호가 없는 것과 같은 CODE_INVALID로 답해 가입 여부를 드러내지 않는다. */
+    /**
+     * 이메일로 대상을 찾지 못하면 번호가 없는 것과 같은 CODE_INVALID로 답해 가입 여부를 드러내지 않는다.
+     * 임시 토큰이 만료됐거나 없으면 410 TOKEN_EXPIRED로 이메일 찾기를 다시 하게 한다(FR-038).
+     */
     private User resolve(ResetTarget target) {
-        Optional<User> user = target.resetToken() != null
-                ? resetTokenResolver.resolve(target.resetToken())
-                : findActiveByEmail(normalizer.email(target.email()));
-        return user.orElseThrow(() -> new BusinessException(ErrorCode.CODE_INVALID));
+        if (target.resetToken() != null) {
+            return resetTokenResolver.resolve(target.resetToken())
+                    .orElseThrow(() -> new BusinessException(ErrorCode.TOKEN_EXPIRED));
+        }
+        return findActiveByEmail(normalizer.email(target.email()))
+                .orElseThrow(() -> new BusinessException(ErrorCode.CODE_INVALID));
     }
 
     private Optional<User> findActiveByEmail(String email) {
