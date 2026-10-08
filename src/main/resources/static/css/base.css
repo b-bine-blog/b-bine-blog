@@ -56,9 +56,9 @@ h2 { font-size: 1.2rem; }
 .site-header a { color: #fff; text-decoration: none; }
 .site-header a:hover { text-decoration: underline; }
 .site-logo { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; font-size: 1.15rem; letter-spacing: -0.02em; }
-.site-logo::before {
-  content: ""; width: 26px; height: 26px; border-radius: 8px 2px 8px 2px;
-  background: linear-gradient(135deg, var(--green-500), #a7e3bf);
+.site-logo::before { /* 나뭇잎 로고(Phosphor Icons, MIT — img/leaf/LICENSE.txt) */
+  content: ""; width: 28px; height: 28px; border-radius: 50%;
+  background: rgba(255,255,255,.14) url("/img/leaf/leaf-white.svg") center / 18px no-repeat;
 }
 .site-header__menu { display: flex; gap: 16px; }
 .site-header__search { flex: 1; min-width: 160px; max-width: 360px; display: flex; }
@@ -90,7 +90,8 @@ h2 { font-size: 1.2rem; }
   font-size: 0.875rem;
   color: var(--muted);
   border-top: 1px solid var(--line);
-  background: var(--surface);
+  background: var(--surface) url("/img/leaf/vine.svg") center top / 120px 30px repeat-x;
+  padding-top: 40px;
 }
 .site-footer a { color: var(--muted); }
 
@@ -168,6 +169,7 @@ table.data th, table.data td { white-space: nowrap; } /* 좁은 폭에서는 표
 .blog-card__desc { margin: 4px 0; overflow-wrap: anywhere; }
 .blog-card__tags .tag { margin-right: 6px; color: var(--green-700); font-size: 0.875rem; }
 .blog-list__empty { color: var(--muted); text-align: center; }
+.blog-list__empty::before, .post-list__empty::before { content: ""; display: block; width: 40px; height: 40px; margin: 4px auto 6px; background: url("/img/leaf/sprout.svg") center / contain no-repeat; opacity: .7; }
 .badge { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 4px; background: var(--green-100); color: var(--green-700); font-size: 0.75rem; }
 .pagination { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
 .pagination button { margin: 0; min-width: 36px; background: var(--green-50); color: var(--green-800); }
@@ -205,7 +207,7 @@ table.data th, table.data td { white-space: nowrap; } /* 좁은 폭에서는 표
 .feed-more { display: block; margin: 12px auto; }
 
 /* 메인 화면 (2026-10-08): 위 검색 띠, 왼쪽 글 피드, 오른쪽 블로그 둘러보기 */
-.hero { background: linear-gradient(135deg, var(--green-800), var(--green-600)); color: #fff; }
+.hero { background: url("/img/leaf/hero-leaves.svg") right center / cover no-repeat, linear-gradient(135deg, var(--green-800), var(--green-600)); color: #fff; }
 .hero__inner { max-width: 1120px; margin: 0 auto; padding: 36px 16px 32px; }
 .hero h1 { color: #fff; margin: 0 0 6px; font-size: 1.8rem; }
 .hero p { margin: 0 0 18px; color: rgba(255,255,255,.88); }
@@ -222,6 +224,8 @@ main.home { max-width: 1120px; display: grid; grid-template-columns: minmax(0, 2
 .panel > h2:first-child { margin-top: 0; }
 .panel__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
 .panel__head h2 { margin: 0; }
+.panel h2 { display: flex; align-items: center; gap: 8px; }
+.panel h2::before { content: ""; width: 18px; height: 18px; flex: none; background: url("/img/leaf/leaf.svg") center / contain no-repeat; }
 .panel .tabs { margin: 10px 0; }
 .panel .post-list, .panel .blog-list { margin: 8px 0 0; }
 .panel .post-item, .panel .blog-list li { box-shadow: none; }
@@ -231,7 +235,7 @@ main.home { max-width: 1120px; display: grid; grid-template-columns: minmax(0, 2
 .side-stack .blog-card__desc { font-size: 0.9rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .side-stack label.inline { display: flex; align-items: center; gap: 6px; margin: 0; font-weight: 400; font-size: 0.9rem; color: var(--muted); }
 .side-stack label.inline select { width: auto; padding: 4px 8px; }
-.cta { background: var(--green-50); border: 1px dashed var(--green-500); border-radius: var(--radius); padding: 16px; }
+.cta { background: var(--green-50) url("/img/leaf/sprout.svg") right 12px bottom 10px / 64px no-repeat; border: 1px dashed var(--green-500); border-radius: var(--radius); padding: 16px 16px 16px; padding-right: 84px; }
 .cta p { margin: 0 0 10px; color: var(--green-900); }
 .cta a.button { display: inline-block; padding: 8px 16px; border-radius: 8px; background: var(--green-700); color: #fff; text-decoration: none; font-weight: 600; }
 
@@ -255,7 +259,7 @@ button.button-quiet { background: transparent; color: var(--muted); border: 1px 
 button.button-quiet:hover:not(:disabled) { background: var(--green-50); color: var(--danger); }
 label.inline { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-weight: 400; font-size: 0.9rem; color: var(--muted); }
 label.inline select { width: auto; padding: 4px 8px; }
-.blog-hero { margin-bottom: 20px; border-top: 4px solid var(--green-600); }
+.blog-hero { margin-bottom: 20px; border-top: 4px solid var(--green-600); background: var(--surface) url("/img/leaf/leaf.svg") right -18px top -14px / 110px no-repeat; }
 .blog-hero h1 { margin: 8px 0 4px; }
 .blog-hero #actions { margin-top: 12px; }
 .blog-hero #actions button, .blog-hero #actions a { margin-top: 0; }
