@@ -1,5 +1,5 @@
 -- 원천은 Crowfoot 문서 654 "메인블로그"(https://crowfoot.java21.net/workspaces/54/models/654). 손으로 고치지 않음.
--- Crowfoot export_ddl로 다시 만든다(research R-02). 2026-10-07, 문서 버전 28, 35개 테이블.
+-- Crowfoot export_ddl로 다시 만든다(research R-02). 2026-10-08, 문서 버전 41, 36개 테이블(shedlock 포함).
 
 -- 메인블로그 — MySQL DDL
 
@@ -462,6 +462,13 @@ CREATE TABLE login_failures (
     PRIMARY KEY (id),
     CONSTRAINT uk_login_failures_email UNIQUE (email)
 ) COMMENT='로그인 실패 기록-----입력한 이메일(소문자) 기준 연속 로그인 실패. 가입 여부와 무관하게 세어 가입 여부를 드러내지 않음(D-97). 성공·잠금 해제·재설정 때 삭제, 1일 지난 행은 04:00 배치가 삭제';
+CREATE TABLE shedlock (
+    name VARCHAR(64) NOT NULL COMMENT '작업 이름',
+    lock_until TIMESTAMP(3) NOT NULL COMMENT '잠금 끝 시각',
+    locked_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '잠근 시각',
+    locked_by VARCHAR(255) NOT NULL COMMENT '잠근 서버',
+    PRIMARY KEY (name)
+) COMMENT='배치 잠금-----ShedLock 잠금 테이블. 매일 04:00 정리 작업이 서버 여러 대에서도 한 번만 돌게 한다. 라이브러리가 정한 구조라 공통 컬럼 규칙의 예외';
 
 ALTER TABLE user_agreements ADD CONSTRAINT fk_user_agreements_users FOREIGN KEY (user_id) REFERENCES users (id);
 ALTER TABLE refresh_tokens ADD CONSTRAINT fk_refresh_tokens_users FOREIGN KEY (user_id) REFERENCES users (id);

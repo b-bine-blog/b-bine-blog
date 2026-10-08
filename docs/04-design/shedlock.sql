@@ -1,5 +1,5 @@
 -- ShedLock 잠금 테이블 (research R-13, REQ-005).
--- 업무 테이블이 아니라 Crowfoot ERD에는 넣지 않는다. 운영·개발 DB에는 이 파일로 따로 만든다.
+-- 2026-10-08부터 Crowfoot ERD(REQ-060)와 schema.sql에도 들어 있다. 이 파일은 IF NOT EXISTS라 함께 넣어도 된다.
 CREATE TABLE IF NOT EXISTS shedlock (
     name VARCHAR(64) NOT NULL,
     lock_until TIMESTAMP(3) NOT NULL,
