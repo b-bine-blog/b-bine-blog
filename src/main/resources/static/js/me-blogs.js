@@ -56,9 +56,4 @@
     }
     api.setText($('message'), err.message);
   });
-
-  // 받은 위임 요청(US6)이 있으면 위에 보여 준다. 기능이 없거나 실패하면 칸을 숨긴 채 둔다.
-  if (window.meDelegations) {
-    window.meDelegations.render($('delegations-section'), $('delegations'));
-  }
 })();

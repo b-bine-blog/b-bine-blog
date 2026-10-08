@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>블로그 운영 - 메인블로그</title>
+  <link rel="stylesheet" href="/css/base.css">
+</head>
+<body>
+  <main class="wide">
+    <p><a id="back">← 블로그로</a></p>
+    <h1 id="title">블로그 운영</h1>
+    <p class="message message--error" id="message" role="alert"></p>
+    <!-- 탭은 내 권한에 맞춰 보인다. 서버가 요청마다 다시 확인한다(FR-034). -->
+    <div class="tabs" role="tablist" id="tabs">
+      <button type="button" role="tab" data-tab="info" data-perm="BLOG_INFO" hidden>정보 수정</button>
+      <button type="button" role="tab" data-tab="requests" data-perm="MEMBER_MANAGE" hidden>참여 신청</button>
+      <button type="button" role="tab" data-tab="members" data-perm="MEMBER_MANAGE" hidden>멤버</button>
+      <button type="button" role="tab" data-tab="reports" data-perm="MEMBER_MANAGE" hidden>신고</button>
+      <button type="button" role="tab" data-tab="blacklist" data-perm="MEMBER_MANAGE" hidden>블랙리스트</button>
+      <button type="button" role="tab" data-tab="owner" data-perm="OWNER" hidden>위임·폐쇄</button>
+    </div>
+    <p class="message" id="tab-message"></p>
+
+    <section data-panel="info" hidden>
+      <form id="info-form">
+        <label for="name">블로그 이름</label>
+        <input id="name" maxlength="30" required>
+        <label for="description">소개 (선택, 500자까지)</label>
+        <textarea id="description" maxlength="500" rows="3"></textarea>
+        <label for="tag-input">태그 (10개까지, Enter로 추가)</label>
+        <input id="tag-input" maxlength="30">
+        <ul class="chips" id="tags"></ul>
+        <div data-owner-only hidden>
+          <label for="visibility">공개 범위</label>
+          <select id="visibility">
+            <option value="PUBLIC">공개</option>
+            <option value="LINK">일부 공개(공유 링크로만)</option>
+            <option value="PRIVATE">비공개(멤버만)</option>
+          </select>
+          <label for="join-policy">참여 방식</label>
+          <select id="join-policy">
+            <option value="FREE">자유 참여</option>
+            <option value="APPROVAL">승인 후 참여</option>
+          </select>
+        </div>
+        <button type="submit">저장</button>
+      </form>
+      <h2>대표 이미지</h2>
+      <div class="row">
+        <input type="file" id="cover" accept="image/jpeg,image/png,image/gif,image/webp">
+        <button type="button" id="cover-upload">올리기</button>
+        <button type="button" id="cover-delete">지우기</button>
+      </div>
+      <div data-owner-only data-link-only hidden>
+        <h2>공유 링크</h2>
+        <p class="hint">새로 만들면 이전 링크로는 들어올 수 없습니다.</p>
+        <button type="button" id="share-regenerate">공유 링크 새로 만들기</button>
+      </div>
+    </section>
+
+    <section data-panel="requests" hidden>
+      <div class="table-wrap"><table class="data">
+        <thead><tr><th>닉네임</th><th>신청 시각</th><th></th></tr></thead>
+        <tbody id="request-rows"></tbody>
+      </table></div>
+    </section>
+
+    <section data-panel="members" hidden>
+      <div class="table-wrap"><table class="data">
+        <thead><tr><th>닉네임</th><th>이름</th><th>이메일</th><th>전화번호</th><th>역할</th><th>상태</th><th>제재</th></tr></thead>
+        <tbody id="member-rows"></tbody>
+      </table></div>
+    </section>
+
+    <section data-panel="reports" hidden>
+      <div class="table-wrap"><table class="data">
+        <thead><tr><th>대상</th><th>신고 내용</th><th>사유</th><th>처리</th></tr></thead>
+        <tbody id="report-rows"></tbody>
+      </table></div>
+    </section>
+
+    <section data-panel="blacklist" hidden>
+      <h2>해제 문의</h2>
+      <div class="table-wrap"><table class="data">
+        <thead><tr><th>문의한 사람</th><th>내용</th><th>이름 일치</th><th>전화번호 일치</th><th></th></tr></thead>
+        <tbody id="appeal-rows"></tbody>
+      </table></div>
+      <h2>블랙리스트</h2>
+      <p class="hint">기록은 고치거나 지울 수 없습니다. 해제는 문의로만 합니다.</p>
+      <div class="table-wrap"><table class="data">
+        <thead><tr><th>등록일</th><th>강퇴 사유</th><th>강퇴한 사람</th><th>해제</th></tr></thead>
+        <tbody id="blacklist-rows"></tbody>
+      </table></div>
+    </section>
+
+    <section data-panel="owner" hidden>
+      <div id="delegate-box">
+        <h2>블로그장 위임</h2>
+        <p class="hint">받은 멤버가 7일 안에 수락하면 블로그장이 바뀌고, 나는 일반 멤버로 남습니다.</p>
+        <div class="row">
+          <select id="delegate-target"></select>
+          <button type="button" id="delegate">위임 요청</button>
+        </div>
+        <p class="hint" id="delegate-pending"></p>
+      </div>
+      <h2>블로그 폐쇄</h2>
+      <p class="hint" id="closing-info">누른 날짜로부터 7일 뒤 새벽 4시에 폐쇄됩니다. 그 전까지 철회할 수 있습니다.</p>
+      <button type="button" id="close">블로그 폐쇄</button>
+      <button type="button" id="withdraw-close" hidden>폐쇄 철회</button>
+    </section>
+  </main>
+  <script src="/js/api.js"></script>
+  <script src="/js/session.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/blog-tags.js"></script>
+  <script src="/js/blog-manage.js"></script>
+</body>
+</html>

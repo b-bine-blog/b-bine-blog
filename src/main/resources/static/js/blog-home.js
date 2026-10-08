@@ -1,4 +1,4 @@
-// 블로그 홈 /blog/{주소} (T028, T036, T045, T071).
+// 블로그 홈 /blog/{주소} (T028, T036, T045, T071). 받은 위임 요청 응답(US6)도 여기서 한다.
 // 정보 표시, 참여 신청·취소, 구독, 공유 링크, 정지 안내, 블랙리스트 문의. 값은 모두 textContent로 넣는다(D-64).
 // 버튼을 보이고 숨기는 것은 편의일 뿐이고 권한은 서버가 요청마다 확인한다(FR-034).
 (function () {
@@ -65,7 +65,40 @@
       $('manage').href = '/blog/' + encodeURIComponent(blog.address) + '/manage';
     }
     show('blog', true);
+    loadDelegation();
   }
+
+  // 나에게 온 위임 요청이 있으면 수락·거절을 보여 준다. 없으면 204(FR-040, FR-041).
+  function loadDelegation() {
+    show('delegation', false);
+    if (!blog.myRole || blog.myRole === 'OWNER') {
+      return;
+    }
+    api.get('/api/blogs/' + blog.id + '/delegation').then(function (d) {
+      if (!d || !me || d.toUserId !== me.memberId) {
+        return;
+      }
+      api.setText($('delegation-text'), d.fromNickname + '님이 블로그장 위임을 요청했습니다. '
+        + formatTime(d.expiresAt) + '까지 응답할 수 있습니다.');
+      show('delegation', true);
+    }, function () { /* 요청이 없거나 볼 수 없으면 숨긴 채 둔다 */ });
+  }
+
+  function respondDelegation(action, doneText) {
+    api.post('/api/blogs/' + blog.id + '/delegation/' + action, null, { activity: true })
+      .then(function () { say(doneText); return load(); })
+      .catch(function (err) { say(err.message, true); });
+  }
+
+  $('delegation-accept').addEventListener('click', function () {
+    if (confirm('블로그장 권한을 넘겨받을까요?')) {
+      respondDelegation('acceptance', '이제 이 블로그의 블로그장입니다.');
+    }
+  });
+
+  $('delegation-reject').addEventListener('click', function () {
+    respondDelegation('rejection', '위임 요청을 거절했습니다.');
+  });
 
   function load() {
     return api.get('/api/blogs/address/' + encodeURIComponent(address))

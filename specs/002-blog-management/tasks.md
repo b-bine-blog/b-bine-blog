@@ -265,7 +265,7 @@ description: "002 블로그 생성·참여·운영 구현 작업 목록"
   - SanctionService를 부르고 report_id를 연결한다.
   - 신고자에게 알림을 보낸다.
 - [X] T064 [US7] `src/main/java/com/mainblog/blog/application/BlacklistService.java`를 만든다: `isBlacklisted(blogId, user)`, `list`. `GET /api/blogs/{blogId}/blacklist`를 만든다. 응답에는 등록일·강퇴 사유·강퇴한 사람 닉네임·해제 여부만 넣는다 (FR-057~FR-059)
-- [ ] T065 [P] [US7] 운영 화면 `src/main/resources/static/blog/manage.html`, `js/blog-manage.js`를 만든다. 탭은 참여 신청, 멤버(제재 버튼, 정지 기간 4가지 선택), 신고, 블랙리스트이고, 권한에 따라 탭을 보이거나 숨긴다. 서버가 최종 판단한다
+- [X] T065 [P] [US7] 운영 화면 `src/main/resources/static/blog/manage.html`, `js/blog-manage.js`를 만든다. 탭은 참여 신청, 멤버(제재 버튼, 정지 기간 4가지 선택), 신고, 블랙리스트이고, 권한에 따라 탭을 보이거나 숨긴다. 서버가 최종 판단한다
 
 ---
 
@@ -287,7 +287,7 @@ description: "002 블로그 생성·참여·운영 구현 작업 목록"
 ### 구현
 
 - [X] T067 [US8] `MemberManageService`에 setManager·removeManager·listMembers를 더한다. listMembers는 가린 이메일·전화번호와 정지 상태·횟수를 넣는다. `src/main/java/com/mainblog/blog/api/MemberManageController.java`에 `GET /api/blogs/{blogId}/members`, `PUT`·`DELETE /api/blogs/{blogId}/managers/{userId}`를 만든다 (FR-039~FR-047)
-- [ ] T068 [P] [US8] 운영 화면 멤버 탭에 부블로그장 지정·해제와 권한 체크박스 3개를 더한다(블로그장에게만 보임). 정보 수정 탭(이름·소개·대표 이미지·태그, 블로그장에게는 공개 범위·참여 방식도)과 위임·폐쇄 탭을 더한다. 위임할 멤버가 없거나 폐쇄 예정이면 위임 버튼을 숨긴다 (FR-070, FR-071)
+- [X] T068 [P] [US8] 운영 화면 멤버 탭에 부블로그장 지정·해제와 권한 체크박스 3개를 더한다(블로그장에게만 보임). 정보 수정 탭(이름·소개·대표 이미지·태그, 블로그장에게는 공개 범위·참여 방식도)과 위임·폐쇄 탭을 더한다. 위임할 멤버가 없거나 폐쇄 예정이면 위임 버튼을 숨긴다 (FR-070, FR-071)
 
 ---
 
@@ -308,7 +308,7 @@ description: "002 블로그 생성·참여·운영 구현 작업 목록"
   - create: 맞는 블랙리스트를 고르고, name_matched·phone_matched를 계산하고, 대기·7일 규칙을 확인한다.
   - release·reject: 블로그 행을 잠그고 알림을 보낸다.
   - `blacklist-appeals` API 4개를 `BlacklistController`에 더한다.
-- [ ] T071 [P] [US9] 블로그 홈의 블랙리스트 안내에 문의하기 입력 창을 만든다. 운영 화면에 해제 문의 탭을 만들어 일치 여부 표시, 해제·거절 버튼을 둔다
+- [X] T071 [P] [US9] 블로그 홈의 블랙리스트 안내에 문의하기 입력 창을 만든다. 운영 화면에 해제 문의 탭을 만들어 일치 여부 표시, 해제·거절 버튼을 둔다
 
 ---
 

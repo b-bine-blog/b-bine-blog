@@ -27,6 +27,15 @@
       </div>
       <p class="message" id="action-message"></p>
 
+      <!-- 받은 블로그장 위임 요청. 받은 사람에게만 보인다(BLG-14, FR-040) -->
+      <div class="notice" id="delegation" hidden>
+        <p id="delegation-text"></p>
+        <div class="row">
+          <button type="button" id="delegation-accept">수락</button>
+          <button type="button" id="delegation-reject">거절</button>
+        </div>
+      </div>
+
       <!-- 블랙리스트로 막힌 사람에게만 보인다(BLG-11, BLG-12) -->
       <form class="notice" id="appeal-form" hidden>
         <p>이 블로그에는 참여 신청을 할 수 없습니다. 본인이 아니라고 생각되면 문의를 남겨 주세요.</p>
