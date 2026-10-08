@@ -131,13 +131,13 @@ description: "002 블로그 생성·참여·운영 구현 작업 목록"
 
 **독립 테스트**: quickstart 10, 11
 
-- [ ] T038 [US3] `src/test/java/com/mainblog/blog/BlogRoleCheckIntegrationTest.java`를 만든다 (SC-004)
+- [X] T038 [US3] `src/test/java/com/mainblog/blog/BlogRoleCheckIntegrationTest.java`를 만든다 (SC-004)
   - US3 시나리오 1~4를 다룬다.
   - contracts의 관리 API 전체를 표로 돌린다. A 블로그장·B 멤버 X가 B에 요청하면 모두 403이어야 한다.
   - 같은 쿠키로 정지·강퇴·위임·부블로그장 해제 직후 요청하면 거부돼야 한다.
   - 이 테스트는 US5~US8 API가 생기는 대로 표에 더한다.
-- [ ] T039 [US3] `src/test/java/com/mainblog/blog/BlogPermissionServiceTest.java`를 만든다. 역할 3개 × 권한 3개 × 6개 권한 이름의 조합이 data-model 권한표와 같은지 확인한다
-- [ ] T040 [US3] `BlogPermissionService.canDeletePost(blogId, authorId)`를 만든다. POST_MANAGE를 확인하고, 수정은 작성자만 할 수 있다(`canEditPost`). 글 API는 004에서 쓴다 (FR-037)
+- [X] T039 [US3] `src/test/java/com/mainblog/blog/BlogPermissionServiceTest.java`를 만든다. 역할 3개 × 권한 3개 × 6개 권한 이름의 조합이 data-model 권한표와 같은지 확인한다
+- [X] T040 [US3] `BlogPermissionService.canDeletePost(blogId, authorId)`를 만든다. POST_MANAGE를 확인하고, 수정은 작성자만 할 수 있다(`canEditPost`). 글 API는 004에서 쓴다 (FR-037)
 
 ---
 
