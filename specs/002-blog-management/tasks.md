@@ -277,7 +277,7 @@ description: "002 블로그 생성·참여·운영 구현 작업 목록"
 
 ### 테스트
 
-- [ ] T066 [P] [US8] `src/test/java/com/mainblog/blog/ManagerIntegrationTest.java`를 만든다 (SC-005)
+- [X] T066 [P] [US8] `src/test/java/com/mainblog/blog/ManagerIntegrationTest.java`를 만든다 (SC-005)
   - US8 시나리오 1~6을 다룬다.
   - 체크박스마다 허용·거부를 확인한다.
   - 부블로그장이 지정·위임·폐쇄·공개 범위를 요청하면 항상 403이어야 한다.
@@ -286,7 +286,7 @@ description: "002 블로그 생성·참여·운영 구현 작업 목록"
 
 ### 구현
 
-- [ ] T067 [US8] `MemberManageService`에 setManager·removeManager·listMembers를 더한다. listMembers는 가린 이메일·전화번호와 정지 상태·횟수를 넣는다. `src/main/java/com/mainblog/blog/api/MemberManageController.java`에 `GET /api/blogs/{blogId}/members`, `PUT`·`DELETE /api/blogs/{blogId}/managers/{userId}`를 만든다 (FR-039~FR-047)
+- [X] T067 [US8] `MemberManageService`에 setManager·removeManager·listMembers를 더한다. listMembers는 가린 이메일·전화번호와 정지 상태·횟수를 넣는다. `src/main/java/com/mainblog/blog/api/MemberManageController.java`에 `GET /api/blogs/{blogId}/members`, `PUT`·`DELETE /api/blogs/{blogId}/managers/{userId}`를 만든다 (FR-039~FR-047)
 - [ ] T068 [P] [US8] 운영 화면 멤버 탭에 부블로그장 지정·해제와 권한 체크박스 3개를 더한다(블로그장에게만 보임). 정보 수정 탭(이름·소개·대표 이미지·태그, 블로그장에게는 공개 범위·참여 방식도)과 위임·폐쇄 탭을 더한다. 위임할 멤버가 없거나 폐쇄 예정이면 위임 버튼을 숨긴다 (FR-070, FR-071)
 
 ---
