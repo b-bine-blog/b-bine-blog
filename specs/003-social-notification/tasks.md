@@ -95,11 +95,11 @@ description: "003 소셜·알림 구현 작업 목록"
 
 ## 7단계: 사용자 스토리 5 - 알림 종류 켜고 끄기와 보관 기간 정하기 (P2)
 
-- [ ] T028 [P] [US5] `src/test/java/com/mainblog/notification/NotificationSettingsIntegrationTest.java`: 처음 조회는 9가지 모두 true·30일, 일부만 보내면 그것만 바뀜, `blogClosing` 같은 다른 키 400 `NotAllowed`, `retentionDays` 14 → 400, post_like를 끄면 받은 3건은 그대로·새 좋아요 알림 없음·다시 켜도 꺼 둔 동안 몫은 안 생김, 다 꺼도 폐쇄 예정은 옴, 남의 설정 경로 없음 (US5-1~4, SC-005, D-102 #26)
-- [ ] T029 [P] [US5] `src/test/java/com/mainblog/notification/NotificationRetentionIntegrationTest.java`: 기본 30일(29일째 남음, 31일째 04:00 뒤 사라짐), 7일로 줄이면 다음 04:00에 이미 7일 지난 것까지 사라짐, 30일로 되돌려도 안 돌아옴, 하루 건너뛴 뒤 다음 실행에 밀린 것까지 삭제, 다른 회원 알림은 그대로 (US5-5~7, SC-006, D-102 #27)
-- [ ] T030 [US5] `src/main/java/com/mainblog/notification/application/NotificationSettingsService.java`와 `src/main/java/com/mainblog/notification/api/NotificationSettingsController.java`(`GET·PUT /api/me/notification-settings`, `INSERT ... ON DUPLICATE KEY UPDATE`)를 만든다 (FR-054, FR-057, research R-08)
-- [ ] T031 [US5] `src/main/java/com/mainblog/notification/application/NotificationDailyTasks.java`(보관 7일 회원·그 밖 30일 기준 삭제, 1,000건씩)를 만들고 `src/main/java/com/mainblog/batch/DailyCleanupJob.java`의 단계와 로그에 더한다 (FR-056, SCL-03)
-- [ ] T032 [US5] 화면 `src/main/resources/static/me/notifications.html` + `src/main/resources/static/js/me-notifications.js`: 체크박스 9개, 보관 기간 30일·7일(7일로 바꿀 때 "7일이 지난 알림은 다음 정리 때 지워집니다" 확인 창), 알림 일괄 삭제(확인 창). 끌 수 없는 알림은 체크박스 없이 안내 문구로만 (FR-054, FR-057, D-102 #27)
+- [X] T028 [P] [US5] `src/test/java/com/mainblog/notification/NotificationSettingsIntegrationTest.java`: 처음 조회는 9가지 모두 true·30일, 일부만 보내면 그것만 바뀜, `blogClosing` 같은 다른 키 400 `NotAllowed`, `retentionDays` 14 → 400, post_like를 끄면 받은 3건은 그대로·새 좋아요 알림 없음·다시 켜도 꺼 둔 동안 몫은 안 생김, 다 꺼도 폐쇄 예정은 옴, 남의 설정 경로 없음 (US5-1~4, SC-005, D-102 #26)
+- [X] T029 [P] [US5] `src/test/java/com/mainblog/notification/NotificationRetentionIntegrationTest.java`: 기본 30일(29일째 남음, 31일째 04:00 뒤 사라짐), 7일로 줄이면 다음 04:00에 이미 7일 지난 것까지 사라짐, 30일로 되돌려도 안 돌아옴, 하루 건너뛴 뒤 다음 실행에 밀린 것까지 삭제, 다른 회원 알림은 그대로 (US5-5~7, SC-006, D-102 #27)
+- [X] T030 [US5] `src/main/java/com/mainblog/notification/application/NotificationSettingsService.java`와 `src/main/java/com/mainblog/notification/api/NotificationSettingsController.java`(`GET·PUT /api/me/notification-settings`, `INSERT ... ON DUPLICATE KEY UPDATE`)를 만든다 (FR-054, FR-057, research R-08)
+- [X] T031 [US5] `src/main/java/com/mainblog/notification/application/NotificationDailyTasks.java`(보관 7일 회원·그 밖 30일 기준 삭제, 1,000건씩)를 만들고 `src/main/java/com/mainblog/batch/DailyCleanupJob.java`의 단계와 로그에 더한다 (FR-056, SCL-03)
+- [X] T032 [US5] 화면 `src/main/resources/static/me/notifications.html` + `src/main/resources/static/js/me-notifications.js`: 체크박스 9개, 보관 기간 30일·7일(7일로 바꿀 때 "7일이 지난 알림은 다음 정리 때 지워집니다" 확인 창), 알림 일괄 삭제(확인 창). 끌 수 없는 알림은 체크박스 없이 안내 문구로만 (FR-054, FR-057, D-102 #27)
 
 ---
 

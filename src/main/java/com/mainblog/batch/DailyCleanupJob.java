@@ -18,6 +18,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import com.mainblog.blog.application.BlogDailyTasks;
 import com.mainblog.board.application.BoardDailyTasks;
+import com.mainblog.notification.application.NotificationDailyTasks;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -39,6 +40,7 @@ public class DailyCleanupJob {
     private final MemberProperties memberProperties;
     private final BlogDailyTasks blogDailyTasks;
     private final BoardDailyTasks boardDailyTasks;
+    private final NotificationDailyTasks notificationDailyTasks;
     private final TransactionTemplate transaction;
     private final Clock clock;
 
@@ -46,6 +48,7 @@ public class DailyCleanupJob {
                            LoginFailureRepository loginFailureRepository, FileStorage fileStorage,
                            AuthProperties authProperties, MemberProperties memberProperties,
                            BlogDailyTasks blogDailyTasks, BoardDailyTasks boardDailyTasks,
+                           NotificationDailyTasks notificationDailyTasks,
                            PlatformTransactionManager transactionManager, Clock clock) {
         this.jdbc = jdbc;
         this.refreshTokenRepository = refreshTokenRepository;
@@ -55,6 +58,7 @@ public class DailyCleanupJob {
         this.memberProperties = memberProperties;
         this.blogDailyTasks = blogDailyTasks;
         this.boardDailyTasks = boardDailyTasks;
+        this.notificationDailyTasks = notificationDailyTasks;
         this.transaction = new TransactionTemplate(transactionManager);
         this.clock = clock;
     }
@@ -65,12 +69,12 @@ public class DailyCleanupJob {
         Result result = runOnce();
         log.info("04:00 정리: 탈퇴 개인정보 {}명, RT {}건, 로그인 실패 기록 {}건, 인증번호 {}건, 지운 프로필 사진 {}건, "
                         + "위임 만료 {}건, 폐쇄 알림 {}건, 폐쇄 {}개, 30일 정리 {}개, 지운 대표 이미지 {}건, "
-                        + "글 {}개, 댓글 {}개, 연결 안 된 글 이미지 {}건, 지운 글 이미지 {}건, 조회 기록 {}건",
+                        + "글 {}개, 댓글 {}개, 연결 안 된 글 이미지 {}건, 지운 글 이미지 {}건, 조회 기록 {}건, 보관 기간 지난 알림 {}건",
                 result.purgedMembers(), result.refreshTokens(), result.loginFailures(), result.codes(),
                 result.profileImages(), result.blog().expiredDelegations(), result.blog().closingNotices(), result.blog().closedBlogs(),
                 result.blog().purgedBlogs(), result.blog().coverImages(), result.board().purgedPosts(),
                 result.board().purgedComments(), result.board().orphanImages(), result.board().purgedImages(),
-                result.board().purgedViews());
+                result.board().purgedViews(), result.notifications());
     }
 
     /** 회원 정리는 한 트랜잭션, 블로그·게시판 단계는 BlogDailyTasks·BoardDailyTasks가 단계마다 따로 트랜잭션을 쓴다. */
@@ -84,12 +88,13 @@ public class DailyCleanupJob {
             int codes = deleteExpiredCodes(now);
             int images = purgeDeletedProfileImages(now);
             return new Result(purged, tokens, failures, codes, images, BlogDailyTasks.Result.EMPTY,
-                    BoardDailyTasks.Result.EMPTY);
+                    BoardDailyTasks.Result.EMPTY, 0);
         });
         BlogDailyTasks.Result blog = blogDailyTasks.run(now);
         BoardDailyTasks.Result board = boardDailyTasks.run(now);
+        int notifications = notificationDailyTasks.run(now); // 003 T031: 보관 기간(30일, 설정 7일) 지난 알림
         return new Result(members.purgedMembers(), members.refreshTokens(), members.loginFailures(),
-                members.codes(), members.profileImages(), blog, board);
+                members.codes(), members.profileImages(), blog, board, notifications);
     }
 
     /** 탈퇴 30일 뒤 개인정보 삭제(4.5, USR-05 인수 시나리오 6). 행은 남겨 예전 글이 "탈퇴한 회원"을 가리키게 한다. */
@@ -145,5 +150,5 @@ public class DailyCleanupJob {
     }
 
     public record Result(int purgedMembers, int refreshTokens, int loginFailures, int codes, int profileImages,
-                         BlogDailyTasks.Result blog, BoardDailyTasks.Result board) {}
+                         BlogDailyTasks.Result blog, BoardDailyTasks.Result board, int notifications) {}
 }
