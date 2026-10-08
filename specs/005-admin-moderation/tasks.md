@@ -110,14 +110,14 @@ description: "005 메인 관리자·제재 구현 작업 목록"
 
 ## 5단계: 사용자 스토리 3 - 블로그장 경고와 강퇴(권한 박탈) (P2)
 
-- [ ] T026 [P] [US3] `admin/OwnerWarningIntegrationTest` (US3-1·2·10·11, FR-020, FR-021, D-95, D-103 #12·#13)
+- [X] T026 [P] [US3] `admin/OwnerWarningIntegrationTest` (US3-1·2·10·11, FR-020, FR-021, D-95, D-103 #12·#13)
   - 사유: 빈 값·501자는 400
   - 첫 경고: `OWNER_WARNED`에 사유와 "3번 중 1번"이 들어가고 신고자는 없다. `OWNER_WARNING` 기록
   - 세 번째 경고에 박탈된다
   - 1년 지난 경고는 세지 않는다. 블로그 A·C는 따로 센다
   - 새 블로그장은 0부터, 전 블로그장이 다시 블로그장이 되면 자기 경고를 다시 센다
   - `ownerId`가 지금 블로그장이 아니면 409 `OWNER_CHANGED`. 폐쇄된 블로그는 409
-- [ ] T027 [P] [US3] `admin/OwnerRevocationIntegrationTest` (US3-3~9, FR-022~FR-029, D-17, D-54, D-103 #14~#17)
+- [X] T027 [P] [US3] `admin/OwnerRevocationIntegrationTest` (US3-3~9, FR-022~FR-029, D-17, D-54, D-103 #14~#17)
   - 바로 강퇴: 경고 0이어도 박탈. S1(10/1)·S2(10/3) 중 S1이 수락 없이 블로그장, 전 블로그장은 MEMBER, `OWNER_REVOKED` 알림
   - S1이 공개 블로그 3개를 운영해도 넘어간다(D-103 #16)
   - 부블로그장 없음: 10/2 15:00 강퇴 → 10/9 04:00 예약. 문구 "블로그장 권한 박탈로 인한 폐쇄 조치". 박탈된 P를 뺀 멤버·구독자에게 3번씩, 중복 0. 폐쇄 전까지 글쓰기·댓글이 되고 아무도 철회할 수 없다
@@ -128,15 +128,15 @@ description: "005 메인 관리자·제재 구현 작업 목록"
   - 새 블로그장이 전 블로그장을 002 제재로 정지할 수 있다
   - 관리자용 멤버 경고·정지·강제 퇴장 API가 없다(FR-010)
   - 기록: `OWNER_KICK` + `AUTO_DELEGATE` 또는 `CLOSE_SCHEDULE`
-- [ ] T028 [P] [US3] `admin/OwnerConcurrencyTest`: 경고 2번인 블로그장에게 관리자 둘이 동시에 경고 10번을 보낸다. 박탈 1건(`owner_revocations` 1행), 위임 또는 폐쇄 예약 1번, 나머지는 409 `OWNER_CHANGED` (SC-005, FR-028)
-- [ ] T029 [US3] `admin/application/OwnerRevocationService.java`를 만든다. 블로그 행 잠금 안에서 아래를 한 번에 한다 (research R-09, data-model 박탈 순서)
+- [X] T028 [P] [US3] `admin/OwnerConcurrencyTest`: 경고 2번인 블로그장에게 관리자 둘이 동시에 경고 10번을 보낸다. 박탈 1건(`owner_revocations` 1행), 위임 또는 폐쇄 예약 1번, 나머지는 409 `OWNER_CHANGED` (SC-005, FR-028)
+- [X] T029 [US3] `admin/application/OwnerRevocationService.java`를 만든다. 블로그 행 잠금 안에서 아래를 한 번에 한다 (research R-09, data-model 박탈 순서)
   - 위임 요청 자동 취소 + 알림
   - `OwnerSuccessionService.revokeOwner`
   - `owner_revocations`, `OWNER_REVOKED` 알림, 기록
   - `BlogClosingService`: `closeBySystem`에 뺄 회원(박탈된 사람)을 넘긴다. 3일 전·1일 전 대상 쿼리에서 `owner_revocations`(이 블로그·이 폐쇄 예정 시각)의 user_id를 뺀다 (US3-5)
-- [ ] T030 [US3] `admin/application/OwnerWarningService.java`를 만든다. 잠금 → `ownerId` 확인 → 사유 검사 → `owner_warnings` → 1년 안 경고 수 → 알림 → 3번이면 `OwnerRevocationService.revoke(WARNING_3)` (FR-020, FR-021)
-- [ ] T031 [US3] `admin/api/AdminOwnerController.java`를 만든다. `GET·POST /api/admin/blogs/{blogId}/owner-warnings`, `POST /api/admin/blogs/{blogId}/owner-revocation` (contracts)
-- [ ] T032 [US3] 블로그 상세 화면(`admin-blogs.js`)에 경고(사유 입력, "지금 n번") 버튼과 바로 강퇴 버튼, 확인 창, 경고 이력을 붙인다
+- [X] T030 [US3] `admin/application/OwnerWarningService.java`를 만든다. 잠금 → `ownerId` 확인 → 사유 검사 → `owner_warnings` → 1년 안 경고 수 → 알림 → 3번이면 `OwnerRevocationService.revoke(WARNING_3)` (FR-020, FR-021)
+- [X] T031 [US3] `admin/api/AdminOwnerController.java`를 만든다. `GET·POST /api/admin/blogs/{blogId}/owner-warnings`, `POST /api/admin/blogs/{blogId}/owner-revocation` (contracts)
+- [X] T032 [US3] 블로그 상세 화면(`admin-blogs.js`)에 경고(사유 입력, "지금 n번") 버튼과 바로 강퇴 버튼, 확인 창, 경고 이력을 붙인다
 
 ---
 
@@ -283,3 +283,6 @@ description: "005 메인 관리자·제재 구현 작업 목록"
 3. **T053 일부를 2단계에서 했다.** 관리자 API가 생기면 바로 `OpenApiConformanceTest`의 "계약에 없는 API 없음"이 깨지므로 `ADMIN_CONTRACT`를 그 검사에 먼저 넣었다. 계약의 모든 경로가 매핑됐는지 보는 검사는 10단계에서 더했다.
 4. **T009** 관리자 화면을 열 때 액세스 토큰(15분)만 만료되고 로그인 유지 토큰(RT)이 있으면 로그인 화면으로 보내지 않고 `js/admin-refresh.js`가 토큰을 한 번 새로 받아 다시 연다. 다른 화면은 `api.js`가 같은 일을 하지만 `/admin`은 서버가 먼저 role을 봐서 따로 두었다. 실패하면 `/login.html?next=/admin`으로 간다.
 5. **T006** CSRF 거부는 지금처럼 본문 없는 403이고, 로그인했지만 관리자가 아닌 `/api/admin/**` 요청만 403 `ADMIN_ONLY` JSON이다.
+6. **T029** 002 `DelegationIntegrationTest`의 "박탈된 사람도 멤버로서 폐쇄 알림을 받는다" 확인을 "받지 않는다"로 바꿨다. 005 FR-024·US3-5("박탈된 사람을 제외한 멤버 전원과 구독자")가 002 구현보다 뒤의 결정이라서다. `OwnerSuccessionService.revokeOwner`가 박탈된 사람을 즉시 알림에서 빼고, 3일 전·1일 전 알림은 `owner_revocations`(이 블로그·이 폐쇄 예정 시각)로 뺀다.
+7. **T029 (사용자 확인 필요)** 박탈 때 받는 멤버에게 가는 `DELEGATION_CANCELED` 알림은 002에 이미 있는 종류를 그대로 써서 탭이 "블로그"다. data-model 알림 표는 "운영" 탭으로 적었지만, 종류의 탭을 바꾸면 002의 위임 취소 알림(블로그장에게 가는 것)까지 바뀌어 그대로 두었다. 끌 수 없는 것은 같다.
+8. **T032** 경고 확인 창의 "기준 횟수"는 블로그 상세 응답에 없어(계약 `BlogDetail`) "기준 횟수(기본 3번)"로 적었다. 실제 판단과 "3번 중 n번" 알림 문구는 서버 설정값(`admin.warning.revoke-threshold`)을 쓴다.

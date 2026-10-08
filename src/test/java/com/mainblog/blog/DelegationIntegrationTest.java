@@ -173,8 +173,8 @@ class DelegationIntegrationTest extends BlogTestBase {
         assertThat(jdbc.queryForObject("SELECT close_reason FROM blogs WHERE id = ?", String.class, blog))
                 .isEqualTo("OWNER_REVOKED");
         assertThat(role(blog, y.id())).isEqualTo("MEMBER");
-        // 박탈된 사람도 멤버로서 폐쇄 알림을 받는다
-        assertThat(notificationsOf(y.id())).containsExactly("BLOG_CLOSING");
+        // 박탈된 사람은 폐쇄 예정 알림에서 빠진다(005 FR-024, US3-5)
+        assertThat(notificationsOf(y.id())).doesNotContain("BLOG_CLOSING");
         assertThat(jdbc.queryForObject("SELECT content FROM notifications WHERE recipient_id = ?", String.class,
                 m.id())).contains("블로그장 권한 박탈로 인한 폐쇄 조치");
         assertThat(deleteAs(y, "/api/blogs/" + blog + "/closing").status()).isEqualTo(403);

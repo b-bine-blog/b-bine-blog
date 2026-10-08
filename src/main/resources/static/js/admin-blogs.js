@@ -1,4 +1,4 @@
-// 관리자 블로그 탭 (005 T025, ADM-02, FR-011~FR-014, D-94, D-103 #6~#8).
+// 관리자 블로그 탭 (005 T025·T032, ADM-02, ADM-07, FR-011~FR-014, FR-020~FR-029, D-94, D-103 #6~#8·#12~#17).
 // 검색·상태 거르기, 목록, 상세, 숨김·해제·강제 폐쇄. 모든 값은 textContent(D-64).
 (function () {
   'use strict';
@@ -83,9 +83,63 @@
     }
     box.appendChild(actions);
     box.appendChild(msg);
-    if (global.adminOwnerActions) { global.adminOwnerActions(box, d, function () { openDetail(d.id); }); }
+    renderOwner(box, d);
   }
 
+
+  // 블로그장 경고(사유 필수, "지금 n번")와 바로 강퇴, 경고 이력 (T032)
+  function renderOwner(box, d) {
+    box.appendChild(ui.el('h3', null, '블로그장 경고·강퇴'));
+    if (d.status !== 'CLOSED' && d.owner) {
+      var label = ui.el('label', null, '경고 사유(필수, 500자까지)');
+      var reason = ui.el('textarea');
+      reason.id = 'owner-warning-reason';
+      reason.maxLength = 500;
+      reason.rows = 3;
+      label.htmlFor = reason.id;
+      box.appendChild(label);
+      box.appendChild(reason);
+      var msg = ui.el('p', 'message');
+      var actions = ui.el('div', 'admin-actions');
+      actions.appendChild(ui.button('경고 (지금 ' + d.ownerActiveWarningCount + '번)', function () {
+        var text = reason.value.trim();
+        if (!text) { ui.message(msg, '경고 사유를 적어 주세요.', true); return; }
+        var next = d.ownerActiveWarningCount + 1;
+        var warnText = ui.nick(d.owner) + ' 블로그장에게 경고합니다. 1년 안 경고가 ' + next + '번이 됩니다.'
+          + ' 기준 횟수(기본 3번)가 되면 같은 처리에서 블로그장 권한이 박탈됩니다.';
+        if (!ui.confirm(warnText)) { return; }
+        api.post('/api/admin/blogs/' + d.id + '/owner-warnings', { ownerId: d.owner.id, reason: text }, { activity: true })
+          .then(function () { search(state.page); openDetail(d.id); },
+            function (err) { ui.message(msg, ui.errorText(err), true); });
+      }, 'button-small'));
+      actions.appendChild(ui.button('바로 강퇴', function () {
+        var kickText = ui.nick(d.owner) + ' 블로그장의 권한을 박탈합니다. '
+          + (d.managers.length ? '가장 먼저 된 부블로그장(' + ui.nick(d.managers[0].user) + ')이 수락 없이 블로그장이 됩니다.'
+            : (d.status === 'CLOSING' ? '부블로그장이 없어 지금 폐쇄 예정 시각에 폐쇄됩니다.'
+              : '부블로그장이 없어 7일 뒤 04:00에 폐쇄됩니다. 아무도 철회할 수 없습니다.'));
+        if (!ui.confirm(kickText)) { return; }
+        var text = reason.value.trim();
+        api.post('/api/admin/blogs/' + d.id + '/owner-revocation', { ownerId: d.owner.id, reason: text || null },
+          { activity: true }).then(function () { search(state.page); openDetail(d.id); },
+          function (err) { ui.message(msg, ui.errorText(err), true); });
+      }, 'button-small button-danger'));
+      box.appendChild(actions);
+      box.appendChild(msg);
+    } else {
+      box.appendChild(ui.el('p', 'hint', d.owner ? '폐쇄된 블로그입니다.' : '지금 블로그장이 없습니다.'));
+    }
+    var history = ui.el('div');
+    box.appendChild(history);
+    api.get('/api/admin/blogs/' + d.id + '/owner-warnings', { activity: true }).then(function (res) {
+      ui.table(history, [
+        { label: '시각', value: function (w) { return ui.fmt(w.createdAt); } },
+        { label: '블로그장', value: function (w) { return ui.nick(w.owner); } },
+        { label: '사유', value: function (w) { return w.reason || '-'; } },
+        { label: '관리자', value: function (w) { return ui.nick(w.admin); } },
+        { label: '셈', value: function (w) { return w.counted ? '1년 안' : '1년 지남'; } }
+      ], res.warnings, null, '경고 이력이 없습니다.');
+    }, function (err) { history.appendChild(ui.el('p', 'message message--error', ui.errorText(err))); });
+  }
 
   document.addEventListener('DOMContentLoaded', function () {
     $('blog-search').addEventListener('submit', function (e) {

@@ -50,11 +50,12 @@ public class OwnerSuccessionService {
             return new Result(next.getUserId(), null);
         }
         // 이미 블로그장이 폐쇄를 예약했으면 그 일정을 그대로 둔다. 철회할 블로그장이 없으니 그대로 폐쇄된다.
+        // 박탈된 사람은 폐쇄 예정 알림에서 뺀다(005 T029, FR-024 "박탈된 사람을 제외한 멤버 전원과 구독자").
         LocalDateTime at = blog.isClosing() ? blog.getCloseScheduledAt()
-                : closingService.closeBySystem(blogId, CloseReason.OWNER_REVOKED, adminId);
+                : closingService.closeBySystem(blogId, CloseReason.OWNER_REVOKED, adminId, List.of(owner.getUserId()));
         return new Result(null, at);
     }
 
-    /** newOwnerId가 있으면 승계, 없으면 closeScheduledAt에 폐쇄 예정. */
+    /** newOwnerId가 있으면 승계, 없으면 closeScheduledAt에 폐쇄 예정. revokedUserId는 박탈된 사람. */
     public record Result(Long newOwnerId, LocalDateTime closeScheduledAt) {}
 }
