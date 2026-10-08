@@ -460,6 +460,7 @@ components:
             canDelete: { type: boolean }
             canComment: { type: boolean }
             shareable: { type: boolean, description: 비공개 블로그면 false(FR-047) }
+            hiddenByAdmin: { type: boolean, description: "메인 관리자가 숨긴 글이면 true. 작성자 본인에게만 이 상태로 보이고 고치기·댓글·좋아요·공유는 막힌다(005 T041, D-103 #10)" }
     PostPage:
       type: object
       properties:
@@ -508,6 +509,7 @@ components:
         id: { type: integer, format: int64 }
         parentId: { type: integer, format: int64, nullable: true }
         deleted: { type: boolean, description: true면 "삭제된 댓글입니다" 자리(content·author null) }
+        hidden: { type: boolean, description: "true면 \"관리자가 숨긴 댓글입니다\" 자리(content·author null). 답글이 남은 최상위 댓글만(005 T042)" }
         content: { type: string, nullable: true }
         author: { allOf: [ { $ref: '#/components/schemas/Author' } ], nullable: true }
         replyToNickname: { type: string, nullable: true, description: 대상의 지금 닉네임(D-87) }

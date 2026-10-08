@@ -23,7 +23,8 @@ public final class BoardViews {
                              String categoryName, String thumbnailUrl, int likeCount, int viewCount,
                              int commentCount, LocalDateTime createdAt,
                              String content, String contentHtml, Long categoryId, List<String> tags, boolean liked,
-                             boolean canEdit, boolean canDelete, boolean canComment, boolean shareable) {}
+                             boolean canEdit, boolean canDelete, boolean canComment, boolean shareable,
+                             boolean hiddenByAdmin) {}
 
     public record PostPage(List<PostSummary> items, int page, int size, long totalElements, int totalPages) {
 
@@ -40,9 +41,10 @@ public final class BoardViews {
 
     public record UploadedImages(List<UploadedImage> images) {}
 
+    /** hidden: 메인 관리자가 숨긴 최상위 댓글 자리(답글이 남았을 때만, 내용·작성자 없음, 005 T042). */
     public record CommentView(long id, Long parentId, boolean deleted, String content, Author author,
                               String replyToNickname, boolean edited, boolean canEdit, boolean canDelete,
-                              LocalDateTime createdAt, List<CommentView> replies) {}
+                              LocalDateTime createdAt, List<CommentView> replies, boolean hidden) {}
 
     public record CommentPage(List<CommentView> items, int page, int totalPages, long totalElements) {}
 

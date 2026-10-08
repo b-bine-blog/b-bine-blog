@@ -14,6 +14,7 @@ import com.mainblog.common.notification.NotificationWriter;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,10 +42,14 @@ public class PostService {
     private final BoardProperties props;
     private final JdbcTemplate jdbc;
     private final Clock clock;
+    private final AdminPostDelete adminDelete;
+
+    private static final java.time.format.DateTimeFormatter KEY_TIME =
+            java.time.format.DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
     public PostService(PostStore store, PostPolicy policy, PostTagService tagService, PostImageService imageService,
                        PostQueryService queryService, MarkdownRenderer renderer, NotificationWriter notifications,
-                       BoardProperties props, JdbcTemplate jdbc, Clock clock) {
+                       BoardProperties props, JdbcTemplate jdbc, Clock clock, @Lazy AdminPostDelete adminDelete) {
         this.store = store;
         this.policy = policy;
         this.tagService = tagService;
@@ -55,6 +60,12 @@ public class PostService {
         this.props = props;
         this.jdbc = jdbc;
         this.clock = clock;
+        this.adminDelete = adminDelete;
+    }
+
+    /** 메인 관리자의 블로그 글 삭제를 맡는 쪽(005 AdminPostModerationService). 게시판이 관리자 패키지를 직접 알지 않게 둔다. */
+    public interface AdminPostDelete {
+        void delete(long adminId, long postId);
     }
 
     /** 블로그 글 쓰기: 그 블로그 멤버(정지 아님)만. 폐쇄 예정 블로그도 된다(US1-14). */
@@ -98,7 +109,10 @@ public class PostService {
         return queryService.detailAfterWrite(postId, userId);
     }
 
-    /** 삭제: 30일 보관 뒤 04:00에 지운다. 남이 지우면 작성자에게 끌 수 없는 알림(FR-011). */
+    /**
+     * 삭제: 30일 보관 뒤 04:00에 지운다. 남이 지우면 작성자에게 끌 수 없는 알림(FR-011).
+     * 메인 관리자가 블로그 글을 지우면 활동 기록이 남도록 005 AdminPostModerationService가 처리한다(005 T041, FR-017).
+     */
     @Transactional
     public void delete(long postId, long userId) {
         PostRow post = store.findForUpdate(postId).orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
@@ -106,11 +120,28 @@ public class PostService {
         if (!PostPolicy.canDelete(post, viewer)) {
             throw new BusinessException(ErrorCode.POST_FORBIDDEN);
         }
-        store.markDeleted(postId, userId, LocalDateTime.now(clock));
-        if (post.authorId() != userId && !post.isNotice() && isActive(post.authorId())) {
-            notifications.write(post.authorId(), NotificationType.POST_DELETED, "POST", postId, userId,
-                    "'" + post.title() + "' 글이 삭제되었습니다.", "POST_DELETED:" + postId);
+        if (viewer.admin() && !post.isNotice()) {
+            adminDelete.delete(userId, postId);
+            return;
         }
+        LocalDateTime now = LocalDateTime.now(clock);
+        store.markDeleted(postId, userId, now);
+        if (post.authorId() != userId && !post.isNotice()) {
+            notifyDeleted(post, userId, now);
+        }
+    }
+
+    /**
+     * 작성자에게 "내 글 삭제됨"(끌 수 없음). 키에 삭제 시각을 넣어 복구한 뒤 다시 지워도 다시 간다(005 R-11).
+     * 005 관리자 삭제도 같은 문구를 쓴다.
+     */
+    public void notifyDeleted(PostRow post, long actorId, LocalDateTime deletedAt) {
+        if (!isActive(post.authorId())) {
+            return;
+        }
+        notifications.write(post.authorId(), NotificationType.POST_DELETED, "POST", post.id(), actorId,
+                "'" + post.title() + "' 글이 삭제되었습니다.",
+                "POST_DELETED:" + post.id() + ":" + deletedAt.format(KEY_TIME));
     }
 
     /** 블로그 글 이미지 올리기: 글을 쓸 수 있는 멤버만. */

@@ -31,7 +31,7 @@
         return;
       }
       render();
-      loadComments(1);
+      if (!p.hiddenByAdmin) { loadComments(1); } // 관리자가 숨긴 글은 댓글을 열지 않는다(005 T044, D-103 #10)
     }, function (err) {
       board.sayError($('message'), err.status === 404 ? { message: '볼 수 없거나 삭제된 글입니다.' } : err, load);
     });
@@ -70,8 +70,11 @@
     $('delete').hidden = !post.canDelete;
     renderReport();
     $('post').hidden = false;
-    $('comments').hidden = isNotice;
+    $('comments').hidden = isNotice || !!post.hiddenByAdmin;
     $('comment-form').hidden = !post.canComment;
+    if (post.hiddenByAdmin) {
+      board.say($('message'), '관리자가 숨긴 글입니다. 작성자인 나에게만 보이고 고치거나 댓글을 달 수 없습니다.', true);
+    }
     $('comment-login').hidden = !!me || isNotice;
   }
 
@@ -162,6 +165,10 @@
 
   function commentItem(c, isReply) {
     var li = el('li', 'comment' + (isReply ? ' comment--reply' : ''));
+    if (c.hidden) {
+      li.appendChild(el('p', 'comment__deleted', '관리자가 숨긴 댓글입니다')); // 005 T042
+      return li;
+    }
     if (c.deleted) {
       li.appendChild(el('p', 'comment__deleted', '삭제된 댓글입니다'));
       return li;

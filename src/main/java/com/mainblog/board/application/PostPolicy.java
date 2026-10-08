@@ -78,12 +78,36 @@ public class PostPolicy {
         return viewerIn(blogContext(post.blogId()), admin);
     }
 
-    /** 삭제 확인용 보는 사람. 메인 관리자는 블로그 공개 범위와 관계없이 지울 수 있다. */
+    /**
+     * 글 상세용(005 T041, D-103 #10). 관리자가 숨긴 글(HIDDEN)은 작성자 본인에게만 보이고(블로그를 볼 수 있을 때),
+     * 블로그장을 포함한 다른 사람에게는 404다. 그 밖에는 {@link #requireReadable}과 같다.
+     */
+    public Viewer requireReadableForDetail(PostRow post, Long userId) {
+        if (post.isHiddenByAdmin()) {
+            if (post.isNotice() || userId == null || post.authorId() != userId) {
+                throw new BusinessException(ErrorCode.POST_NOT_FOUND);
+            }
+            Viewer v = viewerIn(blogContext(post.blogId()), false);
+            return new Viewer(v.userId(), false, v.member(), false);
+        }
+        return requireReadable(post, userId);
+    }
+
+    /**
+     * 삭제 확인용 보는 사람. 메인 관리자는 블로그 공개 범위와 관계없이 지울 수 있다.
+     * 관리자가 숨긴 글은 관리자와 작성자 본인만 지울 수 있다(블로그장·글 관리 권한자에게는 보이지 않음, 005 D-103 #10).
+     */
     public Viewer viewerForDelete(PostRow post, Long userId) {
+        boolean admin = isAdmin(userId);
+        if (post.isHiddenByAdmin() && !post.isNotice()) {
+            if (admin) {
+                return new Viewer(userId, true, false, false);
+            }
+            return requireReadableForDetail(post, userId);
+        }
         if (!post.isVisible()) {
             throw new BusinessException(ErrorCode.POST_NOT_FOUND);
         }
-        boolean admin = isAdmin(userId);
         if (admin || post.isNotice()) {
             return new Viewer(userId, admin, false, false);
         }

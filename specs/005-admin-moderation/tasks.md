@@ -167,7 +167,7 @@ description: "005 메인 관리자·제재 구현 작업 목록"
 
 ## 7단계: 사용자 스토리 5 - 게시글·댓글 숨김·삭제와 복구 (P2)
 
-- [ ] T037 [P] [US5] `admin/AdminPostModerationIntegrationTest` (US5-1~4, FR-015~FR-019, D-103 #9~#11)
+- [X] T037 [P] [US5] `admin/AdminPostModerationIntegrationTest` (US5-1~4, FR-015~FR-019, D-103 #9~#11)
   - 숨김
     - 목록·검색·피드에서 빠진다
     - 작성자 상세는 `hiddenByAdmin: true`이고 수정·댓글·좋아요는 막힌다. 블로그장·비회원은 404
@@ -183,22 +183,22 @@ description: "005 메인 관리자·제재 구현 작업 목록"
     - 폐쇄 블로그 글은 409
     - 복구 뒤 다시 지우면 알림이 다시 간다
   - 관리자 글 목록·상세: 비공개·숨김 블로그 글도 보이고 `deletedBy`·`restorable`이 있다
-- [ ] T038 [P] [US5] `admin/AdminCommentModerationIntegrationTest` (US5-5, D-103 #9·#11)
+- [X] T038 [P] [US5] `admin/AdminCommentModerationIntegrationTest` (US5-5, D-103 #9·#11)
   - 댓글 숨김·해제·삭제는 작성자 알림 0건, 활동 기록이 남는다
   - 답글이 남은 최상위 댓글을 숨기면 `hidden: true` 자리가 남고 답글은 보인다
   - 관리자가 지운 댓글 복구는 성공, 작성자가 지운 댓글은 409, 30일 뒤는 404
-- [ ] T039 [US5] `admin/application/AdminPostModerationService.java`를 만든다. 목록·상세·숨김·해제·삭제·복구, 알림, 기록 (research R-11)
-- [ ] T040 [US5] `admin/application/AdminCommentModerationService.java`를 만든다. 목록·숨김·해제·삭제·복구, 기록. 누가 지웠는지는 칸 추가 전에는 `admin_actions`의 `COMMENT_DELETE`로 판단한다
-- [ ] T041 [US5] 004 글 쪽을 고친다 (D-103 #10)
+- [X] T039 [US5] `admin/application/AdminPostModerationService.java`를 만든다. 목록·상세·숨김·해제·삭제·복구, 알림, 기록 (research R-11)
+- [X] T040 [US5] `admin/application/AdminCommentModerationService.java`를 만든다. 목록·숨김·해제·삭제·복구, 기록. 누가 지웠는지는 칸 추가 전에는 `admin_actions`의 `COMMENT_DELETE`로 판단한다
+- [X] T041 [US5] 004 글 쪽을 고친다 (D-103 #10)
   - `board/application/PostQueryService`·`PostPolicy`: HIDDEN 글은 작성자에게만 `hiddenByAdmin`으로 보이고, 수정·댓글·좋아요·공유는 막는다
   - `PostService.delete`: 관리자면 `AdminPostModerationService`로 보낸다. `POST_DELETED` 키에 삭제 시각을 넣는다
   - `specs/004-board/contracts/board-api.yaml`의 `PostDetail`에 `hiddenByAdmin`을 더한다
   - 004 테스트에서 깨지는 것을 맞춘다
-- [ ] T042 [US5] 004 댓글 쪽을 고친다
+- [X] T042 [US5] 004 댓글 쪽을 고친다
   - `board/application/CommentService`: HIDDEN 댓글은 빼고, 답글이 남은 HIDDEN 최상위 댓글은 `hidden: true` 자리로 둔다
   - `board-api.yaml` 댓글 스키마에 `hidden`을 더한다
-- [ ] T043 [US5] `admin/api/AdminContentController.java`를 만든다. `GET /api/admin/posts`, `GET·DELETE /api/admin/posts/{postId}`, `PUT·DELETE /api/admin/posts/{postId}/hidden`, `POST /api/admin/posts/{postId}/restore`, `GET /api/admin/comments`, `DELETE /api/admin/comments/{commentId}`, `PUT·DELETE /api/admin/comments/{commentId}/hidden`, `POST /api/admin/comments/{commentId}/restore` (contracts)
-- [ ] T044 [US5] 화면을 만든다
+- [X] T043 [US5] `admin/api/AdminContentController.java`를 만든다. `GET /api/admin/posts`, `GET·DELETE /api/admin/posts/{postId}`, `PUT·DELETE /api/admin/posts/{postId}/hidden`, `POST /api/admin/posts/{postId}/restore`, `GET /api/admin/comments`, `DELETE /api/admin/comments/{commentId}`, `PUT·DELETE /api/admin/comments/{commentId}/hidden`, `POST /api/admin/comments/{commentId}/restore` (contracts)
+- [X] T044 [US5] 화면을 만든다
   - `static/js/admin-content.js`: 글·댓글 탭. 블로그·상태 거르기, 본문은 글자로만, 숨김·삭제·복구 버튼
   - `static/js/board-post.js`: "관리자가 숨긴 글" 표시와 "관리자가 숨긴 댓글입니다" 자리
 
@@ -287,3 +287,7 @@ description: "005 메인 관리자·제재 구현 작업 목록"
 7. **T029 (사용자 확인 필요)** 박탈 때 받는 멤버에게 가는 `DELEGATION_CANCELED` 알림은 002에 이미 있는 종류를 그대로 써서 탭이 "블로그"다. data-model 알림 표는 "운영" 탭으로 적었지만, 종류의 탭을 바꾸면 002의 위임 취소 알림(블로그장에게 가는 것)까지 바뀌어 그대로 두었다. 끌 수 없는 것은 같다.
 8. **T032** 경고 확인 창의 "기준 횟수"는 블로그 상세 응답에 없어(계약 `BlogDetail`) "기준 횟수(기본 3번)"로 적었다. 실제 판단과 "3번 중 n번" 알림 문구는 서버 설정값(`admin.warning.revoke-threshold`)을 쓴다.
 9. **T034** 신고 처리에서 "처리 대상이 지금 블로그장인지" 확인은 경고·강퇴뿐 아니라 블로그 폐쇄에도 한다(계약 설명대로). 문제 없음은 확인하지 않는다. 신고 사유는 003처럼 코드(SPAM 등)로 주고, 화면이 `/api/reports/reasons`로 이름을 붙인다.
+10. **T041** 숨긴 글은 `PostPolicy.requireReadableForDetail`로 글 상세(`GET /api/posts/{id}`)에서만 작성자 본인에게 보인다(`hiddenByAdmin: true`, `canEdit`·`canComment`·`shareable`은 false, 조회수는 세지 않음). 댓글 목록·댓글 쓰기·좋아요·수정은 004의 `requireReadable`을 그대로 써서 404다(403이 아님). 작성자는 숨긴 글을 지울 수 있고, 블로그장·글 관리 권한자는 숨긴 글을 볼 수도 지울 수도 없다(404).
+11. **T041** 004 `PostService`가 관리자 패키지를 직접 알지 않도록 `PostService.AdminPostDelete` 인터페이스를 두고 `AdminPostModerationService`가 구현한다(`@Lazy`로 순환 의존을 끊음). 작성자 알림 문구는 `PostService.notifyDeleted` 하나로 같이 쓴다.
+12. **T042** 숨긴 최상위 댓글 자리는 `hidden: true`, `deleted: false`, 내용·작성자 null이다. 화면(`board-post.js`)은 "관리자가 숨긴 댓글입니다"로 보인다. 004 `CommentService.delete`는 이제 `deleted_by`를 채운다.
+13. **T040 (사용자 확인 필요)** `deleted_by` 칸이 생기기 전에 지워진 댓글(`deleted_by` NULL)은 누가 지웠는지 알 수 없어 복구 대상에서 뺐다(`restorable: false`, 복구하면 409 `NOT_RESTORABLE`). 개발 DB에 그런 행이 있으면 30일 안에만 문제가 된다.

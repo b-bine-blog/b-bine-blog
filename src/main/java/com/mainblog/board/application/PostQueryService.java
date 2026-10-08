@@ -42,8 +42,10 @@ public class PostQueryService {
     @Transactional
     public PostDetail open(long postId, Long userId, HttpServletRequest request, HttpServletResponse response) {
         PostRow post = store.find(postId).orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
-        Viewer viewer = policy.requireReadable(post, userId);
-        viewCount.record(post, userId, request, response);
+        Viewer viewer = policy.requireReadableForDetail(post, userId);
+        if (!post.isHiddenByAdmin()) {
+            viewCount.record(post, userId, request, response);
+        }
         return detail(post, viewer);
     }
 
@@ -60,7 +62,8 @@ public class PostQueryService {
             throw new BusinessException(ErrorCode.POST_NOT_FOUND);
         }
         PostSummary s = rows.get(0);
-        boolean canEdit = PostPolicy.canEdit(post, viewer);
+        boolean hidden = post.isHiddenByAdmin(); // 작성자 본인만 여기 온다. 고치기·댓글·좋아요·공유는 막는다(005 T041)
+        boolean canEdit = !hidden && PostPolicy.canEdit(post, viewer);
         boolean liked = viewer.userId() != null && Boolean.TRUE.equals(jdbc.queryForObject(
                 "SELECT EXISTS (SELECT 1 FROM post_likes WHERE post_id = ? AND user_id = ?)", Boolean.class,
                 post.id(), viewer.userId()));
@@ -69,6 +72,6 @@ public class PostQueryService {
                 s.thumbnailUrl(), s.likeCount(), s.viewCount(), s.commentCount(), s.createdAt(),
                 canEdit ? post.content() : null, renderer.toSafeHtml(post.content()), post.categoryId(),
                 store.tagsOf(post.id()), liked, canEdit, PostPolicy.canDelete(post, viewer),
-                PostPolicy.canComment(post, viewer), shareable);
+                !hidden && PostPolicy.canComment(post, viewer), !hidden && shareable, hidden);
     }
 }

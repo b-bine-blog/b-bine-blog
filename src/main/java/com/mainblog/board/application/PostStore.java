@@ -42,6 +42,11 @@ public class PostStore {
         public boolean isVisible() {
             return "VISIBLE".equals(status);
         }
+
+        /** 메인 관리자가 숨긴 글(005 D-103 #10). */
+        public boolean isHiddenByAdmin() {
+            return "HIDDEN".equals(status);
+        }
     }
 
     public Optional<PostRow> find(long id) {

@@ -91,8 +91,9 @@ public class CommentService {
         MapSqlParameterSource params = new MapSqlParameterSource("post", postId).addValue("blog", post.blogId())
                 .addValue("viewer", userId);
         String block = userId == null ? "" : NOT_BLOCKED;
+        // 지우거나 관리자가 숨긴 최상위 댓글은 보이는 답글이 남았을 때만 자리로 둔다(005 T042)
         String topWhere = "WHERE cm.post_id = :post AND cm.parent_id IS NULL AND (cm.status = 'VISIBLE' "
-                + "OR (cm.status = 'DELETED' AND EXISTS (SELECT 1 FROM comments r WHERE r.parent_id = cm.id "
+                + "OR (cm.status IN ('DELETED', 'HIDDEN') AND EXISTS (SELECT 1 FROM comments r WHERE r.parent_id = cm.id "
                 + "AND r.status = 'VISIBLE')))" + block;
         Long total = named.queryForObject("SELECT COUNT(*) FROM comments cm " + topWhere, params, Long.class);
         params.addValue("limit", size).addValue("offset", (p - 1) * size);
@@ -167,14 +168,19 @@ public class CommentService {
             throw new BusinessException(ErrorCode.COMMENT_FORBIDDEN);
         }
         LocalDateTime now = LocalDateTime.now(clock);
-        jdbc.update("UPDATE comments SET status = 'DELETED', deleted_at = ?, updated_at = ? WHERE id = ?", now, now,
-                commentId);
+        // 누가 지웠는지 남겨 005 관리자 복구가 작성자가 지운 댓글을 가린다(005 T057, D-103 #11)
+        jdbc.update("UPDATE comments SET status = 'DELETED', deleted_at = ?, deleted_by = ?, updated_at = ? WHERE id = ?",
+                now, userId, now, commentId);
     }
 
     private CommentView view(Row r, Viewer viewer, List<CommentView> replies) {
+        if ("HIDDEN".equals(r.status())) {
+            return new CommentView(r.id(), r.parentId(), false, null, null, null, false, false, false, r.createdAt(),
+                    replies, true);
+        }
         if (!"VISIBLE".equals(r.status())) {
             return new CommentView(r.id(), r.parentId(), true, null, null, null, false, false, false, r.createdAt(),
-                    replies);
+                    replies, false);
         }
         String replyTo = null;
         if (r.replyToUserId() != null) {
@@ -183,7 +189,7 @@ public class CommentService {
         boolean mine = viewer.is(r.authorId());
         return new CommentView(r.id(), r.parentId(), false, r.content(),
                 authorView.ofComment(r.authorId(), r.nickname(), r.userStatus(), r.profileName()), replyTo, r.edited(),
-                mine, mine || viewer.postManager(), r.createdAt(), replies);
+                mine, mine || viewer.postManager(), r.createdAt(), replies, false);
     }
 
     private void notifyIfOther(long recipientId, long actorId, NotificationType type, long commentId, String content) {
