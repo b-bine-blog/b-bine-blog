@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>블로그 - 메인블로그</title>
+  <link rel="stylesheet" href="/css/base.css">
+</head>
+<body>
+  <main class="wide">
+    <section id="blog" hidden>
+      <img id="cover" class="cover" alt="대표 이미지" hidden>
+      <h1 id="name"></h1>
+      <p id="description"></p>
+      <ul class="chips" id="tags"></ul>
+      <p class="hint"><span id="owner"></span> · 멤버 <span id="member-count"></span>명 · <span id="visibility"></span></p>
+      <div class="notice" id="closing" hidden></div>
+
+      <div class="row" id="actions">
+        <button type="button" id="join" hidden>참여 신청</button>
+        <button type="button" id="cancel-join" hidden>신청 취소</button>
+        <button type="button" id="subscribe" hidden>구독하기</button>
+        <button type="button" id="unsubscribe" hidden>구독 취소</button>
+        <button type="button" id="share" hidden>공유 링크 복사</button>
+        <a id="manage" hidden>운영</a>
+        <button type="button" id="leave" hidden>블로그 탈퇴</button>
+      </div>
+      <p class="message" id="action-message"></p>
+
+      <!-- 블랙리스트로 막힌 사람에게만 보인다(BLG-11, BLG-12) -->
+      <form class="notice" id="appeal-form" hidden>
+        <p>이 블로그에는 참여 신청을 할 수 없습니다. 본인이 아니라고 생각되면 문의를 남겨 주세요.</p>
+        <label for="appeal-content">문의 내용 (선택)</label>
+        <textarea id="appeal-content" maxlength="1000" rows="3"></textarea>
+        <button type="submit">문의하기</button>
+      </form>
+
+      <!-- 글 목록은 004에서 만든다 -->
+    </section>
+    <!-- 정지된 회원 안내(FR-050) -->
+    <section class="notice" id="suspended" hidden></section>
+    <p class="message message--error" id="message"></p>
+  </main>
+  <script src="/js/api.js"></script>
+  <script src="/js/session.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/blog-home.js"></script>
+</body>
+</html>

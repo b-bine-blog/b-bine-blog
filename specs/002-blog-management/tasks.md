@@ -69,17 +69,17 @@ description: "002 블로그 생성·참여·운영 구현 작업 목록"
 
 ### 테스트
 
-- [ ] T019 [P] [US1] `src/test/java/com/mainblog/blog/BlogCreateIntegrationTest.java`를 만든다. US1 시나리오 1~7과 10~12를 다룬다: 생성·주소 형식·예약어·중복·이름 중복 허용·공개 3·비공개 5·비회원 401·관리자 403·태그
-- [ ] T020 [P] [US1] `src/test/java/com/mainblog/blog/BlogCreateConcurrencyTest.java`를 만든다. 공개 2개 가진 회원이 10번 동시 요청해도 공개가 3개를 넘지 않는지 확인하고(SC-002), 두 회원이 같은 주소를 동시에 요청하면 하나만 성공하는지 확인한다
-- [ ] T021 [P] [US1] `src/test/java/com/mainblog/blog/BlogLimitConfigTest.java`를 만든다. `@TestPropertySource(blog.limit.public=5)`로 4번째 공개 생성이 성공하는지 확인한다 (SC-003)
+- [X] T019 [P] [US1] `src/test/java/com/mainblog/blog/BlogCreateIntegrationTest.java`를 만든다. US1 시나리오 1~7과 10~12를 다룬다: 생성·주소 형식·예약어·중복·이름 중복 허용·공개 3·비공개 5·비회원 401·관리자 403·태그
+- [X] T020 [P] [US1] `src/test/java/com/mainblog/blog/BlogCreateConcurrencyTest.java`를 만든다. 공개 2개 가진 회원이 10번 동시 요청해도 공개가 3개를 넘지 않는지 확인하고(SC-002), 두 회원이 같은 주소를 동시에 요청하면 하나만 성공하는지 확인한다
+- [X] T021 [P] [US1] `src/test/java/com/mainblog/blog/BlogLimitConfigTest.java`를 만든다. `@TestPropertySource(blog.limit.public=5)`로 4번째 공개 생성이 성공하는지 확인한다 (SC-003)
 
 ### 구현
 
-- [ ] T022 [P] [US1] `src/main/java/com/mainblog/blog/application/BlogAddressPolicy.java`를 만든다(형식·예약어) (FR-003, FR-004)
-- [ ] T023 [P] [US1] `src/main/java/com/mainblog/blog/application/BlogLimitPolicy.java`를 만든다 (FR-010, FR-013, research R-02)
+- [X] T022 [P] [US1] `src/main/java/com/mainblog/blog/application/BlogAddressPolicy.java`를 만든다(형식·예약어) (FR-003, FR-004)
+- [X] T023 [P] [US1] `src/main/java/com/mainblog/blog/application/BlogLimitPolicy.java`를 만든다 (FR-010, FR-013, research R-02)
   - `users` 행을 `SELECT ... FOR UPDATE`로 잠근다.
   - 지금 블로그장인 ACTIVE·CLOSING 블로그를 공개·비공개로 나눠 센다.
-- [ ] T024 [US1] `src/main/java/com/mainblog/blog/application/BlogService.create`를 만든다 (FR-001, FR-002, FR-006)
+- [X] T024 [US1] `src/main/java/com/mainblog/blog/application/BlogService.create`를 만든다 (FR-001, FR-002, FR-006)
   - 관리자를 거부한다.
   - 이름 trim 후 1~30자, 소개 0~500자를 확인한다.
   - 태그를 정규화하고 최대 10개를 확인한다.
@@ -87,10 +87,10 @@ description: "002 블로그 생성·참여·운영 구현 작업 목록"
   - blogs, blog_members(OWNER, joined_at), tags·blog_tags를 저장한다.
   - visibility가 LINK면 공유 링크를 만든다.
   - 주소 유니크 위반은 BLOG_ADDRESS_TAKEN으로 바꾼다.
-- [ ] T025 [US1] `src/main/java/com/mainblog/blog/api/BlogController.java`에 `POST /api/blogs`와 `GET /api/blogs/address/{address}`를 만든다(BlogDetail: myRole·myPermissions 포함). contracts의 응답 형식을 따른다
-- [ ] T026 [US1] `src/main/java/com/mainblog/blog/application/BlogCoverImageService.java`와 `src/main/java/com/mainblog/blog/api/BlogCoverImageController.java`(`PUT`·`DELETE /api/blogs/{blogId}/cover-image`, BLOG_INFO 권한)를 만든다. 001의 ImageValidator·ImageSanitizer·FileStorage를 쓰고, 롤백되면 파일을 지운다 (FR-007, research R-05)
-- [ ] T027 [P] [US1] 블로그 만들기 화면 `src/main/resources/static/blogs/new.html`, `js/blog-new.js`를 만든다. 주소 형식은 화면에서도 미리 검사하고(최종 판단은 서버), 태그는 입력 칩으로 받는다. 생성한 뒤 대표 이미지를 올리고 `/blog/{주소}`로 이동한다
-- [ ] T028 [P] [US1] 블로그 홈 화면의 뼈대 `src/main/resources/static/blog/index.html`, `js/blog-home.js`를 만든다. 정보 표시는 textContent로 하고, 블로그장·부블로그장에게는 운영 메뉴 링크를 보여 준다
+- [X] T025 [US1] `src/main/java/com/mainblog/blog/api/BlogController.java`에 `POST /api/blogs`와 `GET /api/blogs/address/{address}`를 만든다(BlogDetail: myRole·myPermissions 포함). contracts의 응답 형식을 따른다
+- [X] T026 [US1] `src/main/java/com/mainblog/blog/application/BlogCoverImageService.java`와 `src/main/java/com/mainblog/blog/api/BlogCoverImageController.java`(`PUT`·`DELETE /api/blogs/{blogId}/cover-image`, BLOG_INFO 권한)를 만든다. 001의 ImageValidator·ImageSanitizer·FileStorage를 쓰고, 롤백되면 파일을 지운다 (FR-007, research R-05)
+- [X] T027 [P] [US1] 블로그 만들기 화면 `src/main/resources/static/blogs/new.html`, `js/blog-new.js`를 만든다. 주소 형식은 화면에서도 미리 검사하고(최종 판단은 서버), 태그는 입력 칩으로 받는다. 생성한 뒤 대표 이미지를 올리고 `/blog/{주소}`로 이동한다
+- [X] T028 [P] [US1] 블로그 홈 화면의 뼈대 `src/main/resources/static/blog/index.html`, `js/blog-home.js`를 만든다. 정보 표시는 textContent로 하고, 블로그장·부블로그장에게는 운영 메뉴 링크를 보여 준다
 
 **체크포인트**: US1만으로 블로그를 만들고 들어갈 수 있다.
 
