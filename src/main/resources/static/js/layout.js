@@ -12,7 +12,7 @@
     return a;
   }
 
-  // 왼쪽 로고·공지, 가운데 검색, 오른쪽 내 메뉴(2026-10-08 배치 변경). 자주 쓰는 "블로그 만들기"·"회원가입"은 버튼처럼 보인다.
+  // 왼쪽 로고·공지, 가운데 검색, 오른쪽 내 메뉴(2026-10-08 배치 변경). "회원가입"은 버튼처럼 보이고, "블로그 만들기"는 닉네임 메뉴 안에 있다.
   function renderHeader(me) {
     var header = document.createElement('header');
     header.className = 'site-header';
@@ -47,23 +47,9 @@
     var right = document.createElement('div');
     right.className = 'site-header__right';
     if (me) {
-      var create = link('/blogs/new.html', '블로그 만들기');
-      create.className = 'button-light';
-      right.appendChild(create);
       right.appendChild(link('/me/blogs.html', '내 블로그'));
       right.appendChild(bellButton());
-      var name = link('/me/index.html', me.nickname);
-      name.className = 'site-header__nickname';
-      name.title = '내 정보';
-      right.appendChild(name);
-      var logout = document.createElement('button');
-      logout.type = 'button';
-      logout.textContent = '로그아웃';
-      logout.addEventListener('click', function () {
-        api.post('/api/auth/logout', null, { activity: true, noRefresh: true })
-          .finally(function () { location.href = '/'; });
-      });
-      right.appendChild(logout);
+      right.appendChild(profileMenu(me));
     } else {
       right.appendChild(link('/login.html', '로그인'));
       var signup = link('/signup.html', '회원가입');
@@ -73,6 +59,51 @@
     nav.appendChild(right);
     header.appendChild(nav);
     document.body.insertBefore(header, document.body.firstChild);
+  }
+
+  // 닉네임을 누르면 여는 프로필 메뉴(2026-10-08 사용자 요청): 내 정보, 블로그 만들기(BLG-01), 로그아웃.
+  function profileMenu(me) {
+    var box = document.createElement('div');
+    box.className = 'profile-menu';
+    var toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.className = 'site-header__nickname';
+    toggle.textContent = me.nickname;
+    toggle.setAttribute('aria-haspopup', 'true');
+    toggle.setAttribute('aria-expanded', 'false');
+    var list = document.createElement('div');
+    list.className = 'profile-menu__list';
+    list.id = 'profile-menu-list';
+    list.hidden = true;
+    toggle.setAttribute('aria-controls', list.id);
+    list.appendChild(link('/me/index.html', '내 정보'));
+    list.appendChild(link('/blogs/new.html', '블로그 만들기'));
+    var logout = document.createElement('button');
+    logout.type = 'button';
+    logout.textContent = '로그아웃';
+    logout.addEventListener('click', function () {
+      api.post('/api/auth/logout', null, { activity: true, noRefresh: true })
+        .finally(function () { location.href = '/'; });
+    });
+    list.appendChild(logout);
+
+    function setOpen(open) {
+      list.hidden = !open;
+      toggle.setAttribute('aria-expanded', String(open));
+    }
+    toggle.addEventListener('click', function (e) {
+      e.stopPropagation();
+      setOpen(list.hidden);
+    });
+    document.addEventListener('click', function (e) {
+      if (!box.contains(e.target)) { setOpen(false); }
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !list.hidden) { setOpen(false); toggle.focus(); }
+    });
+    box.appendChild(toggle);
+    box.appendChild(list);
+    return box;
   }
 
   // 종 아이콘 버튼. 그림은 SVG 요소로 만들고 안 읽은 개수는 배지에 textContent로 넣는다.

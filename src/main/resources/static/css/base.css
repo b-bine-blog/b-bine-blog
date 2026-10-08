@@ -68,6 +68,13 @@ h2 { font-size: 1.2rem; }
 .site-header__right { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px 14px; align-items: center; margin-left: auto; }
 .site-header nav > a, .site-header__right > * { white-space: nowrap; } /* 좁은 폭에서 글자 단위로 꺾이지 않고 줄 단위로 넘어간다(SC-010) */
 .site-header__nickname { font-weight: 700; }
+.profile-menu { position: relative; }
+.site-header button.site-header__nickname { border: 0; background: rgba(255,255,255,.12); color: #fff; font-size: 0.95rem; padding: 5px 12px; }
+.site-header button.site-header__nickname::after { content: " ▾"; font-size: 0.8em; }
+.site-header button.site-header__nickname[aria-expanded="true"] { background: #fff; color: var(--green-800); }
+.profile-menu__list { position: absolute; right: 0; top: calc(100% + 6px); min-width: 150px; display: flex; flex-direction: column; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 6px 0; z-index: 20; }
+.site-header .profile-menu__list a, .site-header .profile-menu__list button { display: block; width: 100%; text-align: left; padding: 8px 16px; color: var(--text); background: transparent; border: 0; border-radius: 0; font-size: 0.95rem; font-weight: 400; font-family: inherit; }
+.site-header .profile-menu__list a:hover, .site-header .profile-menu__list button:hover { background: var(--green-50); text-decoration: none; }
 .site-header .button-light { display: inline-block; padding: 5px 12px; border-radius: 999px; background: #fff; color: var(--green-800); font-weight: 700; }
 .site-header .button-light:hover { text-decoration: none; background: var(--green-100); }
 .site-header button { margin: 0; padding: 4px 10px; background: transparent; border: 1px solid rgba(255,255,255,.6); border-radius: 999px; font-size: 0.85rem; }
