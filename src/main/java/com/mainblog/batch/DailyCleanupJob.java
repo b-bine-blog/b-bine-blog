@@ -60,9 +60,9 @@ public class DailyCleanupJob {
     public void scheduled() {
         Result result = runOnce();
         log.info("04:00 정리: 탈퇴 개인정보 {}명, RT {}건, 로그인 실패 기록 {}건, 인증번호 {}건, 지운 프로필 사진 {}건, "
-                        + "폐쇄 알림 {}건, 폐쇄 {}개, 30일 정리 {}개, 지운 대표 이미지 {}건",
+                        + "위임 만료 {}건, 폐쇄 알림 {}건, 폐쇄 {}개, 30일 정리 {}개, 지운 대표 이미지 {}건",
                 result.purgedMembers(), result.refreshTokens(), result.loginFailures(), result.codes(),
-                result.profileImages(), result.blog().closingNotices(), result.blog().closedBlogs(),
+                result.profileImages(), result.blog().expiredDelegations(), result.blog().closingNotices(), result.blog().closedBlogs(),
                 result.blog().purgedBlogs(), result.blog().coverImages());
     }
 

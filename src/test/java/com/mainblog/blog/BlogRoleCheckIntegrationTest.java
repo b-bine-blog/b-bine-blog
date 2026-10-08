@@ -24,7 +24,8 @@ class BlogRoleCheckIntegrationTest extends BlogTestBase {
             new Api("PATCH", "/api/blogs/{blog}", "{\"visibility\":\"PRIVATE\"}"),
             new Api("POST", "/api/blogs/{blog}/share-link", null),
             new Api("POST", "/api/blogs/{blog}/closing", null),
-            new Api("DELETE", "/api/blogs/{blog}/closing", null));
+            new Api("DELETE", "/api/blogs/{blog}/closing", null),
+            new Api("POST", "/api/blogs/{blog}/delegation", "{\"toUserId\":1}"));
 
     private Res send(Member who, Api api, long blog, long req) throws Exception {
         String url = api.path().replace("{blog}", String.valueOf(blog)).replace("{req}", String.valueOf(req));

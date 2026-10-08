@@ -18,13 +18,17 @@ public class BlogDailyTasks {
 
     private final BlogClosingService closingService;
     private final BlogPurgeService purgeService;
+    private final DelegationService delegationService;
 
-    public BlogDailyTasks(BlogClosingService closingService, BlogPurgeService purgeService) {
+    public BlogDailyTasks(BlogClosingService closingService, BlogPurgeService purgeService,
+                          DelegationService delegationService) {
         this.closingService = closingService;
         this.purgeService = purgeService;
+        this.delegationService = delegationService;
     }
 
     public Result run(LocalDateTime now) {
+        int delegations = step("위임 만료", () -> delegationService.expireDue(now));
         int notices = step("폐쇄 알림", () -> closingService.sendDueNotices(now));
         int closed = 0;
         for (Long id : closingService.dueBlogIds(now)) {
@@ -38,7 +42,7 @@ public class BlogDailyTasks {
             });
         }
         int covers = step("대표 이미지 정리", () -> purgeService.purgeDeletedCoverImages(now));
-        return new Result(notices, closed, purged, covers);
+        return new Result(delegations, notices, closed, purged, covers);
     }
 
     private static int step(String name, Supplier<Integer> work) {
@@ -50,7 +54,8 @@ public class BlogDailyTasks {
         }
     }
 
-    public record Result(int closingNotices, int closedBlogs, int purgedBlogs, int coverImages) {
-        public static final Result EMPTY = new Result(0, 0, 0, 0);
+    public record Result(int expiredDelegations, int closingNotices, int closedBlogs, int purgedBlogs,
+                         int coverImages) {
+        public static final Result EMPTY = new Result(0, 0, 0, 0, 0);
     }
 }

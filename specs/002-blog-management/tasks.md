@@ -215,20 +215,20 @@ description: "002 블로그 생성·참여·운영 구현 작업 목록"
 
 ### 테스트
 
-- [ ] T053 [P] [US6] `src/test/java/com/mainblog/blog/DelegationIntegrationTest.java`를 만든다
+- [X] T053 [P] [US6] `src/test/java/com/mainblog/blog/DelegationIntegrationTest.java`를 만든다
   - US6 시나리오 1~5와 7을 다룬다.
   - 7일 만료는 04:00 처리로도, 응답 시점 확인으로도 되는지 본다.
   - 대기 중 요청이 있으면 두 번째 요청을 409로 막는지 본다.
   - 부블로그장이 위임받으면 권한이 사라지고 다른 부블로그장은 그대로인지 본다.
   - 이전 블로그장이 MEMBER로 남는지 본다.
-- [ ] T054 [P] [US6] `src/test/java/com/mainblog/blog/LeaveBlogIntegrationTest.java`를 만든다. US6 시나리오 6·7을 다룬다: 글 author_left, member_count, 받은 위임 요청 자동 취소
+- [X] T054 [P] [US6] `src/test/java/com/mainblog/blog/LeaveBlogIntegrationTest.java`를 만든다. US6 시나리오 6·7을 다룬다: 글 author_left, member_count, 받은 위임 요청 자동 취소
 
 ### 구현
 
-- [ ] T055 [US6] `src/main/java/com/mainblog/blog/application/DelegationService.java`를 만든다. request·accept·reject·cancelPending·expireDue를 두고, accept에서는 이전 블로그장을 먼저 바꾸고 flush한다. 알림 4종을 보낸다 (FR-066~FR-072, research R-12)
-- [ ] T056 [US6] `src/main/java/com/mainblog/blog/api/DelegationController.java`에 `POST`·`GET /api/blogs/{blogId}/delegation`, `.../acceptance`, `.../rejection`을 만든다
-- [ ] T057 [US6] `src/main/java/com/mainblog/blog/application/MemberManageService.leave`와 `DELETE /api/blogs/{blogId}/members/me`를 만든다. 블로그장이면 409를 주고, 멤버 행을 지우고, author_left를 표시하고, member_count를 줄이고, 받은 위임을 취소한다 (FR-064, FR-065)
-- [ ] T058 [US6] `src/main/java/com/mainblog/blog/application/OwnerSuccessionService.revokeOwner(blogId)`와 테스트를 만든다. 가장 먼저 부블로그장이 된 사람에게 넘기고, 없으면 OWNER_REVOKED로 폐쇄를 예약한다. 005가 부를 서비스다 (FR-082)
+- [X] T055 [US6] `src/main/java/com/mainblog/blog/application/DelegationService.java`를 만든다. request·accept·reject·cancelPending·expireDue를 두고, accept에서는 이전 블로그장을 먼저 바꾸고 flush한다. 알림 4종을 보낸다 (FR-066~FR-072, research R-12)
+- [X] T056 [US6] `src/main/java/com/mainblog/blog/api/DelegationController.java`에 `POST`·`GET /api/blogs/{blogId}/delegation`, `.../acceptance`, `.../rejection`을 만든다
+- [X] T057 [US6] `src/main/java/com/mainblog/blog/application/MemberManageService.leave`와 `DELETE /api/blogs/{blogId}/members/me`를 만든다. 블로그장이면 409를 주고, 멤버 행을 지우고, author_left를 표시하고, member_count를 줄이고, 받은 위임을 취소한다 (FR-064, FR-065)
+- [X] T058 [US6] `src/main/java/com/mainblog/blog/application/OwnerSuccessionService.revokeOwner(blogId)`와 테스트를 만든다. 가장 먼저 부블로그장이 된 사람에게 넘기고, 없으면 OWNER_REVOKED로 폐쇄를 예약한다. 005가 부를 서비스다 (FR-082)
 
 ---
 
