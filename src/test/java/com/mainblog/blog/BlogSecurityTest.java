@@ -34,6 +34,16 @@ class BlogSecurityTest extends BlogTestBase {
             "POST /api/blogs/{blog}/delegation/acceptance",
             "POST /api/blogs/{blog}/delegation/rejection",
             "POST /api/blogs/{blog}/blacklist-appeals");
+    /** 004 게시판 API. 쓰기·카테고리 권한은 board 패키지의 통합 테스트(PostWrite·Category·PostImage)에서 확인한다. */
+    static final Set<String> BOARD_APIS = Set.of(
+            "GET /api/blogs/{blog}/posts",
+            "POST /api/blogs/{blog}/posts",
+            "POST /api/blogs/{blog}/images",
+            "GET /api/blogs/{blog}/categories",
+            "POST /api/blogs/{blog}/categories",
+            "PUT /api/blogs/{blog}/categories/order",
+            "PATCH /api/blogs/{blog}/categories/{categoryId}",
+            "DELETE /api/blogs/{blog}/categories/{categoryId}");
     /** multipart라 BlogRoleCheckIntegrationTest 목록 대신 아래에서 따로 확인한다. */
     static final String COVER_UPLOAD = "PUT /api/blogs/{blog}/cover-image";
 
@@ -59,6 +69,7 @@ class BlogSecurityTest extends BlogTestBase {
         unknown.removeAll(checked);
         unknown.removeAll(MEMBER_FACING);
         unknown.remove(COVER_UPLOAD);
+        unknown.removeAll(BOARD_APIS);
         assertThat(unknown).as("새 블로그 API는 BlogRoleCheckIntegrationTest.MANAGE_APIS나 MEMBER_FACING에 더한다")
                 .isEmpty();
     }

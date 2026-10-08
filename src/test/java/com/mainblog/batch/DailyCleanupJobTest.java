@@ -55,8 +55,11 @@ class DailyCleanupJobTest extends IntegrationTestBase {
         jdbc.update(sql, id, "PROFILE", id, java.util.UUID.randomUUID() + ".jpg", null);
         jdbc.update(sql, id, "POST", null, java.util.UUID.randomUUID() + ".jpg", BASE_TIME.minusDays(40));
 
-        assertThat(job.runOnce().profileImages()).isEqualTo(1);
-        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM images", Integer.class)).isEqualTo(3);
+        DailyCleanupJob.Result result = job.runOnce();
+        assertThat(result.profileImages()).isEqualTo(1);
+        // 삭제 표시 30일 지난 글 이미지는 004 게시판 정리 단계가 지운다(004 T054)
+        assertThat(result.board().purgedImages()).isEqualTo(1);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM images", Integer.class)).isEqualTo(2);
     }
 
     @Test

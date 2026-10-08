@@ -34,7 +34,7 @@ public abstract class BlogTestBase extends IntegrationTestBase {
     protected DailyCleanupJob dailyCleanupJob;
 
     /** 로그인한 회원. extraCookies는 공유 링크 쿠키 등. */
-    protected record Member(long id, String email, LoginCookies login, List<Cookie> extraCookies) {
+    public record Member(long id, String email, LoginCookies login, List<Cookie> extraCookies) {
         public Cookie[] cookies() {
             List<Cookie> all = new ArrayList<>(Arrays.asList(login.cookies()));
             all.addAll(extraCookies);

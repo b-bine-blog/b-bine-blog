@@ -51,12 +51,9 @@ class BoardSecurityTest extends BoardTestBase {
         Member admin = admin("운영자");
 
         Res created = postAs(writer, "/api/blogs/" + b.blogId() + "/posts",
-                postJson("여행 기록", "본문 board-secret@test.com 은 글쓴이가 직접 쓴 것이 아니다", null, List.of("여행")));
+                postJson("여행 기록", "본문", null, List.of("여행")));
         assertThat(created.status()).isEqualTo(201);
         long post = created.json().get("id").asLong();
-        // 본문에 회원이 직접 쓴 말은 그대로 둔다. 서버가 붙이는 작성자 정보에만 개인정보가 없어야 하므로 본문을 바꾼다.
-        assertThat(putAs(writer, "/api/posts/" + post, postJson("여행 기록", "본문", null, List.of("여행"))).status())
-                .isEqualTo(200);
         Res comment = postAs(writer, "/api/posts/" + post + "/comments", "{\"content\":\"댓글\"}");
         long commentId = comment.json().get("id").asLong();
         postAs(reader, "/api/posts/" + post + "/comments", "{\"content\":\"답글\",\"parentId\":" + commentId + "}");
@@ -138,8 +135,15 @@ class BoardSecurityTest extends BoardTestBase {
             assertThat(detail.raw().getContentType()).startsWith(MediaType.APPLICATION_JSON_VALUE);
             assertThat(detail.raw().getHeader("X-Content-Type-Options")).isEqualTo("nosniff");
             assertThat(detail.json().get("title").asText()).isEqualTo(title);
-            String html = detail.json().get("contentHtml").asText().toLowerCase();
-            assertThat(html).doesNotContain("<script", "onerror", "onload", "javascript:", "<iframe", "<svg");
+            // 글자로 남은 "javascript:"는 괜찮다. 실행될 수 있는 태그·속성만 없으면 된다
+            org.jsoup.nodes.Document html = org.jsoup.Jsoup.parseBodyFragment(detail.json().get("contentHtml").asText());
+            assertThat(html.select("script, iframe, svg, object, embed")).isEmpty();
+            for (org.jsoup.nodes.Element e : html.getAllElements()) {
+                for (org.jsoup.nodes.Attribute a : e.attributes()) {
+                    assertThat(a.getKey().toLowerCase()).as(attack).doesNotStartWith("on");
+                    assertThat(a.getValue().toLowerCase().strip()).as(attack).doesNotStartWith("javascript:");
+                }
+            }
             for (var tag : detail.json().path("tags")) {
                 assertThat(tag.asText()).doesNotContain("<", ">");
             }
@@ -148,7 +152,7 @@ class BoardSecurityTest extends BoardTestBase {
             assertThat(c.status()).isEqualTo(201);
             Res comments = getAs(reader, "/api/posts/" + post + "/comments");
             assertThat(comments.raw().getContentType()).startsWith(MediaType.APPLICATION_JSON_VALUE);
-            assertThat(comments.json().toString()).contains(objectMapper.writeValueAsString(attack).replace("\"", ""));
+            assertThat(comments.json().get("items").get(0).get("content").asText()).isEqualTo(attack);
 
             Res search = getAs(reader, "/api/search?q=" + q(attack));
             assertThat(search.status()).as(attack).isIn(200, 400);

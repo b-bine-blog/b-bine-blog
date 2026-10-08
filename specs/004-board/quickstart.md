@@ -39,4 +39,8 @@
 
 ## 확인 결과
 
-(구현 뒤 채움)
+2026-10-08 개발 환경에서 확인함.
+
+- 자동 테스트: `./gradlew test` 전체 통과(440개 + 보안·성능·시드 테스트). 시나리오 1~20은 `board/*IntegrationTest`, `BoardSecurityTest`, `perf/PostResponseTimeTest`가 같은 조건으로 확인한다.
+- 화면(21): Toast UI 에디터를 앱과 같은 CSP로 360px·1280px에서 열어 입력·마크다운 저장·가로 스크롤 없음을 확인했다. 인라인 스타일이 막혀 툴바 팝업이 깨져서 `style-src 'self' 'unsafe-inline'`을 더했다(D-101).
+- 아직 못 한 것: Crowfoot DB에 붙인 실제 앱으로 글 상세·검색·피드 화면을 눌러 보는 확인. 게시판 시드(`local/seed.sql` 아래쪽)를 Crowfoot DB에 넣으면 사용자 컴퓨터에서 바로 볼 수 있다.

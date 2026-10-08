@@ -141,11 +141,11 @@ description: "004 게시판 구현 작업 목록"
 
 - [X] T054 `board/application/BoardDailyTasks.java`를 `DailyCleanupJob`에 더한다(삭제 30일 글·댓글 정리, 연결 안 된 이미지 1일 표시, 이미지 파일 30일 삭제, 조회 기록 7일 정리)와 `board/BoardDailyTasksIntegrationTest` (FR-013, SC-012, D-100 #4)
 - [X] T055 [P] `contract/OpenApiConformanceTest`에 board-api.yaml 경로·메서드 대조와 "계약에 없는 API 없음"을 더한다
-- [ ] T056 [P] `board/BoardSecurityTest`: 글·댓글·검색·피드·태그·공지 응답 전체와 로그에 이메일·전화번호·이름 없음, CSRF 없는 쓰기 403, 공격 문자열 모음을 제목·댓글·태그·검색어에 넣어도 응답이 HTML로 해석되지 않는 JSON 문자열 (SC-002, SC-011)
-- [ ] T057 [P] `perf/PostResponseTimeTest`: 글 5,000개로 목록·검색·피드가 2초 안 (SC-001)
+- [X] T056 [P] `board/BoardSecurityTest`: 글·댓글·검색·피드·태그·공지 응답 전체와 로그에 이메일·전화번호·이름 없음, CSRF 없는 쓰기 403, 공격 문자열 모음을 제목·댓글·태그·검색어에 넣어도 응답이 HTML로 해석되지 않는 JSON 문자열 (SC-002, SC-011)
+- [X] T057 [P] `perf/PostResponseTimeTest`: 글 5,000개로 목록·검색·피드가 2초 안 (SC-001)
 - [X] T058 [P] `js/api.js`에 5초 중단(`AbortController`)과 다시 시도 안내를 더한다 (FR-070, D-48)
-- [ ] T059 `local/seed.sql`에 글·댓글·카테고리·태그 예시를 더하고, 화면을 360px·PC에서 확인한다 (SC-013)
-- [ ] T060 quickstart.md "확인 결과"를 채우고 README의 기능 목록을 갱신한다
+- [X] T059 `local/seed.sql`에 글·댓글·카테고리·태그 예시를 더하고, 화면을 360px·PC에서 확인한다 (SC-013)
+- [X] T060 quickstart.md "확인 결과"를 채우고 README의 기능 목록을 갱신한다
 
 ---
 
