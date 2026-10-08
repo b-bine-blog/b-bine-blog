@@ -57,4 +57,6 @@ tasks.named('test') {
     useJUnitPlatform()
     // Docker Hub 요청 제한을 피하려고 Ryuk 컨테이너를 쓰지 않는다. 테스트 컨테이너는 JVM 종료 때 정리된다.
     environment 'TESTCONTAINERS_RYUK_DISABLED', 'true'
+    // 화면 확인용 서버(UiPreviewServer)는 -PuiPreview=true일 때만 돈다
+    systemProperty 'ui.preview', findProperty('uiPreview') ?: 'false'
 }

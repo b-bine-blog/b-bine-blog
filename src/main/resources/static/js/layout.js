@@ -10,24 +10,49 @@
     return a;
   }
 
+  // 왼쪽 로고·공지, 가운데 검색, 오른쪽 내 메뉴(2026-10-08 배치 변경). 자주 쓰는 "블로그 만들기"·"회원가입"은 버튼처럼 보인다.
   function renderHeader(me) {
     var header = document.createElement('header');
     header.className = 'site-header';
     var nav = document.createElement('nav');
-    nav.appendChild(link('/', '메인블로그'));
-    var right0 = link('/notices', '공지사항'); // 004 US10
-    right0.className = 'site-header__notice';
+    nav.setAttribute('aria-label', '상단 메뉴');
+    var logo = link('/', '메인블로그');
+    logo.className = 'site-logo';
+    nav.appendChild(logo);
+
+    var menu = document.createElement('div');
+    menu.className = 'site-header__menu';
+    menu.appendChild(link('/notices', '공지사항')); // 004 US10
+    nav.appendChild(menu);
+
+    // 어느 화면에서나 바로 검색(통합 검색 화면으로 이동, 004 US6)
+    var search = document.createElement('form');
+    search.className = 'site-header__search';
+    search.setAttribute('role', 'search');
+    search.action = '/search';
+    search.method = 'get';
+    var q = document.createElement('input');
+    q.type = 'search';
+    q.name = 'q';
+    q.maxLength = 20;
+    q.placeholder = '검색';
+    q.setAttribute('aria-label', '통합 검색');
+    search.appendChild(q);
+    if (!document.getElementById('search-form')) { // 검색창이 있는 화면에는 두 개를 두지 않는다
+      nav.appendChild(search);
+    }
+
     var right = document.createElement('div');
     right.className = 'site-header__right';
-    right.appendChild(right0);
     if (me) {
-      var name = document.createElement('span');
-      name.className = 'site-header__nickname';
-      name.textContent = me.nickname;
-      right.appendChild(name);
-      right.appendChild(link('/blogs/new.html', '블로그 만들기'));
+      var create = link('/blogs/new.html', '블로그 만들기');
+      create.className = 'button-light';
+      right.appendChild(create);
       right.appendChild(link('/me/blogs.html', '내 블로그'));
-      right.appendChild(link('/me/index.html', '내 정보'));
+      var name = link('/me/index.html', me.nickname);
+      name.className = 'site-header__nickname';
+      name.title = '내 정보';
+      right.appendChild(name);
       var logout = document.createElement('button');
       logout.type = 'button';
       logout.textContent = '로그아웃';
@@ -38,7 +63,9 @@
       right.appendChild(logout);
     } else {
       right.appendChild(link('/login.html', '로그인'));
-      right.appendChild(link('/signup.html', '회원가입'));
+      var signup = link('/signup.html', '회원가입');
+      signup.className = 'button-light';
+      right.appendChild(signup);
     }
     nav.appendChild(right);
     header.appendChild(nav);

@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="/css/base.css">
 </head>
 <body>
-  <main class="wide">
+  <main class="wide reading">
     <p class="hint"><a id="blog-link"></a></p>
     <article id="post" hidden>
       <h1 class="post-title" id="title"></h1>
@@ -17,9 +17,9 @@
       <div class="row">
         <button type="button" id="like" hidden>좋아요 <span id="like-count">0</span></button>
         <span class="hint" id="like-static" hidden></span>
-        <button type="button" id="share" hidden>링크 복사</button>
-        <a id="edit" hidden>수정</a>
-        <button type="button" id="delete" hidden>삭제</button>
+        <button type="button" id="share" class="button-outline" hidden>링크 복사</button>
+        <a id="edit" class="button button-outline" hidden>수정</a>
+        <button type="button" id="delete" class="button-quiet" hidden>삭제</button>
       </div>
       <input type="text" id="share-url" class="sr-only" readonly tabindex="-1" aria-hidden="true">
       <p class="message" id="post-message" role="alert"></p>

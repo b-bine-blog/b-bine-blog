@@ -9,6 +9,8 @@
 <body>
   <main class="wide">
     <section id="blog" hidden>
+      <!-- 블로그 소개 영역(2026-10-08 배치 변경): 이름·소개·참여 버튼을 한 상자에 -->
+      <div class="panel blog-hero">
       <img id="cover" class="cover" alt="대표 이미지" hidden>
       <h1 id="name"></h1>
       <p id="description"></p>
@@ -22,10 +24,11 @@
         <button type="button" id="subscribe" hidden>구독하기</button>
         <button type="button" id="unsubscribe" hidden>구독 취소</button>
         <button type="button" id="share" hidden>공유 링크 복사</button>
-        <a id="manage" hidden>운영</a>
-        <button type="button" id="leave" hidden>블로그 탈퇴</button>
+        <a id="manage" class="button button-outline" hidden>운영</a>
+        <button type="button" id="leave" hidden class="button-quiet">블로그 탈퇴</button>
       </div>
       <p class="message" id="action-message"></p>
+      </div>
 
       <!-- 받은 블로그장 위임 요청. 받은 사람에게만 보인다(BLG-14, FR-040) -->
       <div class="notice" id="delegation" hidden>
@@ -45,12 +48,12 @@
       </form>
 
       <!-- 글 목록·카테고리 (004 T027, FR-017~FR-021) -->
-      <section id="posts">
+      <section id="posts" class="panel">
         <div class="blog-toolbar">
           <h2>글</h2>
           <div class="row">
-            <a id="write" hidden>글쓰기</a>
-            <label>보기
+            <a id="write" class="button" hidden>글쓰기</a>
+            <label class="inline">보기
               <select id="post-size">
                 <option value="10">10개</option>
                 <option value="20">20개</option>
