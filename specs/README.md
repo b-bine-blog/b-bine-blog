@@ -6,7 +6,7 @@
 | 폴더 | 기능 | 원본 범위 | 확인 필요 항목 |
 |---|---|---|---|
 | [001-member-auth](001-member-auth/spec.md) ([plan](001-member-auth/plan.md)) | 회원 가입·로그인·계정 관리 | USR-01~08, SEC-01~05·13, 4.4, 4.6, 6.5, 6.7 | 0 (D-97로 모두 확정) |
-| [002-blog-management](002-blog-management/spec.md) | 블로그 생성·참여·운영 | BLG-01~13, SEC-07, 4.4, 4.5, 6.4, 6.5, 7장 | 20 |
+| [002-blog-management](002-blog-management/spec.md) | 블로그 생성·참여·운영 | BLG-01~13, SEC-07, 4.4, 4.5, 6.4, 6.5, 7장 | 0 (D-98로 모두 확정) |
 | [003-social-notification](003-social-notification/spec.md) | 소셜(팔로우·구독·차단·신고)과 알림 | SOC-01~06, 3.6, 6.5, 6.7 | 32 |
 | [004-board](004-board/spec.md) | 게시판(글·댓글·검색·피드·공유) | BRD-01~11, SEC-06·08, 6.1~6.4, 6.6, 6.7 | 21 |
 | [005-admin-moderation](005-admin-moderation/spec.md) | 메인 관리자와 제재 | ADM-01~07, 3.7, SEC-09, 4.4, 4.5 | 25 |
