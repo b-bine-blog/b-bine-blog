@@ -146,14 +146,14 @@ description: "001 회원 가입·로그인·계정 관리 구현 작업 목록"
 
 ### US4 테스트
 
-- [ ] T052 [P] [US4] `src/test/java/com/mainblog/auth/PasswordResetIntegrationTest.java`: 인수 시나리오 1~6과 SC-001(가입·미가입 이메일 응답 동일, 미가입·탈퇴 이메일은 메일 0통), SC-002(30분 경과, 5번째 오류, 사용한 번호 재사용, 1분 안 재요청은 메일 없음), SC-004(재설정 후 기존 RT 전부 401), 잠긴 계정의 login_failures 행 삭제
+- [X] T052 [P] [US4] `src/test/java/com/mainblog/auth/PasswordResetIntegrationTest.java`: 인수 시나리오 1~6과 SC-001(가입·미가입 이메일 응답 동일, 미가입·탈퇴 이메일은 메일 0통), SC-002(30분 경과, 5번째 오류, 사용한 번호 재사용, 1분 안 재요청은 메일 없음), SC-004(재설정 후 기존 RT 전부 401), 잠긴 계정의 login_failures 행 삭제
 
 ### US4 구현
 
-- [ ] T053 [P] [US4] `src/main/java/com/mainblog/auth/domain/PasswordResetCode.java`, `PasswordResetCodeRepository.java`: user_id, code_hash, sent_at(다시 보내기 1분), expires_at(sent_at + 30분), fail_count(5면 무효), used(1회용). 회원당 1건, 새로 보내면 이전 행 삭제
-- [ ] T054 [US4] `src/main/java/com/mainblog/auth/application/PasswordResetService.java`: 발송(ACTIVE 회원만 메일, 1분 안이면 조용히 끝냄, 응답 동일), 확인(맞는지만, 틀리면 fail_count+1), 저장(코드 다시 확인 → PasswordPolicy·두 값 일치 → bcrypt 저장 → 코드 행 삭제 → RT 전부 폐기 → login_failures에서 그 이메일 행 삭제). 대상 회원을 email 또는 userId로 받는 내부 메서드를 둬 US6에서 다시 쓴다 (FR-030~FR-033, D-25, D-97)
-- [ ] T055 [US4] `src/main/java/com/mainblog/auth/api/PasswordResetController.java`: `POST /api/auth/password-reset/code`(202), `/verify`(200/400), `POST /api/auth/password-reset`(204/400)
-- [ ] T056 [US4] 화면 `src/main/resources/static/find-password.html`, `src/main/resources/static/js/find-password.js`: 이메일 입력 → "입력한 이메일로 안내를 보냈습니다" → 인증번호 → 새 비밀번호 두 번, 다시 보내기 60초 비활성. `resetToken` 쿼리 파라미터가 있으면 이메일 칸 없이 시작(US6에서 씀)
+- [X] T053 [P] [US4] `src/main/java/com/mainblog/auth/domain/PasswordResetCode.java`, `PasswordResetCodeRepository.java`: user_id, code_hash, sent_at(다시 보내기 1분), expires_at(sent_at + 30분), fail_count(5면 무효), used(1회용). 회원당 1건, 새로 보내면 이전 행 삭제
+- [X] T054 [US4] `src/main/java/com/mainblog/auth/application/PasswordResetService.java`: 발송(ACTIVE 회원만 메일, 1분 안이면 조용히 끝냄, 응답 동일), 확인(맞는지만, 틀리면 fail_count+1), 저장(코드 다시 확인 → PasswordPolicy·두 값 일치 → bcrypt 저장 → 코드 행 삭제 → RT 전부 폐기 → login_failures에서 그 이메일 행 삭제). 대상 회원을 email 또는 userId로 받는 내부 메서드를 둬 US6에서 다시 쓴다 (FR-030~FR-033, D-25, D-97)
+- [X] T055 [US4] `src/main/java/com/mainblog/auth/api/PasswordResetController.java`: `POST /api/auth/password-reset/code`(202), `/verify`(200/400), `POST /api/auth/password-reset`(204/400)
+- [X] T056 [US4] 화면 `src/main/resources/static/find-password.html`, `src/main/resources/static/js/find-password.js`: 이메일 입력 → "입력한 이메일로 안내를 보냈습니다" → 인증번호 → 새 비밀번호 두 번, 다시 보내기 60초 비활성. `resetToken` 쿼리 파라미터가 있으면 이메일 칸 없이 시작(US6에서 씀)
 
 **확인 지점**: 비밀번호 재설정이 따로 동작한다.
 
