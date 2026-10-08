@@ -63,3 +63,20 @@ INSERT INTO notifications (recipient_id, notification_type, tab, target_type, ta
   (101, 'JOIN_REQUESTED', 'BLOG',      'BLOG', 101, 103,  '''여행 기록장'' 블로그에 새로온회원님이 참여를 신청했습니다.', 'SEED:5', FALSE, NOW()),
   (102, 'NOTICE',         'OPERATION', 'POST', 105, NULL,  '새 공지사항이 올라왔습니다.',                      'SEED:6', FALSE, NOW());
 INSERT INTO notification_settings (user_id, post_like, retention_days) VALUES (102, FALSE, 7);
+
+-- 005 관리자 예시(관리자 신고 3건, 숨긴 글 1개, 블로그장 경고 1건과 활동 기록). Crowfoot DB에는 아직 넣지 않았다.
+-- 관리자 계정(admin@local.test, 104)으로 /admin에 들어가 신고함·글·활동 기록 탭에서 본다.
+INSERT INTO reports (id, blog_id, reporter_id, target_type, target_id, target_snapshot, reason, reason_detail, route, status, created_at) VALUES
+  (101, 101, 103, 'BLOG', 101, '{"name":"여행 기록장","address":"travel-log"}', 'SPAM', NULL, 'ADMIN', 'PENDING', NOW() - INTERVAL 2 HOUR),
+  (102, 101, 103, 'USER', 101, '{"nickname":"블로그장"}', 'ABUSE', NULL, 'ADMIN', 'PENDING', NOW() - INTERVAL 1 HOUR),
+  (103, 101, 102, 'POST', 103, '{"title":"여행 준비물 목록"}', 'OTHER', '광고 링크가 섞여 있어요.', 'ADMIN', 'PENDING', NOW() - INTERVAL 30 MINUTE);
+INSERT INTO posts (id, blog_id, author_id, board_type, title, content, status, hidden_at, created_at) VALUES
+  (106, 101, 102, 'BLOG', '관리자가 숨긴 글', '작성자(member@local.test)에게만 "관리자가 숨긴 글"로 보입니다.', 'HIDDEN', NOW(), NOW() - INTERVAL 4 HOUR);
+INSERT INTO owner_warnings (blog_id, user_id, report_id, admin_id, reason, created_at) VALUES
+  (101, 101, NULL, 104, '광고성 글을 반복해서 올렸습니다.', NOW() - INTERVAL 1 DAY);
+INSERT INTO admin_actions (admin_id, report_id, action_type, target_type, target_id, memo, created_at) VALUES
+  (104, NULL, 'OWNER_WARNING', 'USER', 101, '블로그 101: 광고성 글을 반복해서 올렸습니다.', NOW() - INTERVAL 1 DAY),
+  (104, NULL, 'POST_HIDE', 'POST', 106, NULL, NOW());
+INSERT INTO notifications (recipient_id, notification_type, tab, target_type, target_id, actor_id, content, event_key, is_read, created_at) VALUES
+  (101, 'OWNER_WARNED', 'OPERATION', 'BLOG', 101, NULL, '''여행 기록장'' 블로그장 경고 (3번 중 1번). 사유: 광고성 글을 반복해서 올렸습니다.', 'SEED:7', FALSE, NOW() - INTERVAL 1 DAY),
+  (102, 'POST_HIDDEN',  'OPERATION', 'POST', 106, NULL, '''관리자가 숨긴 글'' 글을 관리자가 숨겼습니다. 이 글은 나에게만 보입니다.', 'SEED:8', FALSE, NOW());

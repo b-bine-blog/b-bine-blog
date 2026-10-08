@@ -45,4 +45,27 @@
 
 ## 확인 결과
 
-(구현 뒤 채운다.)
+2026-10-08, 브랜치 `005-admin-moderation`. 1~25번은 자동 테스트(Testcontainers MySQL 8, 서버 시계는 `MutableClock`)로 확인했다. 전체 `./gradlew test` 결과는 아래 표 밑에 적었다.
+
+| # | 결과 | 확인한 테스트 |
+|---|---|---|
+| 1·2 | 통과 | `admin/AdminAccessIntegrationTest`, `admin/AdminSecurityTest`(계약의 27개 요청 × 비회원·회원·블로그장·부블로그장·권한 회수 관리자) |
+| 3~6 | 통과 | `admin/AdminMemberIntegrationTest` |
+| 7 | 통과 | `admin/AdminBlogQueryIntegrationTest` |
+| 8 | 통과 | `admin/AdminBlogHideIntegrationTest`, `blog/VisibilityIntegrationTest` |
+| 9·10 | 통과 | `admin/AdminForceCloseIntegrationTest` |
+| 11·12·14 | 통과 | `admin/OwnerWarningIntegrationTest`, `admin/OwnerRevocationIntegrationTest` |
+| 13 | 통과 | `admin/OwnerConcurrencyTest`(두 관리자 × 10번, 블로그장 교체·폐쇄 예약 두 경우) |
+| 15·16 | 통과 | `admin/AdminReportIntegrationTest`(15번은 003 신고 API로 넣은 신고) |
+| 17~19 | 통과 | `admin/AdminPostModerationIntegrationTest` |
+| 20 | 통과 | `admin/AdminCommentModerationIntegrationTest` |
+| 21 | 통과 | `admin/AdminBlogActivityDeniedTest` |
+| 22 | 통과 | `admin/AdminActionLogIntegrationTest`(16가지 조치 모두) |
+| 23 | 통과 | `admin/AdminDailyTasksIntegrationTest` |
+| 24 | 통과 | `admin/AdminStatsIntegrationTest` |
+| 25 | 통과 | `admin/AdminSecurityTest` |
+| 26 | **확인 안 함** | 이 작업 환경에서는 앱을 띄워 브라우저로 볼 수 없어 하지 못했다. 표는 720px 이하에서 카드로 바뀌도록 `css/base.css`에 넣었고, 모든 관리자 요청은 `api.js`의 5초 중단 안내(`activity: true`)를 쓴다. 360px·1280px 화면 확인은 `local/start.sh`로 띄워 직접 봐야 한다(tasks T056) |
+
+- 응답 시간(SC-001): `perf/AdminResponseTimeTest` — 회원 10,000명·블로그 1,000개·신고 5,000건에서 회원 검색·블로그 검색·신고함·통계 모두 2초 안.
+- 계약 대조: `contract/OpenApiConformanceTest` — 관리자 계약 22개 경로의 모든 메서드가 매핑돼 있고, 계약에 없는 `/api` 경로가 없다.
+- 전체 `./gradlew test`: 598개 중 597개 통과, 실패 0, 건너뜀 1(화면 확인용 `support/UiPreviewServer`, 원래 꺼 둔 테스트). 17분 28초.

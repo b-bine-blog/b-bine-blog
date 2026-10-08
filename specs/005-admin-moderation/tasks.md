@@ -239,8 +239,8 @@ description: "005 메인 관리자·제재 구현 작업 목록"
 
 ## 10단계: 다듬기 (Polish)
 
-- [ ] T053 [P] `contract/OpenApiConformanceTest`에 `ADMIN_CONTRACT = specs/005-admin-moderation/contracts/admin-api.yaml`의 경로·메서드 대조를 더하고, "계약에 없는 API 없음" 검사에도 넣는다(T041·T042로 바뀐 board-api.yaml 포함)
-- [ ] T054 [P] `admin/AdminSecurityTest` (SC-002, SC-003, FR-003, FR-007, FR-009)
+- [X] T053 [P] `contract/OpenApiConformanceTest`에 `ADMIN_CONTRACT = specs/005-admin-moderation/contracts/admin-api.yaml`의 경로·메서드 대조를 더하고, "계약에 없는 API 없음" 검사에도 넣는다(T041·T042로 바뀐 board-api.yaml 포함)
+- [X] T054 [P] `admin/AdminSecurityTest` (SC-002, SC-003, FR-003, FR-007, FR-009)
   - 계약의 모든 `/api/admin/**` 경로·메서드를 아래 계정으로 부른다
     - 비회원: 401
     - 회원·블로그 멤버·블로그장·부블로그장: 403 `ADMIN_ONLY`, 본문에 회원 정보 없음
@@ -249,15 +249,15 @@ description: "005 메인 관리자·제재 구현 작업 목록"
   - "전체 보기" 응답을 뺀 관리자 응답 전체와 로그에 이메일·전화번호 원문, 비밀번호 칸이 0건
   - "전체 보기"마다 `PRIVACY_VIEW` 1건
   - `admin/index.html`은 static에서 직접 받을 수 없다
-- [ ] T055 [P] `perf/AdminResponseTimeTest`: 회원 10,000명, 블로그 1,000개, 신고 5,000건으로 회원 검색·블로그 검색·신고함이 2초 안이다 (SC-001)
+- [X] T055 [P] `perf/AdminResponseTimeTest`: 회원 10,000명, 블로그 1,000개, 신고 5,000건으로 회원 검색·블로그 검색·신고함이 2초 안이다 (SC-001)
 - [ ] T056 [P] 관리자 화면 6개 탭을 360px·1280px에서 확인한다. 가로 스크롤이 없고 `api.js` 5초 중단 안내가 나와야 한다 (SC-010, D-48)
-- [ ] T057 **(DB 변경 승인 뒤)** Crowfoot 문서 654에 `comments.deleted_by`, `owner_warnings.reason`을 더한다. `admin_actions.action_type` 설명도 고친다(research R-15). `plan_migration` → 사용자 승인 → `apply_migration` → `export_ddl`로 `docs/04-design/schema.sql`을 갱신한다. 그다음 아래를 고치고 T038·T026에 사례를 더한다
+- [X] T057 **(DB 변경 승인 뒤)** Crowfoot 문서 654에 `comments.deleted_by`, `owner_warnings.reason`을 더한다. `admin_actions.action_type` 설명도 고친다(research R-15). `plan_migration` → 사용자 승인 → `apply_migration` → `export_ddl`로 `docs/04-design/schema.sql`을 갱신한다. 그다음 아래를 고치고 T038·T026에 사례를 더한다
   - 004 `CommentService.delete`가 `deleted_by`를 채운다
   - 댓글 복구 판단을 `deleted_by <> author_id`로 바꾼다
   - 경고가 `reason`을 저장하고 경고 이력에 보인다
-- [ ] T058 003 plan·구현과 맞춘다. 신고 행 모양(`reports` 칸, 사유 값)과 알림 이름(`OWNER_WARNED` 등)이 다르면 data-model·계약·`NotificationType`을 고친다. 003 신고 버튼으로 만든 신고가 관리자 신고함에 들어오는지 본다 (research R-16)
-- [ ] T059 `local/seed.sql`에 관리자 신고 예시(블로그·블로그장·블로그장 글), 숨긴 글, 블로그장 경고 1건을 더하고 `SeedSqlTest`를 맞춘다
-- [ ] T060 quickstart.md "확인 결과"를 채우고 README의 기능 목록을 갱신한다
+- [X] T058 003 plan·구현과 맞춘다. 신고 행 모양(`reports` 칸, 사유 값)과 알림 이름(`OWNER_WARNED` 등)이 다르면 data-model·계약·`NotificationType`을 고친다. 003 신고 버튼으로 만든 신고가 관리자 신고함에 들어오는지 본다 (research R-16)
+- [X] T059 `local/seed.sql`에 관리자 신고 예시(블로그·블로그장·블로그장 글), 숨긴 글, 블로그장 경고 1건을 더하고 `SeedSqlTest`를 맞춘다
+- [X] T060 quickstart.md "확인 결과"를 채우고 README의 기능 목록을 갱신한다
 
 ---
 
@@ -294,3 +294,9 @@ description: "005 메인 관리자·제재 구현 작업 목록"
 14. **T048** 멤버 제재 기록(`blog_sanctions`)의 1년 기준은 `created_at` 대신 제재한 시각 `starts_at`으로 했다. 002가 `created_at`을 DB 기본값(DB 시계)으로 채워 서버 시계(`Clock`)와 어긋날 수 있어서다. 실제 운영에서는 두 값이 같다. 활동 기록·경고·박탈·신고는 서비스가 `created_at`을 서버 시계로 채우므로 그대로 `created_at`을 쓴다.
 15. **T045** "조치가 실패하면 기록도 없다"는 같은 트랜잭션에서 조치와 기록을 쓰고 일부러 실패시켜 둘 다 없는 것을 확인했다. `AdminActionLog.write`는 트랜잭션 밖에서 부르면 실패한다(`MANDATORY`).
 16. **T051** 일별 가입·글 수는 시작일 00:00부터 내일 00:00 전까지만 센다. `users.created_at`은 DB 기본값이라 서버 시계와 어긋난 행이 오늘 뒤 날짜로 잡히지 않게 위쪽 경계도 두었다. T050의 "설정값을 바꾸면 개수가 바뀐다"는 Spring 문맥을 새로 띄우지 않고 설정값만 바꾼 서비스를 만들어 확인했다.
+17. **T053** 관리자 계약은 경로 22개(메서드 27개)가 모두 매핑됐는지와 모든 경로가 `/api/admin/`인지 본다. 004 `board-api.yaml`에 `PostDetail.hiddenByAdmin`, 댓글 `hidden`을 더했다(경로·메서드는 그대로).
+18. **T055** `perf/AdminResponseTimeTest`에 통계(`/api/admin/stats`)도 넣었다.
+19. **T056 (사용자 확인 필요, 하지 않음)** 이 작업 환경에서는 앱을 띄울 수 없어(bootRun 금지) 360px·1280px 화면 확인을 하지 못했다. quickstart 26번대로 `local/start.sh`로 띄워 직접 봐야 한다.
+20. **T057** Crowfoot 문서 반영(`plan_migration`·`apply_migration`)은 사용자가 이미 개발 DB에 해 두었고, `docs/04-design/schema.sql`은 손으로 맞췄다(1번). 코드 쪽(`deleted_by` 채우기, 경고 `reason` 저장·이력 표시)은 T030·T040·T042에서 처음부터 했다.
+21. **T058** 003과 맞춰 볼 것: 신고 사유는 003의 코드 값(`SPAM` 등), 결과 이름(`OWNER_WARNING`·`OWNER_KICK`·`BLOG_CLOSE`)과 `ReportResultNotifier`의 문구가 이미 맞았다. 003 신고 버튼(`POST /api/reports`)으로 만든 블로그·블로그장·블로그장 글·메인 프로필 신고가 관리자 신고함에 들어오고 멤버 글 신고는 블로그장 신고함에만 가는 것을 `AdminReportIntegrationTest`에서 확인했다. 알림 이름(`OWNER_WARNED`·`OWNER_REVOKED`·`BLOG_HIDDEN`·`POST_HIDDEN`·`POST_RESTORED`)은 2단계에서 더한 그대로다.
+22. **D-103 #8 (사용자 확인 필요)** D-103 #8은 "관리자 폐쇄도 블로그장이 철회할 수 있다(D-94)"는 뜻이 맞는지 확인을 부탁해 두었다. 지금은 적힌 대로 블로그장이 `DELETE /api/blogs/{id}/closing`으로 관리자 강제 폐쇄도 철회할 수 있다(`AdminForceCloseIntegrationTest`). 관리자 폐쇄는 철회할 수 없게 바꾸려면 `BlogClosingService.withdraw`에서 `close_reason = ADMIN`을 막으면 된다.

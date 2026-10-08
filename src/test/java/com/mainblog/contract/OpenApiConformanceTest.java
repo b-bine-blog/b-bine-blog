@@ -102,6 +102,16 @@ class OpenApiConformanceTest extends IntegrationTestBase {
     }
 
     @Test
+    void 관리자_계약의_22개_경로와_모든_메서드가_매핑돼_있다() throws Exception {
+        Set<String> contract = contractOperations(ADMIN_CONTRACT);
+        assertThat(contract.stream().map(op -> op.substring(op.indexOf(' ') + 1)).distinct()).hasSize(22);
+        assertThat(contract).allMatch(op -> op.contains(" /api/admin/"));
+        Set<String> missing = new TreeSet<>(contract);
+        missing.removeAll(mappedOperations());
+        assertThat(missing).isEmpty();
+    }
+
+    @Test
     void 계약에_없는_API가_없다() throws Exception {
         Set<String> extra = new TreeSet<>(mappedOperations());
         extra.removeAll(contractOperations());
