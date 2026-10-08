@@ -297,14 +297,14 @@ description: "002 블로그 생성·참여·운영 구현 작업 목록"
 
 **독립 테스트**: quickstart 18
 
-- [ ] T069 [P] [US9] `src/test/java/com/mainblog/blog/BlacklistAppealIntegrationTest.java`를 만든다
+- [X] T069 [P] [US9] `src/test/java/com/mainblog/blog/BlacklistAppealIntegrationTest.java`를 만든다
   - US9 시나리오 1~3을 다룬다.
   - 대기 중 문의는 하나만 둘 수 있어야 한다.
   - 거절 뒤 7일 안에는 409, 7일 뒤에는 다시 문의할 수 있어야 한다.
   - 블랙리스트가 아닌 사람은 409 NOT_BLACKLISTED여야 한다.
   - 응답에 해시·원문이 없어야 한다.
   - 해제 뒤 참여 신청이 성공해야 한다.
-- [ ] T070 [US9] `src/main/java/com/mainblog/blog/application/AppealService.java`를 만든다 (FR-061~FR-063)
+- [X] T070 [US9] `src/main/java/com/mainblog/blog/application/AppealService.java`를 만든다 (FR-061~FR-063)
   - create: 맞는 블랙리스트를 고르고, name_matched·phone_matched를 계산하고, 대기·7일 규칙을 확인한다.
   - release·reject: 블로그 행을 잠그고 알림을 보낸다.
   - `blacklist-appeals` API 4개를 `BlacklistController`에 더한다.
