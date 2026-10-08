@@ -13,6 +13,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 /**
  * 블로그를 볼 수 있는지 (T015, FR-025~FR-030, research R-06).
  * PUBLIC 누구나, LINK 멤버·구독자·유효한 공유 링크 쿠키, PRIVATE 멤버만. 폐쇄 여부와 정지는 BlogPermissionService가 본다.
+ * 관리자가 숨긴 블로그는 공개 범위와 관계없이 멤버만 본다(005 FR-012, D-103 #7).
  * 공유 링크로 들어온 것은 쿠키 + DB로만 판단해 서버에 상태를 두지 않는다(SCL-01).
  */
 @Component
@@ -31,6 +32,10 @@ public class BlogAccessPolicy {
     public boolean canView(Blog blog, BlogMember member, Long userId) {
         if (member != null) {
             return true;
+        }
+        // 관리자가 숨긴 블로그는 멤버만 본다. 비회원·구독자·공유 링크·메인 관리자의 일반 화면도 못 본다(005 T021, FR-012, D-103 #7)
+        if (blog.isHidden()) {
+            return false;
         }
         return switch (blog.getVisibility()) {
             case PUBLIC -> true;

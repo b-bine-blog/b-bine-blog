@@ -126,6 +126,22 @@ public class Blog extends BaseTimeEntity {
         this.closedAt = now;
     }
 
+    /** 관리자 숨김(005 FR-012, D-103 #7). 누가 숨겼는지는 admin_actions. */
+    public void hide(LocalDateTime now) {
+        this.hidden = true;
+        this.hiddenAt = now;
+    }
+
+    public void unhide() {
+        this.hidden = false;
+        this.hiddenAt = null;
+    }
+
+    /** 이미 폐쇄 예정인 블로그를 관리자가 폐쇄: 시각은 그대로 두고 사유만 관리자 폐쇄로(005 D-103 #8). */
+    public void markAdminClose() {
+        this.closeReason = CloseReason.ADMIN;
+    }
+
     public boolean isClosed() {
         return status == BlogStatus.CLOSED;
     }
@@ -180,5 +196,9 @@ public class Blog extends BaseTimeEntity {
 
     public boolean isHidden() {
         return hidden;
+    }
+
+    public LocalDateTime getHiddenAt() {
+        return hiddenAt;
     }
 }

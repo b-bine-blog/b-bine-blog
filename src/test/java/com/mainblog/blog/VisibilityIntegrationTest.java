@@ -211,4 +211,25 @@ class VisibilityIntegrationTest extends BlogTestBase {
         assertThat(cleared.status()).isEqualTo(200);
         assertThat(cleared.json().get("description").isNull()).isTrue();
     }
+
+    @Test
+    void 관리자가_숨긴_블로그는_멤버만_보고_구독자와_공유_링크와_비회원은_못_본다() throws Exception {
+        // 005 T021, FR-012, D-103 #7
+        Member owner = member("숨김장");
+        long blog = createBlog(owner, "hide-link", "LINK", "FREE");
+        Member member = member("숨김멤버");
+        addMember(blog, member.id(), "MEMBER");
+        Member subscriber = member("숨김구독");
+        subscribe(blog, subscriber.id());
+        Cookie cookie = enter(shareToken(owner, blog));
+        assertThat(viewWith(null, "hide-link", cookie)).isEqualTo(200);
+        assertThat(viewWith(subscriber, "hide-link", null)).isEqualTo(200);
+
+        jdbc.update("UPDATE blogs SET hidden = TRUE, hidden_at = ? WHERE id = ?", clock.now(), blog);
+        assertThat(viewWith(null, "hide-link", cookie)).isEqualTo(404);
+        assertThat(viewWith(subscriber, "hide-link", null)).isEqualTo(404);
+        assertThat(viewWith(member("남"), "hide-link", null)).isEqualTo(404);
+        assertThat(viewWith(owner, "hide-link", null)).isEqualTo(200);
+        assertThat(viewWith(member, "hide-link", null)).isEqualTo(200);
+    }
 }

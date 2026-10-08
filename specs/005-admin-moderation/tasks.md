@@ -80,29 +80,29 @@ description: "005 메인 관리자·제재 구현 작업 목록"
 
 ## 4단계: 사용자 스토리 2 - 블로그 조회·숨김·강제 폐쇄 (P1)
 
-- [ ] T018 [P] [US2] `admin/AdminBlogQueryIntegrationTest` (US2-1, D-103 #6)
+- [X] T018 [P] [US2] `admin/AdminBlogQueryIntegrationTest` (US2-1, D-103 #6)
   - 이름·주소·블로그장 닉네임으로 찾는다. 공개·일부 공개·비공개 모두 나온다
   - 상태: 운영 중·폐쇄 예정·폐쇄됨(30일 정리 전만)·숨김, status로 거르기
   - 멤버 4·글 12: 삭제 글은 빼고 숨긴 글은 센다
   - 상세: 부블로그장 목록, 대기 중 위임 요청, 지금 블로그장 경고 수
-- [ ] T019 [P] [US2] `admin/AdminBlogHideIntegrationTest` (US2-2, FR-012, D-103 #7)
+- [X] T019 [P] [US2] `admin/AdminBlogHideIntegrationTest` (US2-2, FR-012, D-103 #7)
   - 숨기면 메인 목록·블로그 검색·피드·통합 검색·태그에서 빠진다
   - 비회원·다른 회원·구독자·공유 링크 쿠키·관리자 일반 화면은 404. 블로그장·멤버는 보고 글을 쓴다
   - 블로그장만 `BLOG_HIDDEN` 1건, 멤버는 0건. `BLOG_HIDE` 기록. 다시 숨기면 409 `ALREADY_HIDDEN`
   - 해제하면 다시 보이고 `BLOG_UNHIDE` 기록, 알림 없음. 숨김이 아닌데 해제하면 409 `NOT_HIDDEN`
   - 폐쇄된 블로그는 409 `BLOG_ALREADY_CLOSED`
-- [ ] T020 [P] [US2] `admin/AdminForceCloseIntegrationTest` (US2-3~6, FR-013, FR-014, D-94, D-103 #8)
+- [X] T020 [P] [US2] `admin/AdminForceCloseIntegrationTest` (US2-3~6, FR-013, FR-014, D-94, D-103 #8)
   - 10월 2일 15:00(MutableClock)에 폐쇄하면 10월 9일 04:00으로 예약된다
   - 블로그장을 뺀 멤버·구독자에게 즉시·10/6 04:00·10/8 04:00에 한 번씩 알림, 중복 0
   - 10월 9일 04:00에 폐쇄되고 글이 안 보인다(30일 정리는 002 테스트로 갈음)
   - 블로그장 철회는 성공 + 철회 알림, 관리자가 철회 API를 부르면 403
   - 이미 폐쇄 예정이면 시각 그대로, 알림 다시 없음, `close_reason = ADMIN`, `keptExisting: true`
   - 폐쇄된 블로그는 409. `BLOG_FORCE_CLOSE` 기록
-- [ ] T021 [US2] `blog/application/BlogAccessPolicy.canView`: 숨김이고 멤버가 아니면 false로 바꾼다. 002 `VisibilityIntegrationTest`에 숨김 사례를 더한다 (FR-012, D-103 #7)
-- [ ] T022 [US2] `blog/application/BlogClosingService.markAdminClose(blogId)`를 더한다. 폐쇄 예정이면 `close_reason`만 ADMIN으로 바꾸고 시각·알림은 그대로 둔다 (D-103 #8)
-- [ ] T023 [US2] `admin/application/AdminBlogService.java`를 만든다. 검색·상세(JdbcTemplate), 숨김·해제(+ `BLOG_HIDDEN` 알림), 강제 폐쇄(`closeBySystem(ADMIN)` 또는 `markAdminClose`), 기록 (FR-011~FR-013)
-- [ ] T024 [US2] `admin/api/AdminBlogController.java`를 만든다. `GET /api/admin/blogs`, `GET /api/admin/blogs/{blogId}`, `PUT·DELETE /api/admin/blogs/{blogId}/hidden`, `POST /api/admin/blogs/{blogId}/force-close` (contracts)
-- [ ] T025 [US2] 화면 `static/js/admin-blogs.js`: 블로그 탭을 만든다. 검색·상태 거르기, 목록, 상세, 숨김·해제·강제 폐쇄 버튼과 확인 창("7일 뒤 04:00에 폐쇄됩니다")
+- [X] T021 [US2] `blog/application/BlogAccessPolicy.canView`: 숨김이고 멤버가 아니면 false로 바꾼다. 002 `VisibilityIntegrationTest`에 숨김 사례를 더한다 (FR-012, D-103 #7)
+- [X] T022 [US2] `blog/application/BlogClosingService.markAdminClose(blogId)`를 더한다. 폐쇄 예정이면 `close_reason`만 ADMIN으로 바꾸고 시각·알림은 그대로 둔다 (D-103 #8)
+- [X] T023 [US2] `admin/application/AdminBlogService.java`를 만든다. 검색·상세(JdbcTemplate), 숨김·해제(+ `BLOG_HIDDEN` 알림), 강제 폐쇄(`closeBySystem(ADMIN)` 또는 `markAdminClose`), 기록 (FR-011~FR-013)
+- [X] T024 [US2] `admin/api/AdminBlogController.java`를 만든다. `GET /api/admin/blogs`, `GET /api/admin/blogs/{blogId}`, `PUT·DELETE /api/admin/blogs/{blogId}/hidden`, `POST /api/admin/blogs/{blogId}/force-close` (contracts)
+- [X] T025 [US2] 화면 `static/js/admin-blogs.js`: 블로그 탭을 만든다. 검색·상태 거르기, 목록, 상세, 숨김·해제·강제 폐쇄 버튼과 확인 창("7일 뒤 04:00에 폐쇄됩니다")
 
 **체크포인트**: 관리자가 블로그를 찾고 숨기고 폐쇄할 수 있다(사용자가 말한 "블로그를 관리할 수 없음" 해결).
 

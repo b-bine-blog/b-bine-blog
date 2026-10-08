@@ -70,6 +70,22 @@ public class BlogClosingService {
         return schedule(blog, reason, actorId);
     }
 
+    /**
+     * 이미 폐쇄 예정인 블로그를 관리자가 강제 폐쇄할 때(005 T022, D-103 #8): 폐쇄 사유만 ADMIN으로 바꾸고
+     * 시각과 알림은 그대로 둔다(늦추지 않고 다시 알리지 않음). 이후 3일 전·1일 전 알림 문구는 관리자 폐쇄 문구가 된다.
+     * 철회는 D-94대로 블로그장이 할 수 있다(withdraw는 사유를 가리지 않는다). 폐쇄 예정 시각을 돌려준다.
+     */
+    @Transactional
+    public LocalDateTime markAdminClose(long blogId) {
+        Blog blog = lock(blogId);
+        if (!blog.isClosing()) {
+            throw new BusinessException(ErrorCode.BLOG_NOT_CLOSING);
+        }
+        blog.markAdminClose();
+        blogRepository.flush();
+        return blog.getCloseScheduledAt();
+    }
+
     /** 폐쇄 예정 시각: 지금 날짜 + grace-days의 hour시(FR-073). */
     public LocalDateTime scheduledTimeFor(LocalDateTime now) {
         return now.toLocalDate().plusDays(properties.closing().graceDays())
