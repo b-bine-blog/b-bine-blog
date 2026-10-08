@@ -259,10 +259,41 @@ button.button-quiet { background: transparent; color: var(--muted); border: 1px 
 button.button-quiet:hover:not(:disabled) { background: var(--green-50); color: var(--danger); }
 label.inline { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-weight: 400; font-size: 0.9rem; color: var(--muted); }
 label.inline select { width: auto; padding: 4px 8px; }
-.blog-hero { margin-bottom: 20px; border-top: 4px solid var(--green-600); background: var(--surface) url("/img/leaf/leaf.svg") right -18px top -14px / 110px no-repeat; }
-.blog-hero h1 { margin: 8px 0 4px; }
-.blog-hero #actions { margin-top: 12px; }
+/* 개별 블로그 첫 화면(2026-10-08 꾸밈): 위 띠 + 이름·소개·버튼, 아래는 글 목록과 블로그 정보 두 칸 */
+main.blog-page { max-width: 1120px; }
+.blog-hero { margin-bottom: 20px; padding: 0; overflow: hidden; }
+.blog-hero__banner { position: relative; height: 150px;
+  background: url("/img/leaf/hero-leaves.svg") right center / cover no-repeat, linear-gradient(135deg, var(--green-800), var(--green-500)); }
+.blog-hero__cover { display: block; width: 100%; height: 100%; object-fit: cover; }
+.blog-hero__body { position: relative; padding: 0 24px 20px; }
+.blog-hero__body::before { /* 띠에 걸친 나뭇잎 배지 */
+  content: ""; display: block; width: 72px; height: 72px; margin-top: -36px; border-radius: 50%;
+  border: 4px solid var(--surface); box-shadow: var(--shadow);
+  background: var(--green-50) url("/img/leaf/leaf.svg") center / 38px no-repeat; }
+.blog-hero h1 { margin: 10px 0 4px; font-size: 1.7rem; }
+.blog-hero__desc { margin: 0 0 6px; color: var(--muted); white-space: pre-line; }
+.blog-hero__desc:empty { display: none; }
+.blog-hero #actions { margin-top: 14px; }
 .blog-hero #actions button, .blog-hero #actions a { margin-top: 0; }
+.blog-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 24px; align-items: start; }
+.blog-layout > .blog-about { position: sticky; top: 76px; }
+.blog-about h2 { margin-top: 0; }
+.blog-meta { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.blog-meta li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; background: var(--green-50); color: var(--green-900); }
+.blog-meta li::before { content: ""; width: 18px; height: 18px; flex: none; background: center / contain no-repeat; }
+.blog-meta .blog-meta__owner::before { background-image: url("/img/icon/crown.svg"); }
+.blog-meta .blog-meta__members::before { background-image: url("/img/icon/users.svg"); }
+.blog-meta .blog-meta__visibility::before { background-image: url("/img/icon/eye.svg"); }
+.blog-meta li:has(> span:empty) { display: none; }
+.blog-about .chips { margin-top: 14px; }
+.blog-about .chips:empty { display: none; }
+#posts .blog-toolbar h2 { margin: 0; }
+@media (max-width: 860px) {
+  .blog-layout { grid-template-columns: minmax(0, 1fr); }
+  .blog-layout > .blog-about { position: static; order: -1; }
+  .blog-hero__banner { height: 110px; }
+  .blog-hero__body { padding: 0 16px 16px; }
+}
 #posts .blog-toolbar h2 { margin: 0; }
 .post-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 12px 0; }
 .post-actions button { margin-top: 0; }
