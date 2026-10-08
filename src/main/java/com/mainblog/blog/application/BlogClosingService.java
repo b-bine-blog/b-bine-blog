@@ -60,7 +60,7 @@ public class BlogClosingService {
 
     /**
      * 관리자 강제 폐쇄(FR-084)·블로그장 권한 박탈(FR-082)에서 부른다. 005의 관리자 API가 쓴다.
-     * 철회는 FR-078대로 그 블로그의 블로그장만 할 수 있다.
+     * 철회: 블로그장 폐쇄는 블로그장이(FR-078), 관리자 강제 폐쇄는 관리자만 한다({@link #withdrawByAdmin}, D-104).
      */
     @Transactional
     public LocalDateTime closeBySystem(long blogId, CloseReason reason, Long actorId) {
@@ -83,7 +83,7 @@ public class BlogClosingService {
     /**
      * 이미 폐쇄 예정인 블로그를 관리자가 강제 폐쇄할 때(005 T022, D-103 #8): 폐쇄 사유만 ADMIN으로 바꾸고
      * 시각과 알림은 그대로 둔다(늦추지 않고 다시 알리지 않음). 이후 3일 전·1일 전 알림 문구는 관리자 폐쇄 문구가 된다.
-     * 철회는 D-94대로 블로그장이 할 수 있다(withdraw는 사유를 가리지 않는다). 폐쇄 예정 시각을 돌려준다.
+     * 사유가 ADMIN이 되면 블로그장은 철회할 수 없고 관리자만 철회한다(D-104). 폐쇄 예정 시각을 돌려준다.
      */
     @Transactional
     public LocalDateTime markAdminClose(long blogId) {
@@ -115,7 +115,10 @@ public class BlogClosingService {
         return at;
     }
 
-    /** 블로그장만 철회한다(FR-078). 이후 알림·폐쇄는 일어나지 않는다. */
+    /**
+     * 블로그장이 철회한다(FR-078). 이후 알림·폐쇄는 일어나지 않는다.
+     * 관리자가 강제 폐쇄한 블로그(close_reason = ADMIN)는 블로그장이 철회할 수 없다(ADM-02, BLG-09, D-104).
+     */
     @Transactional
     public void withdraw(long blogId, long userId) {
         Blog blog = lock(blogId);
@@ -123,10 +126,34 @@ public class BlogClosingService {
         if (!blog.isClosing()) {
             throw new BusinessException(ErrorCode.BLOG_NOT_CLOSING);
         }
+        if (blog.getCloseReason() == CloseReason.ADMIN) {
+            throw new BusinessException(ErrorCode.ADMIN_CLOSE_LOCKED);
+        }
+        doWithdraw(blog, userId);
+    }
+
+    /**
+     * 관리자가 강제 폐쇄를 철회한다(005, ADM-02, D-104). 관리자 확인은 부르는 쪽(AdminBlogService)이 했다.
+     * 폐쇄 예정이 아니면 BLOG_NOT_CLOSING, 다른 사유(OWNER·OWNER_REVOKED)의 폐쇄 예정이면 NOT_ADMIN_CLOSE.
+     * 효과는 블로그장 철회와 같다(운영 중으로 돌리고 같은 철회 알림).
+     */
+    @Transactional
+    public void withdrawByAdmin(long blogId, long adminId) {
+        Blog blog = lock(blogId);
+        if (!blog.isClosing()) {
+            throw new BusinessException(ErrorCode.BLOG_NOT_CLOSING);
+        }
+        if (blog.getCloseReason() != CloseReason.ADMIN) {
+            throw new BusinessException(ErrorCode.NOT_ADMIN_CLOSE);
+        }
+        doWithdraw(blog, adminId);
+    }
+
+    private void doWithdraw(Blog blog, long actorId) {
         LocalDateTime at = blog.getCloseScheduledAt();
         blog.withdrawClose();
         blogRepository.flush();
-        notifyAll(blog, at, WITHDRAWN, userId, LocalDateTime.now(clock), List.of());
+        notifyAll(blog, at, WITHDRAWN, actorId, LocalDateTime.now(clock), List.of());
     }
 
     /** 04:00 처리: 밀린 회차까지 D3·D1 알림을 보낸다. 보낸 알림 수를 돌려준다. */

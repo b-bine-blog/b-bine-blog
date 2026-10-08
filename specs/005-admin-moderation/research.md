@@ -21,7 +21,7 @@
 | 세션 응답의 admin 값 | `SessionMemberQuery.SessionMember.admin`(`GET /api/auth/session`) | 상단 메뉴에 "관리자" 링크를 보이고, 관리자에게 "블로그 만들기·내 블로그"를 숨긴다(D-90) |
 | 가리기 도구 | `common/masking/EmailMasker`(@ 앞 2글자, 2글자 이하면 1글자 + `***`), `PhoneMasker`(`010-****-5678`) | 형식이 4.4와 같아 그대로 쓴다(FR-006, D-22) |
 | 블로그 숨김 칸 | `blogs.hidden`·`hidden_at`, `Blog.isHidden()` | 목록·검색·피드 제외는 이미 된다: `BlogQueryService.LISTED`, `PostVisibility`(피드·검색·태그·구독·팔로우), `OgTagRenderer`. 들어가기 막기는 아직 없다(R-07) |
-| 강제 폐쇄 | `BlogClosingService.closeBySystem(blogId, CloseReason.ADMIN, actorId)`: 누른 날 + 7일 04:00, 즉시 알림, 위임 요청 자동 취소. 문구 "운영 정책에 따른 폐쇄 조치". 철회 `withdraw`는 블로그장만(이유와 관계없이) | 그대로 부른다(FR-013, D-94). 이미 폐쇄 예정이면 지금은 `BLOG_ALREADY_CLOSING`을 던지므로 D-103 #8용 메서드를 더한다(R-08) |
+| 강제 폐쇄 | `BlogClosingService.closeBySystem(blogId, CloseReason.ADMIN, actorId)`: 누른 날 + 7일 04:00, 즉시 알림, 위임 요청 자동 취소. 문구 "운영 정책에 따른 폐쇄 조치". 철회 `withdraw`는 블로그장만, 관리자 폐쇄(`ADMIN`)는 막음(D-104) | 그대로 부른다(FR-013, D-94). 이미 폐쇄 예정이면 지금은 `BLOG_ALREADY_CLOSING`을 던지므로 D-103 #8용 메서드를 더한다(R-08) |
 | 블로그장 박탈 후 처리 | `OwnerSuccessionService.revokeOwner(blogId, adminId)`: 박탈된 사람은 MEMBER로, 가장 먼저 된 부블로그장(`manager_since`, id 순)을 OWNER로. 없으면 `OWNER_REVOKED` 폐쇄 예약. 이미 폐쇄 예정이면 기존 시각 유지. 개수 제한 확인 없음 | D-103 #14·#16·#17과 같다. 위임 요청 자동 취소 알림(#15)만 더한다(R-09) |
 | 폐쇄 알림 중복 방지 | `blog_closing_notices` 유니크 + `event_key` + 04:00 `sendDueNotices` | 그대로(SC-006) |
 | 블로그 안 신고 처리 | `BlogReportService`: `route = 'BLOG'`만 다룬다. 결과 NONE·WARNING·SUSPEND·KICK, 신고자 보호(`reporterId` 응답 제외), `REPORT_ALREADY_HANDLED`, `REPORT_RESOLVED` 알림 | 관리자 신고 처리(`route = 'ADMIN'`)를 같은 모양으로 만든다(R-10). 블로그장 신고함에 관리자 신고가 안 보이는 것(SC-007 앞부분)은 이미 된다 |
@@ -138,8 +138,8 @@
   - 이미 폐쇄 예정이면 `BlogClosingService.markAdminClose(blogId)`(새 메서드)로 `close_reason`만 `ADMIN`으로 바꾸고 시각과 알림은 그대로 둔다(D-103 #8). 그 뒤 3일 전·1일 전 알림 문구는 "운영 정책에 따른 폐쇄 조치"가 된다.
   - 폐쇄된 블로그는 409 `BLOG_ALREADY_CLOSED`.
   - `BLOG_FORCE_CLOSE` 기록, 응답은 폐쇄 예정 시각과 "기존 예정 유지" 여부.
-- **철회**: 002 `ClosingController`의 철회는 블로그장만 할 수 있고 이유를 가리지 않는다. 관리자 철회 API는 만들지 않는다(D-94). 관리자가 블로그장 철회 API를 부르면 002가 `BLOG_FORBIDDEN`으로 막는다.
-- **이유**: FR-013, FR-031, ADM-02, D-94, D-103 #8.
+- **철회**(D-104로 바뀜): 002 `ClosingController`의 철회는 블로그장만 할 수 있고, 사유가 `ADMIN`이면 403 `ADMIN_CLOSE_LOCKED`로 막는다. 관리자 폐쇄는 관리자 API `DELETE /api/admin/blogs/{blogId}/force-close`로만 철회한다(`BlogClosingService.withdrawByAdmin`, 같은 철회 알림, `RESTORE`·`BLOG` 기록, memo "강제 폐쇄 철회"). 사유가 `ADMIN`이 아니면 409 `NOT_ADMIN_CLOSE`. 관리자가 블로그장 철회 API를 부르면 002가 `BLOG_FORBIDDEN`으로 막는다.
+- **이유**: FR-013, FR-031, ADM-02, D-94, D-103 #8, D-104.
 
 ## R-09 블로그장 경고와 권한 박탈
 
@@ -265,7 +265,7 @@
   - 404 `NOT_FOUND`(회원·신고), `BLOG_NOT_FOUND`, `POST_NOT_FOUND`, `COMMENT_NOT_FOUND`
   - 409 `REPORT_ALREADY_HANDLED`
   - 429 `RATE_LIMITED`
-- **새로 더하는 것**(모두 409): `OWNER_CHANGED`(지금 블로그장이 요청한 대상이 아님), `ALREADY_HIDDEN`, `NOT_HIDDEN`, `NOT_RESTORABLE`(지운 상태가 아니거나 작성자가 지움), `BLOG_ALREADY_CLOSED`(폐쇄된 블로그에 숨김·폐쇄·경고·복구). 002의 `BLOG_ALREADY_CLOSING`은 강제 폐쇄에서 쓰지 않는다(D-103 #8로 기존 예정을 유지).
+- **새로 더하는 것**(모두 409): `OWNER_CHANGED`(지금 블로그장이 요청한 대상이 아님), `ALREADY_HIDDEN`, `NOT_HIDDEN`, `NOT_RESTORABLE`(지운 상태가 아니거나 작성자가 지움), `BLOG_ALREADY_CLOSED`(폐쇄된 블로그에 숨김·폐쇄·경고·복구), `NOT_ADMIN_CLOSE`(관리자 폐쇄가 아닌 폐쇄 예정을 관리자가 철회, D-104). 403 `ADMIN_CLOSE_LOCKED`(블로그장이 관리자 폐쇄를 철회, D-104). 002의 `BLOG_ALREADY_CLOSING`은 강제 폐쇄에서 쓰지 않는다(D-103 #8로 기존 예정을 유지).
 
 ## R-15 스키마 확인과 DB 변경
 
@@ -330,4 +330,4 @@
 13. 관리자 목록은 한 페이지 20개가 기본이고 10·20·50을 고를 수 있다(data-model 설정값).
 14. 003의 신고 행 모양과 알림 이름은 003 명세를 기준으로 가정했다(R-16).
 
-D-103 #8은 채택됐지만 "D-94가 관리자 폐쇄도 블로그장이 철회할 수 있게 한 뜻이 맞는지" 확인 요청이 함께 있다. 지금 계획은 D-94·D-103 #8대로 블로그장이 철회하면 관리자 폐쇄도 철회되는 것으로 둔다. 2026-10-08 현재 002 구현도 같다.
+D-103 #8과 함께 부탁한 "D-94가 관리자 폐쇄도 블로그장이 철회할 수 있게 한 뜻이 맞는지" 확인은 2026-10-08 답이 왔다(D-104): 관리자 폐쇄는 블로그장이 철회할 수 없고 관리자만 철회한다.

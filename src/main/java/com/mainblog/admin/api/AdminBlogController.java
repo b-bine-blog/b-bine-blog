@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-/** 관리자 블로그 조회·숨김·강제 폐쇄 (005 T024, ADM-02, FR-011~FR-013, contracts/admin-api.yaml blog). */
+/** 관리자 블로그 조회·숨김·강제 폐쇄·강제 폐쇄 철회 (005 T024, ADM-02, FR-011~FR-013, D-104, contracts/admin-api.yaml blog). */
 @RestController
 public class AdminBlogController {
 
@@ -56,5 +56,12 @@ public class AdminBlogController {
     @PostMapping("/api/admin/blogs/{blogId}/force-close")
     public CloseResult forceClose(@PathVariable long blogId, @AuthenticationPrincipal AuthenticatedMember me) {
         return service.forceClose(me.id(), blogId);
+    }
+
+    /** 강제 폐쇄 철회: 관리자가 폐쇄한 블로그만(D-104). */
+    @DeleteMapping("/api/admin/blogs/{blogId}/force-close")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void withdrawForceClose(@PathVariable long blogId, @AuthenticationPrincipal AuthenticatedMember me) {
+        service.withdrawForceClose(me.id(), blogId);
     }
 }

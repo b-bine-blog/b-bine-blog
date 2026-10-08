@@ -75,7 +75,10 @@ public enum ErrorCode {
     ALREADY_HIDDEN(HttpStatus.CONFLICT, "이미 숨겼거나 숨길 수 없는 상태입니다."),
     NOT_HIDDEN(HttpStatus.CONFLICT, "숨긴 상태가 아닙니다."),
     NOT_RESTORABLE(HttpStatus.CONFLICT, "복구할 수 없습니다. 지운 상태가 아니거나 작성자가 직접 지웠습니다."),
-    BLOG_ALREADY_CLOSED(HttpStatus.CONFLICT, "이미 폐쇄된 블로그입니다.");
+    BLOG_ALREADY_CLOSED(HttpStatus.CONFLICT, "이미 폐쇄된 블로그입니다."),
+    // 관리자 강제 폐쇄는 관리자만 철회 (ADM-02, BLG-09, D-104)
+    ADMIN_CLOSE_LOCKED(HttpStatus.FORBIDDEN, "관리자가 폐쇄한 블로그는 블로그장이 철회할 수 없습니다."),
+    NOT_ADMIN_CLOSE(HttpStatus.CONFLICT, "관리자가 폐쇄한 블로그가 아닙니다.");
 
     private final HttpStatus status;
     private final String message;

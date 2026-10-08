@@ -25,7 +25,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * 관리자 블로그 조회·숨김·강제 폐쇄 (005 T023, ADM-02, FR-011~FR-014, D-94, D-103 #6~#8, research R-05·R-07·R-08).
+ * 관리자 블로그 조회·숨김·강제 폐쇄·강제 폐쇄 철회 (005 T023, ADM-02, FR-011~FR-014, D-94, D-103 #6~#8, D-104,
+ * research R-05·R-07·R-08).
  * 블로그 상태를 바꾸는 일은 002 서비스(BlogClosingService)를 부른다. 조회는 여러 테이블을 묶어 JdbcTemplate으로 한다.
  */
 @Service
@@ -46,6 +47,8 @@ public class AdminBlogService {
 
     static final DateTimeFormatter KEY_TIME = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
     static final DateTimeFormatter SHOW_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    /** 강제 폐쇄 철회 기록의 memo(RESTORE·BLOG, D-104). */
+    static final String WITHDRAW_MEMO = "강제 폐쇄 철회";
 
     private static final String SELECT = """
             SELECT b.id, b.name, b.address, b.visibility, b.status, b.hidden, b.hidden_at, b.close_scheduled_at,
@@ -207,6 +210,19 @@ public class AdminBlogService {
         actionLog.write(adminId, ActionType.BLOG_FORCE_CLOSE, TargetType.BLOG, blogId, reportId,
                 "폐쇄 예정 " + at.format(SHOW_TIME) + (kept ? " (기존 폐쇄 예정 유지)" : ""));
         return new CloseResult(at, kept);
+    }
+
+    /**
+     * 강제 폐쇄 철회(ADM-02, BLG-09, D-104). 관리자가 폐쇄한(close_reason = ADMIN) 폐쇄 예정 블로그만 철회한다.
+     * 운영 중으로 돌리고 블로그장 철회와 같은 철회 알림을 보낸다. 활동 기록은 RESTORE·BLOG로 남긴다
+     * (action_type 값을 늘리지 않으려고 기존 RESTORE를 쓴다).
+     */
+    @Transactional
+    public void withdrawForceClose(long adminId, long blogId) {
+        guard.require(adminId);
+        lockOpen(blogId);
+        closingService.withdrawByAdmin(blogId, adminId);
+        actionLog.write(adminId, ActionType.RESTORE, TargetType.BLOG, blogId, null, WITHDRAW_MEMO);
     }
 
     /** 블로그 행을 잠근다. 없으면 404, 폐쇄됐으면 409 BLOG_ALREADY_CLOSED. */

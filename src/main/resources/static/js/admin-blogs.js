@@ -71,8 +71,8 @@
       }
       actions.appendChild(ui.button('강제 폐쇄', function () {
         var text = d.status === 'CLOSING'
-          ? '이미 폐쇄 예정입니다. 예정 시각은 그대로 두고 관리자 폐쇄로 기록합니다.'
-          : '7일 뒤 04:00에 폐쇄됩니다. 멤버와 구독자에게 바로 알림이 갑니다. 블로그장은 그 전까지 철회할 수 있습니다.';
+          ? '이미 폐쇄 예정입니다. 예정 시각은 그대로 두고 관리자 폐쇄로 기록합니다. 이후 블로그장은 철회할 수 없습니다.'
+          : '7일 뒤 04:00에 폐쇄됩니다. 멤버와 구독자에게 바로 알림이 갑니다. 철회는 메인 관리자만 할 수 있습니다.';
         if (!ui.confirm(text)) { return; }
         api.post('/api/admin/blogs/' + d.id + '/force-close', null, { activity: true }).then(function (r) {
           search(state.page);
@@ -80,6 +80,13 @@
           global.alert('폐쇄 예정: ' + ui.fmt(r.closeScheduledAt));
         }, function (err) { ui.message(msg, ui.errorText(err), true); });
       }, 'button-small button-danger'));
+      // 관리자가 강제 폐쇄한 블로그는 관리자만 철회한다(ADM-02, D-104)
+      if (d.status === 'CLOSING' && d.closeReason === 'ADMIN') {
+        actions.appendChild(ui.button('폐쇄 철회', function () {
+          if (!ui.confirm('강제 폐쇄를 철회하고 운영 중으로 돌립니다. 멤버와 구독자에게 철회 알림이 갑니다.')) { return; }
+          act(api.del('/api/admin/blogs/' + d.id + '/force-close', null, { activity: true }), msg, d.id);
+        }, 'button-small button-light'));
+      }
     }
     box.appendChild(actions);
     box.appendChild(msg);

@@ -137,13 +137,28 @@ paths:
       description: |
         운영 중이면 누른 날짜 + 7일 04:00 폐쇄를 예약하고 블로그장을 뺀 멤버·구독자에게 즉시·3일 전·1일 전 알림.
         이미 폐쇄 예정이면 시각과 알림은 그대로 두고 폐쇄 사유만 관리자 폐쇄로 바꾼다(keptExisting = true).
-        철회는 그 블로그의 블로그장만 한다(002 API). 관리자 철회 API는 없다. BLOG_FORCE_CLOSE 기록.
+        관리자가 폐쇄한 블로그(close_reason = ADMIN)는 블로그장이 철회할 수 없고(002 API가 403 ADMIN_CLOSE_LOCKED),
+        관리자만 아래 DELETE로 철회한다(D-104). BLOG_FORCE_CLOSE 기록.
       responses:
         '200': { description: 예약됨, content: { application/json: { schema: { $ref: '#/components/schemas/CloseResult' } } } }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/AdminOnly' }
         '404': { description: BLOG_NOT_FOUND, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
         '409': { description: BLOG_ALREADY_CLOSED, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+    delete:
+      tags: [blog]
+      summary: 강제 폐쇄 철회 (FR-013, ADM-02, BLG-09, D-104)
+      description: |
+        관리자가 폐쇄한(close_reason = ADMIN) 폐쇄 예정 블로그만 철회한다. 운영 중으로 돌리고 예약을 지우며,
+        블로그장 철회와 같이 블로그장을 뺀 멤버·구독자에게 철회 알림(BLOG_CLOSING_WITHDRAWN)을 보낸다.
+        폐쇄 예정이 아니면 409 BLOG_NOT_CLOSING, 블로그장 폐쇄(OWNER)·권한 박탈 폐쇄(OWNER_REVOKED)면 409 NOT_ADMIN_CLOSE.
+        활동 기록은 RESTORE·BLOG, memo "강제 폐쇄 철회"(action_type 값을 늘리지 않음).
+      responses:
+        '204': { description: 철회됨 }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AdminOnly' }
+        '404': { description: BLOG_NOT_FOUND, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '409': { description: "BLOG_NOT_CLOSING, NOT_ADMIN_CLOSE, BLOG_ALREADY_CLOSED", content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
 
   /api/admin/blogs/{blogId}/owner-warnings:
     parameters: [ { $ref: '#/components/parameters/BlogId' } ]

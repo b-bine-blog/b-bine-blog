@@ -36,7 +36,7 @@
 - 관리자 화면은 모든 값을 textContent로 넣는다(D-64).
 
 **규모/범위**:
-- API 27개(경로 22개). 계약은 [contracts/admin-api.yaml](contracts/admin-api.yaml)에 있다.
+- API 28개(경로 22개, D-104로 강제 폐쇄 철회 DELETE를 더함). 계약은 [contracts/admin-api.yaml](contracts/admin-api.yaml)에 있다.
 - 화면 1개(`/admin`, 탭 6개: 회원, 블로그, 신고, 글·댓글, 활동 기록, 통계)
 - 기존 화면 고침: 상단 메뉴(관리자 링크), 글 상세("관리자가 숨긴 글" 표시), 댓글("관리자가 숨긴 댓글입니다" 자리)
 - 테이블 12개를 쓴다. 새 테이블은 없고, 칸 2개를 더한다.
@@ -75,7 +75,7 @@ research.md "가정 모음"의 14개다. 결과에 영향이 큰 것만 다시 �
 6. "전체 보기"는 관리자 한 명당 1분에 30번까지다.
 7. 003의 신고 행 모양과 알림 이름은 003 명세 기준이다. 003 plan이 나오면 맞춘다.
 
-D-103 #8의 "D-94가 관리자 폐쇄도 블로그장이 철회할 수 있게 한 뜻이 맞는지" 확인 요청은 아직 답이 없다. 지금 계획은 그대로(블로그장 철회가 관리자 폐쇄도 철회) 둔다. 다르게 정해지면 `BlogClosingService.withdraw`에서 `close_reason = ADMIN`을 막는 한 곳만 고치면 된다.
+D-103 #8의 "D-94가 관리자 폐쇄도 블로그장이 철회할 수 있게 한 뜻이 맞는지" 확인 요청은 2026-10-08 답이 왔다(D-104): 관리자가 강제 폐쇄한 블로그는 블로그장이 철회할 수 없고 관리자만 철회한다. `BlogClosingService.withdraw`가 `close_reason = ADMIN`을 403 `ADMIN_CLOSE_LOCKED`로 막고, 관리자 철회는 `DELETE /api/admin/blogs/{blogId}/force-close`(`BlogClosingService.withdrawByAdmin`, 기록은 `RESTORE`·`BLOG`)로 한다.
 
 ## 프로젝트 구조 (Project Structure)
 
@@ -149,7 +149,7 @@ src/test/java/com/mainblog/
      - 칸이 생기면 T057로 마무리한다.
 2. **003 확인**: 003 plan이 나오면 신고 행(`reports`) 모양과 알림 이름(`OWNER_WARNED` 등)을 맞춘다(R-16). 다르면 data-model "알림 종류"와 계약을 고친다.
 3. **병합 순서**: 005 브랜치는 004 위에 있다. 003 → 005 순서로 병합한다.
-4. **D-103 #8 확인 요청**에 답이 오면 반영한다(위 "확인할 가정" 아래).
+4. ~~**D-103 #8 확인 요청**에 답이 오면 반영한다~~ → D-104로 반영했다(위 "확인할 가정" 아래).
 
 ## 복잡도 기록 (Complexity Tracking)
 

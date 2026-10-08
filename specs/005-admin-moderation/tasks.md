@@ -91,11 +91,11 @@ description: "005 메인 관리자·제재 구현 작업 목록"
   - 블로그장만 `BLOG_HIDDEN` 1건, 멤버는 0건. `BLOG_HIDE` 기록. 다시 숨기면 409 `ALREADY_HIDDEN`
   - 해제하면 다시 보이고 `BLOG_UNHIDE` 기록, 알림 없음. 숨김이 아닌데 해제하면 409 `NOT_HIDDEN`
   - 폐쇄된 블로그는 409 `BLOG_ALREADY_CLOSED`
-- [X] T020 [P] [US2] `admin/AdminForceCloseIntegrationTest` (US2-3~6, FR-013, FR-014, D-94, D-103 #8)
+- [X] T020 [P] [US2] `admin/AdminForceCloseIntegrationTest` (US2-3~6, FR-013, FR-014, D-94, D-103 #8, D-104)
   - 10월 2일 15:00(MutableClock)에 폐쇄하면 10월 9일 04:00으로 예약된다
   - 블로그장을 뺀 멤버·구독자에게 즉시·10/6 04:00·10/8 04:00에 한 번씩 알림, 중복 0
   - 10월 9일 04:00에 폐쇄되고 글이 안 보인다(30일 정리는 002 테스트로 갈음)
-  - 블로그장 철회는 성공 + 철회 알림, 관리자가 철회 API를 부르면 403
+  - ~~블로그장 철회는 성공 + 철회 알림, 관리자가 철회 API를 부르면 403~~ → D-104: 블로그장 철회는 403 `ADMIN_CLOSE_LOCKED`, 관리자 철회(`DELETE /api/admin/blogs/{id}/force-close`)는 204 + 철회 알림 + `RESTORE` 기록. 블로그장 폐쇄를 관리자가 철회하면 409 `NOT_ADMIN_CLOSE`, 관리자가 아니면 403, CSRF 없으면 403
   - 이미 폐쇄 예정이면 시각 그대로, 알림 다시 없음, `close_reason = ADMIN`, `keptExisting: true`
   - 폐쇄된 블로그는 409. `BLOG_FORCE_CLOSE` 기록
 - [X] T021 [US2] `blog/application/BlogAccessPolicy.canView`: 숨김이고 멤버가 아니면 false로 바꾼다. 002 `VisibilityIntegrationTest`에 숨김 사례를 더한다 (FR-012, D-103 #7)
@@ -294,9 +294,9 @@ description: "005 메인 관리자·제재 구현 작업 목록"
 14. **T048** 멤버 제재 기록(`blog_sanctions`)의 1년 기준은 `created_at` 대신 제재한 시각 `starts_at`으로 했다. 002가 `created_at`을 DB 기본값(DB 시계)으로 채워 서버 시계(`Clock`)와 어긋날 수 있어서다. 실제 운영에서는 두 값이 같다. 활동 기록·경고·박탈·신고는 서비스가 `created_at`을 서버 시계로 채우므로 그대로 `created_at`을 쓴다.
 15. **T045** "조치가 실패하면 기록도 없다"는 같은 트랜잭션에서 조치와 기록을 쓰고 일부러 실패시켜 둘 다 없는 것을 확인했다. `AdminActionLog.write`는 트랜잭션 밖에서 부르면 실패한다(`MANDATORY`).
 16. **T051** 일별 가입·글 수는 시작일 00:00부터 내일 00:00 전까지만 센다. `users.created_at`은 DB 기본값이라 서버 시계와 어긋난 행이 오늘 뒤 날짜로 잡히지 않게 위쪽 경계도 두었다. T050의 "설정값을 바꾸면 개수가 바뀐다"는 Spring 문맥을 새로 띄우지 않고 설정값만 바꾼 서비스를 만들어 확인했다.
-17. **T053** 관리자 계약은 경로 22개(메서드 27개)가 모두 매핑됐는지와 모든 경로가 `/api/admin/`인지 본다. 004 `board-api.yaml`에 `PostDetail.hiddenByAdmin`, 댓글 `hidden`을 더했다(경로·메서드는 그대로).
+17. **T053** 관리자 계약은 경로 22개(메서드 27개, D-104 뒤 28개)가 모두 매핑됐는지와 모든 경로가 `/api/admin/`인지 본다. 004 `board-api.yaml`에 `PostDetail.hiddenByAdmin`, 댓글 `hidden`을 더했다(경로·메서드는 그대로).
 18. **T055** `perf/AdminResponseTimeTest`에 통계(`/api/admin/stats`)도 넣었다.
 19. **T056 (사용자 확인 필요, 하지 않음)** 이 작업 환경에서는 앱을 띄울 수 없어(bootRun 금지) 360px·1280px 화면 확인을 하지 못했다. quickstart 26번대로 `local/start.sh`로 띄워 직접 봐야 한다.
 20. **T057** Crowfoot 문서 반영(`plan_migration`·`apply_migration`)은 사용자가 이미 개발 DB에 해 두었고, `docs/04-design/schema.sql`은 손으로 맞췄다(1번). 코드 쪽(`deleted_by` 채우기, 경고 `reason` 저장·이력 표시)은 T030·T040·T042에서 처음부터 했다.
 21. **T058** 003과 맞춰 볼 것: 신고 사유는 003의 코드 값(`SPAM` 등), 결과 이름(`OWNER_WARNING`·`OWNER_KICK`·`BLOG_CLOSE`)과 `ReportResultNotifier`의 문구가 이미 맞았다. 003 신고 버튼(`POST /api/reports`)으로 만든 블로그·블로그장·블로그장 글·메인 프로필 신고가 관리자 신고함에 들어오고 멤버 글 신고는 블로그장 신고함에만 가는 것을 `AdminReportIntegrationTest`에서 확인했다. 알림 이름(`OWNER_WARNED`·`OWNER_REVOKED`·`BLOG_HIDDEN`·`POST_HIDDEN`·`POST_RESTORED`)은 2단계에서 더한 그대로다.
-22. **D-103 #8 (사용자 확인 필요)** D-103 #8은 "관리자 폐쇄도 블로그장이 철회할 수 있다(D-94)"는 뜻이 맞는지 확인을 부탁해 두었다. 지금은 적힌 대로 블로그장이 `DELETE /api/blogs/{id}/closing`으로 관리자 강제 폐쇄도 철회할 수 있다(`AdminForceCloseIntegrationTest`). 관리자 폐쇄는 철회할 수 없게 바꾸려면 `BlogClosingService.withdraw`에서 `close_reason = ADMIN`을 막으면 된다.
+22. **D-103 #8 (해결 → D-104)** D-103 #8에서 부탁한 "관리자 폐쇄도 블로그장이 철회할 수 있다(D-94)"는 뜻 확인에 2026-10-08 사용자가 "관리자가 강제 폐쇄한 블로그는 블로그장이 취소할 수 없게 막고, 관리자 폐쇄는 관리자만 되돌린다"고 정했다(D-104). `BlogClosingService.withdraw`는 `close_reason = ADMIN`이면 403 `ADMIN_CLOSE_LOCKED`. 관리자 철회 `DELETE /api/admin/blogs/{blogId}/force-close`(204)를 더했다: 관리자 폐쇄인 폐쇄 예정만(아니면 409 `BLOG_NOT_CLOSING`, 다른 사유면 409 `NOT_ADMIN_CLOSE`), 블로그장 철회와 같은 철회 알림, 기록은 새 action_type을 늘리지 않으려고(스키마 설명 변경 없이) 기존 `RESTORE`·`BLOG`에 memo "강제 폐쇄 철회". 관리자 블로그 상세에 "폐쇄 철회" 버튼, 블로그장 관리 화면은 관리자 폐쇄면 철회 버튼을 숨기고 안내 문구를 보인다. 002 계약·명세(FR-084)도 맞췄다. 계약 메서드는 28개(`AdminSecurityTest`).

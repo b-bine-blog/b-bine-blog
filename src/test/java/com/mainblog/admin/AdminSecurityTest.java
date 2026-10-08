@@ -69,7 +69,7 @@ class AdminSecurityTest extends AdminTestBase {
         jdbc.update("UPDATE users SET role = 'USER' WHERE id = ?", revoked.id());
 
         Set<String> ops = operations();
-        assertThat(ops).hasSize(27);
+        assertThat(ops).hasSize(28); // D-104로 강제 폐쇄 철회(DELETE force-close) 추가
         for (String op : ops) {
             Res guest = call(null, request(op));
             assertThat(guest.status()).as("비회원 " + op).isEqualTo(401);
@@ -91,6 +91,7 @@ class AdminSecurityTest extends AdminTestBase {
         List<MockHttpServletRequestBuilder> writes = new ArrayList<>();
         writes.add(put("/api/admin/blogs/" + b.blogId() + "/hidden"));
         writes.add(post("/api/admin/blogs/" + b.blogId() + "/force-close"));
+        writes.add(delete("/api/admin/blogs/" + b.blogId() + "/force-close"));
         writes.add(post("/api/admin/blogs/" + b.blogId() + "/owner-warnings").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"ownerId\":" + b.owner().id() + ",\"reason\":\"x\"}"));
         writes.add(post("/api/admin/blogs/" + b.blogId() + "/owner-revocation").contentType(MediaType.APPLICATION_JSON)

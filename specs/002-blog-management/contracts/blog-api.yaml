@@ -665,10 +665,12 @@ paths:
     delete:
       tags: [closing]
       summary: 폐쇄 철회 (FR-078)
-      description: 블로그장만(관리자 강제 폐쇄도 블로그장이 철회, D-94). 철회 알림을 보낸다.
+      description: |
+        블로그장만. 철회 알림을 보낸다. 관리자가 강제 폐쇄한 블로그(closeReason = ADMIN)는 403 ADMIN_CLOSE_LOCKED로 막고,
+        관리자만 005 API(DELETE /api/admin/blogs/{blogId}/force-close)로 철회한다(D-104).
       responses:
         '200': { description: 운영 중, content: { application/json: { schema: { $ref: '#/components/schemas/BlogDetail' } } } }
-        '403': { $ref: '#/components/responses/Forbidden' }
+        '403': { description: "BLOG_FORBIDDEN, BLOG_SUSPENDED, ADMIN_NOT_ALLOWED, ADMIN_CLOSE_LOCKED(D-104)", content: { application/json: { schema: { $ref: '#/components/schemas/SuspendedError' } } } }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { description: BLOG_NOT_CLOSING, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
 

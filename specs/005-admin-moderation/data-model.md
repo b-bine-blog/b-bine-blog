@@ -81,7 +81,7 @@ reports (003이 만듦, route = ADMIN만 005가 처리)
 | 필드 | 규칙 | 근거 |
 |---|---|---|
 | hidden / hidden_at | 숨김 TRUE·시각, 해제 FALSE·NULL. 누가 했는지는 admin_actions | FR-012, D-103 #7 |
-| close_reason | 강제 폐쇄 `ADMIN`. 이미 폐쇄 예정이면 시각은 그대로 두고 `ADMIN`으로만 바꿈 | FR-013, D-103 #8 |
+| close_reason | 강제 폐쇄 `ADMIN`. 이미 폐쇄 예정이면 시각은 그대로 두고 `ADMIN`으로만 바꿈. `ADMIN`이면 블로그장은 철회할 수 없고 관리자만 철회(철회하면 NULL) | FR-013, D-103 #8, D-104 |
 
 ### 상태와 관리자 조치
 

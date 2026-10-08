@@ -317,10 +317,14 @@
   loaders.owner = function () {
     var closing = blog.status === 'CLOSING';
     $('close').hidden = closing;
-    $('withdraw-close').hidden = !closing || blog.closeReason === 'OWNER_REVOKED';
-    api.setText($('closing-info'), closing
-      ? time(blog.closeScheduledAt) + '에 폐쇄됩니다. 그 전까지 철회할 수 있습니다.'
-      : '누른 날짜로부터 7일 뒤 새벽 4시에 폐쇄됩니다. 그 전까지 철회할 수 있습니다.');
+    // 관리자가 강제 폐쇄한 블로그는 블로그장이 철회할 수 없다(ADM-02, BLG-09, D-104)
+    var adminClose = closing && blog.closeReason === 'ADMIN';
+    $('withdraw-close').hidden = !closing || blog.closeReason === 'OWNER_REVOKED' || adminClose;
+    api.setText($('closing-info'), adminClose
+      ? time(blog.closeScheduledAt) + '에 폐쇄됩니다. 관리자가 폐쇄한 블로그입니다. 철회는 메인 관리자에게 문의하세요.'
+      : closing
+        ? time(blog.closeScheduledAt) + '에 폐쇄됩니다. 그 전까지 철회할 수 있습니다.'
+        : '누른 날짜로부터 7일 뒤 새벽 4시에 폐쇄됩니다. 그 전까지 철회할 수 있습니다.');
     $('delegate-box').hidden = !blog.canDelegate;
     if (!blog.canDelegate) { return; }
     api.get(base() + '/members?size=30').then(function (res) {
