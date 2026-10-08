@@ -35,7 +35,7 @@
 - 본문만 innerHTML로 넣는다(D-64).
 
 **규모/범위**:
-- API 26개(경로 17개). 계약은 [contracts/board-api.yaml](contracts/board-api.yaml)에 있다.
+- API 26개(경로 16개). 계약은 [contracts/board-api.yaml](contracts/board-api.yaml)에 있다.
 - 화면 8개: 글쓰기·수정, 글 상세, 블로그 글 목록(블로그 홈에 붙임), 카테고리 관리(운영 화면에 붙임), 통합 검색, 메인 피드(메인에 붙임), 태그 글 목록, 공지 목록·상세·쓰기
 - 테이블 14개를 쓰고, 새로 만드는 테이블은 없다.
 

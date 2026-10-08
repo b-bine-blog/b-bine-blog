@@ -51,7 +51,7 @@ paths:
         content: { application/json: { schema: { $ref: '#/components/schemas/PostWriteRequest' } } }
       responses:
         '201': { description: 생성됨, content: { application/json: { schema: { $ref: '#/components/schemas/PostDetail' } } } }
-        '400': { description: VALIDATION_FAILED(title·content·tags), CATEGORY_NOT_FOUND, POST_IMAGE_LIMIT, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '400': { description: "VALIDATION_FAILED(title·content·tags, 다른 블로그·없는 categoryId는 field categoryId), POST_IMAGE_LIMIT", content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
@@ -249,7 +249,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
-        '429': { description: TOO_MANY_REQUESTS, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '429': { description: RATE_LIMITED(001과 같은 코드), content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
 
   /api/tags/{name}/posts:
     parameters:
@@ -441,7 +441,7 @@ components:
         title: { type: string }
         author: { $ref: '#/components/schemas/Author' }
         categoryName: { type: string, nullable: true }
-        thumbnailUrl: { type: string, nullable: true, description: 본문 첫 이미지(D-100 #7) }
+        thumbnailUrl: { type: string, nullable: true, description: "본문 첫 이미지(D-100 #7)" }
         likeCount: { type: integer }
         viewCount: { type: integer }
         commentCount: { type: integer }

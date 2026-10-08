@@ -127,7 +127,7 @@
   - 동시 요청은 `uk_post_likes_user_id_post_id`가 하나만 남긴다(SC-006).
   - `posts.like_count`는 `+1`·`-1`을 바꾼 행 수에 맞춰서만 반영한다(`UPDATE posts SET like_count = like_count + ? WHERE id = ?`).
   - 응답은 `{ liked, likeCount }`이다.
-- **트래픽 제한**: 회원당 1분에 30번(`board.like.rate-limit`, `board.like.rate-window`, D-100 #12)이다. 001의 `RateLimiter`(서버 메모리)를 쓰고, 넘으면 429 `TOO_MANY_REQUESTS`이다. 이중화 때 공유 저장소로 바꾸는 점은 001 R-08과 같다.
+- **트래픽 제한**: 회원당 1분에 30번(`board.like.rate-limit`, `board.like.rate-window`, D-100 #12)이다. 001의 `RateLimiter`(서버 메모리)를 쓰고, 넘으면 429 `RATE_LIMITED`(001과 같은 코드)이다. 이중화 때 공유 저장소로 바꾸는 점은 001 R-08과 같다.
 - **알림**: 처음 누를 때 글 작성자에게 `POST_LIKE`를 보낸다. `event_key = POST_LIKE:{postId}:{userId}`라서 취소 후 다시 눌러도 `INSERT IGNORE`로 다시 만들어지지 않는다(D-100 #13). 자기 글이면 보내지 않는다.
 
 ## R-10 조회수
