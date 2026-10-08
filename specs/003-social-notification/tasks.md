@@ -132,12 +132,12 @@ description: "003 소셜·알림 구현 작업 목록"
 
 ## 11단계: 다듬기 (Polish)
 
-- [ ] T045 `src/main/java/com/mainblog/social/application/SocialCleanup.java`(팔로우 두 방향·구독·차단 두 방향 삭제)를 만들어 `src/main/java/com/mainblog/member/application/WithdrawalService.java`가 같은 트랜잭션에서 부르게 하고, `src/test/java/com/mainblog/social/WithdrawalSocialCleanupIntegrationTest.java`로 관계는 즉시 사라지고 그 회원의 신고는 남는 것을 확인한다 (D-102 #16)
-- [ ] T046 [P] `src/test/java/com/mainblog/contract/OpenApiConformanceTest.java`에 `SOCIAL_CONTRACT = specs/003-social-notification/contracts/social-api.yaml`을 더해 경로·메서드 대조와 "계약에 없는 API 없음"에 넣는다 (`BOARD_CONTRACT`와 같은 방식)
-- [ ] T047 [P] `src/test/java/com/mainblog/social/SocialSecurityTest.java`: 프로필·팔로워·팔로잉·차단 목록·알림 목록·신고 응답과 로그에 이메일·이름·전화번호 없음, 상태를 바꾸는 API 모두 CSRF 없으면 403, 공격 문자열을 소개·신고 설명·닉네임에 넣어도 응답이 JSON 문자열, 남의 알림 번호로 읽음·삭제 404 (SC-010, SEC-10, D-22, D-64)
-- [ ] T048 [P] `src/test/java/com/mainblog/perf/SocialResponseTimeTest.java`: 팔로워 5,000명 회원의 프로필·팔로워 목록, 알림 3,000건 회원의 알림 목록·안 읽은 개수가 2초 안 (SC-002)
-- [ ] T049 `local/seed.sql`에 팔로우·구독·알림(탭마다)·알림 설정 예시를 더하고, 종 아이콘·사이드바·프로필·알림 설정·차단 목록을 360px·PC에서 확인한다 (4.2)
-- [ ] T050 quickstart.md "확인 결과"를 채우고, 저장소 `README.md` 기능 목록과 `specs/README.md`의 003 확인 필요 항목 수(0, D-102)를 갱신한다
+- [X] T045 `src/main/java/com/mainblog/social/application/SocialCleanup.java`(팔로우 두 방향·구독·차단 두 방향 삭제)를 만들어 `src/main/java/com/mainblog/member/application/WithdrawalService.java`가 같은 트랜잭션에서 부르게 하고, `src/test/java/com/mainblog/social/WithdrawalSocialCleanupIntegrationTest.java`로 관계는 즉시 사라지고 그 회원의 신고는 남는 것을 확인한다 (D-102 #16)
+- [X] T046 [P] `src/test/java/com/mainblog/contract/OpenApiConformanceTest.java`에 `SOCIAL_CONTRACT = specs/003-social-notification/contracts/social-api.yaml`을 더해 경로·메서드 대조와 "계약에 없는 API 없음"에 넣는다 (`BOARD_CONTRACT`와 같은 방식)
+- [X] T047 [P] `src/test/java/com/mainblog/social/SocialSecurityTest.java`: 프로필·팔로워·팔로잉·차단 목록·알림 목록·신고 응답과 로그에 이메일·이름·전화번호 없음, 상태를 바꾸는 API 모두 CSRF 없으면 403, 공격 문자열을 소개·신고 설명·닉네임에 넣어도 응답이 JSON 문자열, 남의 알림 번호로 읽음·삭제 404 (SC-010, SEC-10, D-22, D-64)
+- [X] T048 [P] `src/test/java/com/mainblog/perf/SocialResponseTimeTest.java`: 팔로워 5,000명 회원의 프로필·팔로워 목록, 알림 3,000건 회원의 알림 목록·안 읽은 개수가 2초 안 (SC-002)
+- [X] T049 `local/seed.sql`에 팔로우·구독·알림(탭마다)·알림 설정 예시를 더하고, 종 아이콘·사이드바·프로필·알림 설정·차단 목록을 360px·PC에서 확인한다 (4.2)
+- [X] T050 quickstart.md "확인 결과"를 채우고, 저장소 `README.md` 기능 목록과 `specs/README.md`의 003 확인 필요 항목 수(0, D-102)를 갱신한다
 
 ---
 
@@ -148,3 +148,21 @@ description: "003 소셜·알림 구현 작업 목록"
 - US3 → US4(팔로우 버튼이 프로필 화면에 붙음) → US7(목록이 프로필 화면에 붙음). US5·US6은 US1 뒤에 서로 독립이다. US8은 US3·US4 뒤(차단 버튼과 팔로우 삭제).
 - 11단계(다듬기)는 모든 스토리 뒤.
 - 같은 파일(`profile.js`, `blog-home.js`, `board-post.js`, `ErrorCode.java`, `NotificationType.java`)을 고치는 작업은 차례로 한다.
+
+---
+
+## 구현하며 바뀐 점
+
+- **T015 알림 탭**: 사용자 확인 없이 추천안(3.6 표대로 위임 요청·결과, 블랙리스트 해제 문의 결과를 `BLOG` 탭으로)으로 진행했다. 개발 DB의 `UPDATE notifications SET tab = 'BLOG' ...`는 실행하지 않았다(이미 쌓인 행은 `OPERATION` 탭에 남는다). 다르게 정하면 `NotificationType` 6줄만 되돌린다.
+- **T019·T040·T044 profile.js**: 프로필 화면을 T019에서 팔로우·차단·신고·팔로워 목록까지 한 번에 만들었다. T040·T044는 서버 API와 `me/blocks.html`만 더했다.
+- **T021 board-feed.js**: 피드 목록은 `board.renderPosts`(→ `authorNode`)를 써서 따로 고치지 않았다.
+- **요청 제한 테스트 격리**: 메모리 요청 제한(`InMemoryRateLimiter`)이 테스트 사이에 남아(회원 번호가 1부터 다시 시작, 시계 고정) 429가 번졌다. `IntegrationTestBase`의 `@BeforeEach`에서 버킷을 비운다(운영 코드는 그대로).
+- **알림 설정 API**: 본문을 `Map`으로 받아 모르는 키는 400 `NotAllowed`, 참·거짓이 아닌 값은 `Type`, 보관 기간 7·30 밖은 `Allowed`로 돌려준다(일부 키만 보내면 그 키만 바꾼다).
+- **새 팔로워 알림**: `target_type = 'USER'`, `target_id`·`actor_id` = 팔로우한 회원(R-06 이동이 프로필로 간다).
+- **보관 기간 정리**: 받은 지 꼬박 30일(7일)이 지난 뒤 처음 오는 04:00에 지운다(1000건씩 나눠 지움).
+- **신고 결과 알림 대상**: 블로그 안 신고는 `target_type = 'BLOG'`(그 블로그 홈으로 이동), 메인 프로필 신고처럼 블로그가 없으면 `target_type = 'REPORT'`(내용만 보임). 문구에 신고당한 회원 닉네임은 넣지 않는다.
+- **신고 2주 제한의 동시성**: 신고자 `users` 행을 `FOR UPDATE`로 잠근 뒤 직전 신고 시각도 잠금 읽기(`FOR SHARE`)로 읽는다. 잠금 전에 다른 조회가 있어 REPEATABLE READ 스냅숏이 앞 요청의 새 행을 못 보는 것을 피했다.
+- **공지 글 신고**: 400 `VALIDATION_FAILED`(field `targetId`, code `NotAllowed`).
+- **차단 해제·차단 목록**: 해제는 대상이 관리자·탈퇴 회원이어도 204(없는 차단 지우기). 차단 목록은 탈퇴하지 않은 회원만 보인다(탈퇴하면 관계가 지워진다).
+- **목록 페이지 크기**: 팔로워·팔로잉·차단 목록은 `social.list.page-size`(20), 페이지 값 확인은 004의 `BoardPaging`(1 미만이면 400 `page`/`Min`)을 같이 쓴다.
+- **T049 화면 확인**: 360px·PC 화면은 서버를 띄우지 않아 직접 보지 못했다(quickstart "확인 결과"에 적음). 시드는 탭마다 1건씩이라 quickstart 2·22의 25건 예시는 테스트 데이터로만 확인했다. Crowfoot DB에는 003 시드를 넣지 않았다.

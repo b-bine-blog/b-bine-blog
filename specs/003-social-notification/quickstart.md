@@ -45,4 +45,29 @@
 
 ## 확인 결과
 
-(구현 후 채운다)
+2026-10-08 구현 후 통합 테스트(Testcontainers MySQL, MutableClock)로 확인했다. 전체 테스트: 526개 중 525개 통과·실패 0, 1개는 기존 `UiPreviewServer`(화면 미리보기용, 일부러 건너뜀).
+
+| # | 확인한 테스트 | 결과 |
+|---|---|---|
+| 1~4 | `NotificationInboxIntegrationTest`(탭·더 보기 20건·읽음·하나/탭/전체 삭제·남의 알림 404) | 통과 |
+| 5·6 | `NotificationPollingSessionTest`(안 읽은 개수 100에서 멈춤, X-User-Activity 없는 폴링은 30분 무활동 로그아웃을 늦추지 않음) | 통과 |
+| 7 | `NotificationInboxIntegrationTest`(R-06 이동 주소: 글·프로필·블로그·신청 탭·블로그 홈·내용만) | 통과 |
+| 8·9 | `MandatoryNotificationIntegrationTest`(9가지를 꺼도 폐쇄 예정·철회·위임·경고 알림 옴, 폐쇄 버튼 뒤 구독자도 3일 전부터 한 번) | 통과 |
+| 10~12 | `ProfileIntegrationTest`(닉네임·사진·소개·공개 블로그·팔로워 수, 개인정보 없음, 소개 500/501자, 본인만 숨긴·비공개 블로그) | 통과 |
+| 13~15 | `FollowIntegrationTest`(팔로워 수 1·0·1, 새 팔로워 알림 1건, 자기 자신 400, 관리자 403, 31번째 429, 동시 10번 1건) | 통과 |
+| 16 | `SubscriptionIntegrationTest`(구독 알림, 블로그장 400, 관리자 403, 요청 제한) | 통과 |
+| 17·18 | `NotificationSettingsIntegrationTest`, `NotificationRetentionIntegrationTest`(끈 동안 몫 없음, 7일·30일 04:00 정리, 1000건씩 지움) | 통과 |
+| 19·20 | `ReportIntegrationTest`(접수처 BLOG·ADMIN, 비멤버 404, 9일째 409 + reportableAt·14일째 성공, 동시 2번 1건, 사유·설명 400, 자기 것 400, 공지 400, 당시 내용이 글 정리 뒤에도 남음) | 통과 |
+| 21 | `ReportResultNotificationTest`, `BlogReportIntegrationTest`(네 가지 결과 → 운영 탭 1건, 끄면 없음, 탈퇴 신고자 없음, 관리자 결과 문구) | 통과 |
+| 22 | `FollowListIntegrationTest`(25명 → 20·5, 최근 순, 닉네임·사진만, 탈퇴 회원 빠짐, 없는 회원 404) | 통과 |
+| 23·24 | `BlockIntegrationTest`(두 방향 팔로우 삭제, 블로그 글 목록·피드·검색·태그·댓글에서 빠짐, 같은 블로그 멤버면 보임, 행동 알림 없음, 블로그장 차단 시 대기 신청 자동 거절 + 7일 규칙, 부블로그장 차단은 영향 없음) | 통과 |
+| 25 | `WithdrawalSocialCleanupIntegrationTest`(관계 즉시 삭제, 신고 남음) | 통과 |
+| 보안 | `SocialSecurityTest`(응답·로그에 이메일·이름·전화번호 없음, CSRF 없는 쓰기 12가지 403, 공격 문자열은 JSON 문자열), `OpenApiConformanceTest`(계약 15개 경로 매핑, 계약 밖 API 없음) | 통과 |
+| 성능 | `SocialResponseTimeTest`(팔로워 5,000명 프로필·목록, 알림 3,000건 목록·개수 2초 안) | 통과 |
+| 시드 | `SeedSqlTest`(`local/seed.sql`의 팔로우·구독·탭 5가지 알림·알림 설정이 스키마에 들어감) | 통과 |
+
+확인하지 못한 것:
+
+- 26(360px·PC 화면), 1의 종 아이콘·사이드바 모양, 5의 실제 30초 배지 갱신은 브라우저로 보지 못했다(이 작업에서는 서버를 띄우지 않음). 화면 코드는 기존 CSS 클래스만 쓰고 글자는 textContent로 넣었다. 사람이 `bootRun` 뒤 확인해야 한다.
+- 2·22의 "시드 25건·팔로워 25명"은 시드에 넣지 않았다(시드는 탭마다 1건씩). 같은 내용은 테스트가 데이터를 만들어 확인했다.
+- Crowfoot DB(cf_u33_d1)에는 003 시드를 넣지 않았다.

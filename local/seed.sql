@@ -49,3 +49,17 @@ INSERT INTO comments (id, parent_id, author_id, post_id, reply_to_user_id, conte
   (103, NULL, 101, 102, NULL, 'B 가게 가 봐야겠네요.', NOW() - INTERVAL 10 HOUR);
 
 INSERT INTO post_likes (post_id, user_id) VALUES (101, 102), (101, 103), (102, 101);
+
+-- 003 소셜·알림 예시(소개·팔로우·구독·탭마다 알림·알림 설정). Crowfoot DB에는 아직 넣지 않았다.
+UPDATE users SET bio = '전국 여행 기록을 남기는 블로그장입니다.' WHERE id = 101;
+INSERT INTO follows (follower_id, followee_id, created_at) VALUES
+  (102, 101, NOW()), (103, 101, NOW()), (101, 102, NOW());
+INSERT INTO blog_subscriptions (blog_id, user_id) VALUES (101, 103), (102, 101);
+INSERT INTO notifications (recipient_id, notification_type, tab, target_type, target_id, actor_id, content, event_key, is_read, created_at) VALUES
+  (101, 'POST_COMMENT',   'COMMENT',   'POST', 101, 102,  '내 글에 새 댓글이 달렸습니다.',                    'SEED:1', FALSE, NOW()),
+  (101, 'POST_LIKE',      'LIKE',      'POST', 101, 103,  '내 글에 좋아요가 눌렸습니다.',                      'SEED:2', FALSE, NOW()),
+  (101, 'NEW_FOLLOWER',   'FOLLOW',    'USER', 103, 103,  '새로온회원님이 회원님을 팔로우합니다.',             'SEED:3', FALSE, NOW()),
+  (101, 'BLOG_SUBSCRIBED','FOLLOW',    'BLOG', 101, 103,  '''여행 기록장'' 블로그를 새로온회원님이 구독했습니다.', 'SEED:4', TRUE,  NOW()),
+  (101, 'JOIN_REQUESTED', 'BLOG',      'BLOG', 101, 103,  '''여행 기록장'' 블로그에 새로온회원님이 참여를 신청했습니다.', 'SEED:5', FALSE, NOW()),
+  (102, 'NOTICE',         'OPERATION', 'POST', 105, NULL,  '새 공지사항이 올라왔습니다.',                      'SEED:6', FALSE, NOW());
+INSERT INTO notification_settings (user_id, post_like, retention_days) VALUES (102, FALSE, 7);

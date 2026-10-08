@@ -24,6 +24,7 @@ local\start.bat         # Windows
 블로그는 `http://localhost:8080/blog/travel-log`, 운영 화면은 뒤에 `/manage`를 붙입니다.
 게시판(004): 블로그 홈에서 글 목록·카테고리·글쓰기, 글 상세에서 댓글·좋아요·링크 복사, 메인에서 피드 탭과 통합 검색(`/search`), 태그 글(`/tags/{이름}`), 공지사항(`/notices`, 관리자만 쓰기)을 씁니다.
 게시판 예시 글·댓글은 `local/seed.sql` 아래쪽에 있고 Crowfoot DB에는 아직 넣지 않았습니다.
+소셜·알림(003): 닉네임을 누르면 회원 프로필(`/profile/{번호}`)에서 팔로우·차단·신고·팔로워 목록을 보고, 상단 종 아이콘으로 알림 사이드바(탭·읽음·삭제, 30초마다 개수 확인)를 엽니다. 글·댓글·블로그 신고 버튼, 내 정보의 소개 고치기·알림 설정(`/me/notifications.html`)·차단 목록(`/me/blocks.html`)도 있습니다. 예시 팔로우·알림은 `local/seed.sql` 맨 아래에 있습니다.
 회원가입 인증번호 메일은 실제로 나가지 않고 가짜 메일함 http://localhost:8025 (Mailpit)에 쌓입니다. 아무 이메일 주소로 가입해도 그 화면에서 인증번호를 볼 수 있습니다.
 실제 Gmail로 보내려면 `.env`의 `MAIL_HOST=smtp.gmail.com`, `MAIL_PORT=587`, `MAIL_SMTP_AUTH=true`, `MAIL_STARTTLS=true`로 바꾸고 `MAIL_USERNAME`, `MAIL_PASSWORD`(보내는 Gmail 계정의 앱 비밀번호)를 채웁니다.
 DB 구조를 바꿀 때는 Crowfoot 문서를 먼저 고치고 변경 계획(plan_migration)을 승인해 DB에 반영한 뒤, `docs/04-design/schema.sql`을 export_ddl로 다시 만듭니다.
@@ -65,6 +66,6 @@ Testcontainers가 테스트 때만 쓰고 버리는 MySQL 8.0 컨테이너를 �
 
 - [CLAUDE.md](CLAUDE.md): AI 코딩 에이전트 작업 규칙
 - [.specify/memory/constitution.md](.specify/memory/constitution.md): 개발 원칙 (Spec Kit)
-- [specs/](specs/README.md): 기능별 명세. 001 회원 [specs/001-member-auth/](specs/001-member-auth/spec.md), 002 블로그 [specs/002-blog-management/](specs/002-blog-management/spec.md), 004 게시판 [specs/004-board/](specs/004-board/spec.md)
+- [specs/](specs/README.md): 기능별 명세. 001 회원 [specs/001-member-auth/](specs/001-member-auth/spec.md), 002 블로그 [specs/002-blog-management/](specs/002-blog-management/spec.md), 003 소셜·알림 [specs/003-social-notification/](specs/003-social-notification/spec.md), 004 게시판 [specs/004-board/](specs/004-board/spec.md)
   (API 계약 `contracts/`, 확인 방법 `quickstart.md`)
 - [docs/](docs/README.md): 원본 요구사항 문서와 결정 기록
