@@ -18,7 +18,11 @@ TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
 FILE_STORAGE_ROOT=./uploads
 # http://localhost에서는 Safari가 Secure 쿠키를 버려 로그인이 안 되므로 끈다(운영은 켬)
 AUTH_COOKIE_SECURE=false
-# 회원가입 인증 메일을 받으려면 Gmail 주소와 앱 비밀번호를 넣는다
+# 메일은 테스트 메일함(http://localhost:8025)으로 간다. 실제 Gmail로 보내려면 README 참고
+MAIL_HOST=localhost
+MAIL_PORT=1025
+MAIL_SMTP_AUTH=false
+MAIL_STARTTLS=false
 MAIL_USERNAME=
 MAIL_PASSWORD=
 ENV
@@ -27,8 +31,12 @@ fi
 
 # 예전에 만든 .env에 없으면 더한다
 grep -q '^AUTH_COOKIE_SECURE=' .env || echo 'AUTH_COOKIE_SECURE=false' >> .env
+if ! grep -q '^MAIL_HOST=' .env && ! grep -q '^MAIL_USERNAME=.\+' .env; then
+  printf 'MAIL_HOST=localhost\nMAIL_PORT=1025\nMAIL_SMTP_AUTH=false\nMAIL_STARTTLS=false\n' >> .env
+fi
 
 docker compose -f local/docker-compose.yml up -d --wait
 echo "DB 준비 완료. 앱을 띄웁니다. 다 뜨면 http://localhost:8080 으로 들어가세요."
+echo "회원가입 인증번호 메일은 http://localhost:8025 (테스트 메일함)에서 확인하세요."
 echo "테스트 계정: owner@local.test / member@local.test / newbie@local.test / admin@local.test (비밀번호 Passw0rd!)"
 ./gradlew bootRun

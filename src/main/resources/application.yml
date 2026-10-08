@@ -30,10 +30,10 @@ spring:
     properties:
       mail:
         smtp:
-          auth: true
+          auth: ${MAIL_SMTP_AUTH:true}          # 내 컴퓨터의 테스트 메일함(Mailpit)만 false
           starttls:
-            enable: true
-            required: true
+            enable: ${MAIL_STARTTLS:true}
+            required: ${MAIL_STARTTLS:true}
           connectiontimeout: 5000
           timeout: 5000
           writetimeout: 5000

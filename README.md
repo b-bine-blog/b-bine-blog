@@ -21,7 +21,8 @@ local\start.bat         # Windows
 | admin@local.test | Passw0rd! | 관리자 |
 
 블로그는 `http://localhost:8080/blog/travel-log`, 운영 화면은 뒤에 `/manage`를 붙입니다.
-새 계정으로 회원가입하려면 인증 메일이 필요해서 `.env`의 `MAIL_USERNAME`, `MAIL_PASSWORD`(Gmail 앱 비밀번호)를 채웁니다.
+회원가입 인증번호 메일은 실제로 나가지 않고 테스트 메일함 http://localhost:8025 (Mailpit)에 쌓입니다. 아무 이메일 주소로 가입해도 그 화면에서 인증번호를 볼 수 있습니다.
+실제 Gmail로 보내려면 `.env`의 `MAIL_HOST=smtp.gmail.com`, `MAIL_PORT=587`, `MAIL_SMTP_AUTH=true`, `MAIL_STARTTLS=true`로 바꾸고 `MAIL_USERNAME`, `MAIL_PASSWORD`(보내는 Gmail 계정의 앱 비밀번호)를 채웁니다.
 멈출 때는 Ctrl+C, DB까지 지우고 처음부터 다시 넣으려면 `docker compose -f local/docker-compose.yml down -v`.
 
 ## 실행

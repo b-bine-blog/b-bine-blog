@@ -20,5 +20,12 @@ services:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot"]   # TCP로 확인해야 초기화용 임시 서버가 아닌 실제 서버를 기다린다
       interval: 3s
       retries: 40
+  # 테스트 메일함: 앱이 보낸 메일(가입 인증번호 등)을 실제로 보내지 않고 http://localhost:8025 에서 보여 준다
+  mail:
+    image: axllent/mailpit:v1.21.8
+    container_name: mainblog-local-mail
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # 메일함 화면
 volumes:
   mainblog-local-data:
