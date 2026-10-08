@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>회원가입 - 메인블로그</title>
+  <link rel="stylesheet" href="/css/base.css">
+</head>
+<body>
+  <main>
+    <h1>회원가입</h1>
+
+    <!-- ① 이메일 인증 (FR-003~FR-007) -->
+    <section id="step-email">
+      <h2>1. 이메일 인증</h2>
+      <label for="email">이메일</label>
+      <input type="email" id="email" autocomplete="email" maxlength="255">
+      <button type="button" id="send-code">인증번호 받기</button>
+      <div id="code-box" hidden>
+        <label for="code">인증번호 6자리</label>
+        <input type="text" id="code" inputmode="numeric" maxlength="6" autocomplete="one-time-code">
+        <button type="button" id="verify-code">확인</button>
+        <button type="button" id="resend-code">다시 보내기</button>
+      </div>
+      <p class="message" id="email-message"></p>
+    </section>
+
+    <!-- ② 비밀번호 (FR-008) -->
+    <section id="step-password" hidden>
+      <h2>2. 비밀번호</h2>
+      <label for="password">비밀번호</label>
+      <input type="password" id="password" maxlength="15" autocomplete="new-password">
+      <p class="hint">8~15자, 영문·숫자·특수문자를 모두 넣어 주세요.</p>
+      <label for="password-confirm">비밀번호 확인</label>
+      <input type="password" id="password-confirm" maxlength="15" autocomplete="new-password">
+      <button type="button" id="to-profile">다음</button>
+      <p class="message" id="password-message"></p>
+    </section>
+
+    <!-- ③ 이름·닉네임·전화번호와 동의 (FR-010~FR-015) -->
+    <section id="step-profile" hidden>
+      <h2>3. 회원 정보</h2>
+      <label for="name">이름</label>
+      <input type="text" id="name" maxlength="20" autocomplete="name">
+      <label for="nickname">닉네임</label>
+      <input type="text" id="nickname" maxlength="12">
+      <button type="button" id="check-nickname">중복 확인</button>
+      <p class="message" id="nickname-message"></p>
+      <label for="phone">전화번호</label>
+      <input type="tel" id="phone" maxlength="13" autocomplete="tel" placeholder="010-1234-5678">
+      <label><input type="checkbox" id="agree-terms"> [필수] 이용약관 동의</label>
+      <label><input type="checkbox" id="agree-privacy"> [필수] 개인정보 수집·이용 동의</label>
+      <button type="button" id="submit-signup">가입하기</button>
+      <p class="message" id="profile-message"></p>
+    </section>
+
+    <section id="step-done" hidden>
+      <h2>가입이 끝났습니다</h2>
+      <p><a href="/login.html">로그인하러 가기</a></p>
+    </section>
+  </main>
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/signup.js"></script>
+</body>
+</html>

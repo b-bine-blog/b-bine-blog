@@ -70,18 +70,18 @@ description: "001 회원 가입·로그인·계정 관리 구현 작업 목록"
 
 ### US1 테스트 (먼저 쓰고 실패 확인)
 
-- [ ] T024 [P] [US1] `src/test/java/com/mainblog/member/application/PasswordPolicyTest.java`, `NicknamePolicyTest.java`, `MemberInputNormalizerTest.java`: 인수 시나리오 6·7·8의 값(`abcd1234`, `Ab1!`, 16자, 1자·13자 닉네임, `Admin`, `admin1`, `ABC`가 있을 때 `abc`, `010-1234-5678` → `01012345678`, `0212345678` 거부, 이름 `김` 거부)
-- [ ] T025 [P] [US1] `src/test/java/com/mainblog/auth/SignupIntegrationTest.java`: 인수 시나리오 1~5, 9~11과 SC-001(가입된·안 된 이메일 응답 본문·상태·헤더 동일), SC-002(10분 경과, 5번째 오류, 재발송 후 이전 번호), FR-007(인증 후 31분이면 403 EMAIL_NOT_VERIFIED), SC-009(같은 닉네임 동시 가입 2건 → 1건만 생성)
-- [ ] T026 [P] [US1] `src/test/java/com/mainblog/contract/SignupContractTest.java`: `POST /api/auth/signup/email-code`, `/verify`, `GET /api/members/nickname-availability`, `POST /api/auth/signup`의 상태 코드와 본문 필드가 contracts와 같은지
+- [X] T024 [P] [US1] `src/test/java/com/mainblog/member/application/PasswordPolicyTest.java`, `NicknamePolicyTest.java`, `MemberInputNormalizerTest.java`: 인수 시나리오 6·7·8의 값(`abcd1234`, `Ab1!`, 16자, 1자·13자 닉네임, `Admin`, `admin1`, `ABC`가 있을 때 `abc`, `010-1234-5678` → `01012345678`, `0212345678` 거부, 이름 `김` 거부)
+- [X] T025 [P] [US1] `src/test/java/com/mainblog/auth/SignupIntegrationTest.java`: 인수 시나리오 1~5, 9~11과 SC-001(가입된·안 된 이메일 응답 본문·상태·헤더 동일), SC-002(10분 경과, 5번째 오류, 재발송 후 이전 번호), FR-007(인증 후 31분이면 403 EMAIL_NOT_VERIFIED), SC-009(같은 닉네임 동시 가입 2건 → 1건만 생성)
+- [X] T026 [P] [US1] `src/test/java/com/mainblog/contract/SignupContractTest.java`: `POST /api/auth/signup/email-code`, `/verify`, `GET /api/members/nickname-availability`, `POST /api/auth/signup`의 상태 코드와 본문 필드가 contracts와 같은지
 
 ### US1 구현
 
-- [ ] T027 [P] [US1] `src/main/java/com/mainblog/auth/domain/EmailVerification.java`, `EmailVerificationRepository.java`: email UNIQUE(소문자), code_hash, sent_at, expires_at(= sent_at + 10분), fail_count NOT NULL(5면 무효), verified_at(+30분 안에만 가입 완료). 메서드 `findByEmail`, `deleteByEmail`
-- [ ] T028 [US1] `src/main/java/com/mainblog/auth/application/SignupService.java` — 발송: 이메일 정규화 → 가입된 ACTIVE 이메일이면 안내 메일만, 아니면 행을 새 번호로 덮어쓰고(이전 번호 무효) 인증번호 메일. sent_at + 1분 안이면 메일 없이 조용히 끝냄. 어느 경우든 같은 결과를 돌려준다 (FR-003, FR-005, FR-006, D-28)
-- [ ] T029 [US1] `SignupService` — 확인: 만료·5회 초과·행 없음이면 CODE_INVALID(행 삭제), 틀리면 fail_count+1 후 CODE_MISMATCH(남은 횟수), 맞으면 verified_at 저장 후 `verifiedUntil` 반환 (FR-004, FR-007)
-- [ ] T030 [US1] `SignupService` — 가입 완료: verified_at + 30분 확인(아니면 EMAIL_NOT_VERIFIED), PasswordPolicy·NicknamePolicy·MemberInputNormalizer 적용, agreeTerms·agreePrivacy 둘 다 true, 한 트랜잭션에서 users 저장(role USER, status ACTIVE, bcrypt) + user_agreements 2건(agreed_at = now) + email_verifications 행 삭제. UNIQUE 위반(`DataIntegrityViolationException`)은 닉네임이면 NICKNAME_DUPLICATE, 이메일이면 SIGNUP_UNAVAILABLE (FR-001, FR-002, FR-007~FR-014, SC-009)
-- [ ] T031 [US1] `src/main/java/com/mainblog/auth/api/SignupController.java`: `POST /api/auth/signup/email-code`(202), `POST /api/auth/signup/email-code/verify`(200/400), `POST /api/auth/signup`(201/400/403/409). `src/main/java/com/mainblog/member/api/NicknameController.java`: `GET /api/members/nickname-availability`(available, reason) — 요청·응답 DTO는 같은 패키지의 record로
-- [ ] T032 [US1] 가입 화면 `src/main/resources/static/signup.html`, `src/main/resources/static/js/signup.js`: 3단계 한 화면 흐름, 다시 보내기 버튼 60초 비활성, 닉네임 중복 확인, [필수] 이용약관·[필수] 개인정보 수집·이용 체크박스(만 14세 체크 없음, D-91), 서버 오류 코드별 안내 문구
+- [X] T027 [P] [US1] `src/main/java/com/mainblog/auth/domain/EmailVerification.java`, `EmailVerificationRepository.java`: email UNIQUE(소문자), code_hash, sent_at, expires_at(= sent_at + 10분), fail_count NOT NULL(5면 무효), verified_at(+30분 안에만 가입 완료). 메서드 `findByEmail`, `deleteByEmail`
+- [X] T028 [US1] `src/main/java/com/mainblog/auth/application/SignupService.java` — 발송: 이메일 정규화 → 가입된 ACTIVE 이메일이면 안내 메일만, 아니면 행을 새 번호로 덮어쓰고(이전 번호 무효) 인증번호 메일. sent_at + 1분 안이면 메일 없이 조용히 끝냄. 어느 경우든 같은 결과를 돌려준다 (FR-003, FR-005, FR-006, D-28)
+- [X] T029 [US1] `SignupService` — 확인: 만료·5회 초과·행 없음이면 CODE_INVALID(행 삭제), 틀리면 fail_count+1 후 CODE_MISMATCH(남은 횟수), 맞으면 verified_at 저장 후 `verifiedUntil` 반환 (FR-004, FR-007)
+- [X] T030 [US1] `SignupService` — 가입 완료: verified_at + 30분 확인(아니면 EMAIL_NOT_VERIFIED), PasswordPolicy·NicknamePolicy·MemberInputNormalizer 적용, agreeTerms·agreePrivacy 둘 다 true, 한 트랜잭션에서 users 저장(role USER, status ACTIVE, bcrypt) + user_agreements 2건(agreed_at = now) + email_verifications 행 삭제. UNIQUE 위반(`DataIntegrityViolationException`)은 닉네임이면 NICKNAME_DUPLICATE, 이메일이면 SIGNUP_UNAVAILABLE (FR-001, FR-002, FR-007~FR-014, SC-009)
+- [X] T031 [US1] `src/main/java/com/mainblog/auth/api/SignupController.java`: `POST /api/auth/signup/email-code`(202), `POST /api/auth/signup/email-code/verify`(200/400), `POST /api/auth/signup`(201/400/403/409). `src/main/java/com/mainblog/member/api/NicknameController.java`: `GET /api/members/nickname-availability`(available, reason) — 요청·응답 DTO는 같은 패키지의 record로
+- [X] T032 [US1] 가입 화면 `src/main/resources/static/signup.html`, `src/main/resources/static/js/signup.js`: 3단계 한 화면 흐름, 다시 보내기 버튼 60초 비활성, 닉네임 중복 확인, [필수] 이용약관·[필수] 개인정보 수집·이용 체크박스(만 14세 체크 없음, D-91), 서버 오류 코드별 안내 문구
 
 **확인 지점**: 가입이 혼자서 동작한다. T025 통과.
 

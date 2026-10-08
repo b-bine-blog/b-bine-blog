@@ -8,20 +8,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.test.web.servlet.MockMvc;
 
 /**
  * 기반 확인 (T023).
  * 컨텍스트가 ddl-auto=validate로 뜨면 엔티티와 Crowfoot 스키마가 맞는 것이다(R-02).
  * 보안 헤더 5종(SEC-12)과 XSRF-TOKEN 쿠키(SEC-10)가 응답에 있는지 본다.
  */
-@AutoConfigureMockMvc
 class SchemaValidationTest extends IntegrationTestBase {
-
-    @Autowired
-    MockMvc mvc;
 
     @Test
     void 보안_헤더와_CSRF_쿠키가_응답에_있다() throws Exception {
