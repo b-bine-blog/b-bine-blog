@@ -1,0 +1,60 @@
+# 도커 이미지를 만들어 서버에 배포한다 (D-105).
+# main에 push되면 실행된다. Actions 탭의 "Run workflow"로 다른 브랜치를 골라 실행할 수도 있다.
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 도커 이미지 만들기
+        run: |
+          docker build -t blogproject:latest .
+          docker save blogproject:latest | gzip > blogproject-image.tar.gz
+
+      - name: 서버로 이미지와 스크립트 보내기
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_ADDRESS }}
+          username: ${{ secrets.SSH_ID }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: ${{ secrets.SSH_PORT }}
+          source: blogproject-image.tar.gz,deploy/deploy.sh
+          target: ~/blogproject
+          strip_components: 0
+          overwrite: true
+
+      - name: 서버에서 실행
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          APP_PORT: ${{ secrets.APP_PORT }}
+          APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
+          DB_ADDRESS: ${{ secrets.DB_ADDRESS }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          CODE_HASH_SECRET: ${{ secrets.CODE_HASH_SECRET }}
+          BLACKLIST_HASH_SECRET: ${{ secrets.BLACKLIST_HASH_SECRET }}
+          MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+          MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+          TURNSTILE_SITE_KEY: ${{ secrets.TURNSTILE_SITE_KEY }}
+          TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
+        with:
+          host: ${{ secrets.SSH_ADDRESS }}
+          username: ${{ secrets.SSH_ID }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: ${{ secrets.SSH_PORT }}
+          envs: APP_PORT,APP_BASE_URL,DB_ADDRESS,DB_PORT,DB_NAME,DB_USERNAME,DB_PASSWORD,JWT_SECRET,CODE_HASH_SECRET,BLACKLIST_HASH_SECRET,MAIL_USERNAME,MAIL_PASSWORD,TURNSTILE_SITE_KEY,TURNSTILE_SECRET_KEY
+          script: bash ~/blogproject/deploy/deploy.sh
