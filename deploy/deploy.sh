@@ -4,10 +4,11 @@
 # SSH로 접속해 실행한다. 비밀 값은 Actions가 환경변수로 넘긴다. 이 파일에는 적지 않는다.
 set -euo pipefail
 
-APP_NAME=blogproject
+# 서버의 도커를 반 전체가 같이 쓰므로 이름에 계정을 붙여 다른 사람 컨테이너와 겹치지 않게 한다
+APP_NAME="${APP_NAME:-aigj_01_008-mainblog}"
 APP_DIR="$HOME/blogproject"
 IMAGE_FILE="$APP_DIR/blogproject-image.tar.gz"
-IMAGE_TAG="${IMAGE_TAG:-latest}"
+IMAGE_TAG="${IMAGE_TAG:?IMAGE_TAG가 비어 있습니다}"
 
 for name in APP_PORT DB_ADDRESS DB_PORT DB_NAME DB_USERNAME DB_PASSWORD \
             JWT_SECRET CODE_HASH_SECRET BLACKLIST_HASH_SECRET; do
@@ -46,8 +47,9 @@ docker run -d \
   "$APP_NAME:$IMAGE_TAG"
 
 rm -f "$IMAGE_FILE"
-# 예전 이미지는 지운다(디스크 절약). 지금 실행 중인 이미지는 남는다.
-docker image prune -f > /dev/null
+# 내 예전 이미지만 지운다(디스크 절약). 같이 쓰는 서버라 docker image prune은 쓰지 않는다.
+docker images --format '{{.Repository}}:{{.Tag}}' "$APP_NAME" \
+  | grep -v ":${IMAGE_TAG}\$" | xargs -r docker rmi > /dev/null 2>&1 || true
 
 echo "앱이 뜨기를 기다리는 중..."
 for i in $(seq 1 30); do

@@ -11,6 +11,11 @@ concurrency:
   group: deploy
   cancel-in-progress: false
 
+env:
+  # 서버 도커를 반 전체가 같이 쓰므로 계정을 붙인 이름을 쓴다
+  APP_NAME: aigj_01_008-mainblog
+  IMAGE_TAG: ${{ github.sha }}
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -19,8 +24,8 @@ jobs:
 
       - name: 도커 이미지 만들기
         run: |
-          docker build -t blogproject:latest .
-          docker save blogproject:latest | gzip > blogproject-image.tar.gz
+          docker build -t "$APP_NAME:$IMAGE_TAG" .
+          docker save "$APP_NAME:$IMAGE_TAG" | gzip > blogproject-image.tar.gz
 
       - name: 서버로 이미지와 스크립트 보내기
         uses: appleboy/scp-action@v0.1.7
@@ -37,6 +42,8 @@ jobs:
       - name: 서버에서 실행
         uses: appleboy/ssh-action@v1.2.0
         env:
+          APP_NAME: ${{ env.APP_NAME }}
+          IMAGE_TAG: ${{ env.IMAGE_TAG }}
           APP_PORT: ${{ secrets.APP_PORT }}
           APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
           DB_ADDRESS: ${{ secrets.DB_ADDRESS }}
@@ -56,5 +63,5 @@ jobs:
           username: ${{ secrets.SSH_ID }}
           password: ${{ secrets.SSH_PASSWORD }}
           port: ${{ secrets.SSH_PORT }}
-          envs: APP_PORT,APP_BASE_URL,DB_ADDRESS,DB_PORT,DB_NAME,DB_USERNAME,DB_PASSWORD,JWT_SECRET,CODE_HASH_SECRET,BLACKLIST_HASH_SECRET,MAIL_USERNAME,MAIL_PASSWORD,TURNSTILE_SITE_KEY,TURNSTILE_SECRET_KEY
+          envs: APP_NAME,IMAGE_TAG,APP_PORT,APP_BASE_URL,DB_ADDRESS,DB_PORT,DB_NAME,DB_USERNAME,DB_PASSWORD,JWT_SECRET,CODE_HASH_SECRET,BLACKLIST_HASH_SECRET,MAIL_USERNAME,MAIL_PASSWORD,TURNSTILE_SITE_KEY,TURNSTILE_SECRET_KEY
           script: bash ~/blogproject/deploy/deploy.sh
