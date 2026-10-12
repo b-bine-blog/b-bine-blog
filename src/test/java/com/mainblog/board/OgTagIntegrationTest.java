@@ -45,13 +45,13 @@ class OgTagIntegrationTest extends BoardTestBase {
         long l = writePost(link.owner(), link.blogId(), "일부글", "c");
         long p = writePost(priv.owner(), priv.blogId(), "비밀글", "c");
         String token = getAs(link.owner(), "/api/blogs/" + link.blogId() + "/share-link").json().get("token").asText();
-        assertThat(page("/blog/og-link/posts/" + l)).contains("og:title\" content=\"블바인 블로그\"").doesNotContain("일부글");
+        assertThat(page("/blog/og-link/posts/" + l)).contains("og:title\" content=\"Blbine Blog\"").doesNotContain("일부글");
         assertThat(page("/blog/og-link/posts/" + l + "?share=wrong")).doesNotContain("일부글");
         assertThat(page("/blog/og-link/posts/" + l + "?share=" + token)).contains("og:title\" content=\"일부글 - ");
         assertThat(page("/blog/og-priv/posts/" + p)).doesNotContain("비밀글");
         deleteAs(link.owner(), "/api/posts/" + l);
         assertThat(page("/blog/og-link/posts/" + l + "?share=" + token)).doesNotContain("일부글");
-        assertThat(page("/blog/og-link/posts/999999")).contains("og:title\" content=\"블바인 블로그\"");
+        assertThat(page("/blog/og-link/posts/999999")).contains("og:title\" content=\"Blbine Blog\"");
     }
 
     @Test

@@ -26,7 +26,7 @@ import org.springframework.web.util.UriUtils;
 public class OgTagRenderer {
 
     static final String PLACEHOLDER = "<!--OG-->";
-    static final String SITE_NAME = "블바인 블로그";
+    static final String SITE_NAME = "Blbine Blog";
     static final String SITE_DESCRIPTION = "함께 쓰는 블로그";
 
     private final JdbcTemplate jdbc;

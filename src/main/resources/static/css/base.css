@@ -1,30 +1,32 @@
+@import url("/vendor/pretendard/pretendardvariable-dynamic-subset.css");
+@import url("/vendor/fredoka/fredoka.css");
 /* 공통 화면 틀 (T021). 색은 초록 계열 변수로만 정한다(2026-10-08 디자인 변경) */
 :root {
-  --green-900: #303b0a;
-  --green-800: #475a0e;
-  --green-700: #5c7413;
-  --green-600: #86a51b;
-  --green-500: #abd425;
-  --green-100: #eef6cf;
-  --green-50: #f2f6e1;
-  /* 함께 쓰는 하늘색(2026-10-12): 연두 #abd425 + 하늘 #a2ddf5 */
-  --sky-800: #155a75;
-  --sky-700: #1d6f8f;
-  --sky-500: #a2ddf5;
-  --sky-100: #e2f5fc;
-  --sky-50: #f2fbfe;
-  --btn: var(--green-500);
-  --btn-hover: #9bc31c;
-  --btn-text: var(--green-900);
-  --bg: #e9eedd;
+  --green-900: #0f3d26;
+  --green-800: #145a37;
+  --green-700: #1a7046;
+  --green-600: #218a56;
+  --green-500: #2fa86b;
+  --green-100: #dff3e7;
+  --green-50: #f1faf4;
+  /* 곁들이는 색도 초록으로(2026-10-12 처음 초록으로 되돌림) */
+  --sky-800: var(--green-800);
+  --sky-700: var(--green-700);
+  --sky-500: var(--green-500);
+  --sky-100: var(--green-100);
+  --sky-50: var(--green-50);
+  --btn: var(--green-600);
+  --btn-hover: var(--green-700);
+  --btn-text: #fff;
+  --bg: #f5f9f6;
   --surface: #fff;
-  --line: #dbe3c4;
-  --text: #222a17;
-  --muted: #646f55;
+  --line: #dce8e0;
+  --text: #1d2a23;
+  --muted: #5f6f66;
   --danger: #c0392b;
   --accent-warm: #fff6e0;
   --radius: 10px;
-  --shadow: 0 1px 3px rgba(43, 58, 15, .08), 0 4px 14px rgba(43, 58, 15, .05);
+  --shadow: 0 1px 3px rgba(15, 61, 38, .08), 0 4px 14px rgba(15, 61, 38, .05);
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -35,7 +37,7 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  font-family: "Pretendard", system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  font-family: "Pretendard Variable", "Pretendard", system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
   line-height: 1.55;
   color: var(--text);
   background: var(--bg);
@@ -64,7 +66,7 @@ h2 { font-size: 1.2rem; }
 }
 .site-header a { color: #fff; text-decoration: none; }
 .site-header a:hover { text-decoration: underline; }
-.site-logo { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; font-size: 1.15rem; letter-spacing: -0.02em; }
+.site-logo { display: inline-flex; align-items: center; gap: 8px; font-family: "Fredoka", "Pretendard Variable", sans-serif; font-weight: 700; font-size: 1.35rem; letter-spacing: 0; }
 .site-header__menu { display: flex; gap: 16px; }
 .site-header__search { flex: 1; min-width: 160px; max-width: 360px; display: flex; }
 .site-header__search input[type="search"] { border: 0; border-radius: 999px; padding: 6px 14px; font-size: 0.95rem; background: rgba(255,255,255,.15); color: #fff; }
@@ -335,7 +337,7 @@ main.reading article > .row > * { margin-top: 0; }
 /* 003 프로필·팔로워 목록·신고 창·알림 설정·차단 목록 */
 .profile-card { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start; border-top: 4px solid var(--green-600); }
 .profile-card__avatar { width: 88px; height: 88px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
-.profile-card__avatar--empty { background: linear-gradient(135deg, var(--green-500), #dcefb8); }
+.profile-card__avatar--empty { background: linear-gradient(135deg, var(--green-500), #a7e3bf); }
 .profile-card__body { flex: 1; min-width: 0; }
 .profile-card__body h1 { margin: 0 0 6px; overflow-wrap: anywhere; }
 .profile-card__bio { margin: 0 0 8px; white-space: pre-line; overflow-wrap: anywhere; }
@@ -459,27 +461,27 @@ button.button-outline:hover:not(:disabled) { background: var(--green-50); color:
 .like-button[aria-pressed="true"]:hover { background: var(--green-800); color: #fff; }
 .comment__actions button:hover:not(:disabled), .link-button:hover:not(:disabled) { background: none; color: var(--green-900); text-decoration: underline; }
 
-/* 연두(#abd425)·하늘(#a2ddf5) 색감 (2026-10-12). 너무 밝다는 의견으로 메뉴·띠·바탕을 한 단계 어둡게 */
+/* 진한 메뉴 + 색 띠 모양(2026-10-12). 색은 처음 초록 */
 .site-header { background: var(--green-800); color: #fff; border-bottom: 3px solid var(--green-500); box-shadow: 0 2px 8px rgba(0,0,0,.18); }
 .site-header a { color: #fff; }
 .site-header__search input[type="search"] { background: rgba(255,255,255,.14); color: #fff; }
 .site-header__search input[type="search"]::placeholder { color: rgba(255,255,255,.7); }
 .site-header button { border-color: rgba(255,255,255,.5); color: #fff; }
 .site-header button.site-header__nickname { background: rgba(255,255,255,.14); color: #fff; }
-.site-header button.site-header__nickname[aria-expanded="true"] { background: var(--green-500); color: var(--green-900); }
+.site-header button.site-header__nickname[aria-expanded="true"] { background: #fff; color: var(--green-800); }
 .site-header button.site-header__bell { background: rgba(255,255,255,.14); color: #fff; }
 .site-header button.site-header__bell:hover { background: rgba(255,255,255,.28); }
-.site-header .button-light { background: var(--green-500); color: var(--green-900); }
-.site-header .button-light:hover { background: var(--btn-hover); }
+.site-header .button-light { background: #fff; color: var(--green-800); }
+.site-header .button-light:hover { background: var(--green-100); }
 
 /* 띠는 메뉴보다 한 톤 밝게, 그림 없이 색만(2026-10-12) */
-.hero { background: linear-gradient(120deg, var(--green-700) 0%, #7f9e1a 50%, #4a9fc0 100%); color: #fff; }
+.hero { background: linear-gradient(120deg, var(--green-800) 0%, var(--green-600) 55%, var(--green-500) 100%); color: #fff; }
 .hero h1 { color: #fff; }
 .hero p { color: rgba(255,255,255,.88); }
 .hero .blog-search input { box-shadow: 0 1px 4px rgba(0,0,0,.15); }
 .hero__actions a { background: rgba(255,255,255,.16); color: #fff; }
 .hero__actions a:hover { background: rgba(255,255,255,.28); }
-.blog-hero__banner { background: linear-gradient(120deg, var(--green-700), #7f9e1a 50%, #4a9fc0); }
+.blog-hero__banner { background: linear-gradient(120deg, var(--green-800), var(--green-600) 55%, var(--green-500)); }
 .post-card__head::before { background: linear-gradient(90deg, var(--green-500), var(--sky-500)); }
 
 /* 하늘색은 태그·배지·답글·알림처럼 "곁들이는" 곳에 쓴다 */
@@ -501,8 +503,6 @@ button:hover:not(:disabled), a.button:hover { background: var(--btn-hover); colo
 button:active:not(:disabled), a.button:active { transform: translateY(1px); }
 a.button-outline, button.button-outline { background: var(--surface); color: var(--green-800); border: 1.5px solid var(--btn); box-shadow: none; }
 a.button-outline:hover, button.button-outline:hover:not(:disabled) { background: var(--sky-50); color: var(--green-900); border-color: var(--sky-500); }
-.hero .blog-search button { background: var(--btn); color: var(--btn-text); }
-.hero .blog-search button:hover { background: var(--btn-hover); }
 .site-header .button-light { background: var(--green-800); color: #fff; }
 .tabs button, .pagination button { border-radius: 999px; box-shadow: none; }
 .tabs button[aria-selected="true"], .pager button[aria-current="page"], .pagination button.is-current { background: var(--btn); color: var(--btn-text); }
