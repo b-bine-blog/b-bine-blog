@@ -29,6 +29,26 @@ export TZ=Asia/Seoul
 
 mkdir -p "$FILE_STORAGE_ROOT"
 
+# java 찾기: SSH로 명령만 실행하면 로그인 때 읽는 PATH 설정이 빠져 java를 못 찾을 수 있다
+find_java() {
+  local c
+  if [ -n "${JAVA_HOME:-}" ] && [ -x "$JAVA_HOME/bin/java" ]; then echo "$JAVA_HOME/bin/java"; return; fi
+  c="$(command -v java 2>/dev/null || true)"
+  [ -z "$c" ] && c="$(bash -lc 'command -v java' 2>/dev/null | tail -n 1 || true)"
+  [ -z "$c" ] && c="$(bash -ic 'command -v java' 2>/dev/null | tail -n 1 || true)"
+  if [ -n "$c" ] && [ -x "$c" ]; then echo "$c"; return; fi
+  for c in "$HOME"/.sdkman/candidates/java/current/bin/java "$HOME"/jdk*/bin/java "$HOME"/*/jdk*/bin/java \
+           /opt/java/*/bin/java /opt/jdk*/bin/java /usr/lib/jvm/*21*/bin/java /usr/lib/jvm/*/bin/java; do
+    if [ -x "$c" ]; then echo "$c"; return; fi
+  done
+}
+JAVA_BIN="$(find_java)"
+if [ -z "$JAVA_BIN" ]; then
+  echo "서버에서 java를 찾지 못했습니다. 서버 터미널에서 'which java' 결과를 확인하세요." >&2
+  exit 1
+fi
+echo "java: $JAVA_BIN"
+
 # 이전 앱 멈추기: 이 스크립트가 남긴 PID만 멈춘다(같이 쓰는 서버라 다른 프로세스는 건드리지 않는다)
 if [ -f "$PID_FILE" ]; then
   OLD_PID="$(cat "$PID_FILE")"
@@ -50,7 +70,7 @@ fi
 
 echo "새 앱 실행 중 (포트 $APP_PORT)..."
 # setsid + nohup: SSH 접속이 끝나도 앱이 계속 돈다
-setsid nohup java -Xmx512m -jar "$JAR" > "$LOG_FILE" 2>&1 < /dev/null &
+setsid nohup "$JAVA_BIN" -Xmx512m -jar "$JAR" > "$LOG_FILE" 2>&1 < /dev/null &
 echo $! > "$PID_FILE"
 NEW_PID="$(cat "$PID_FILE")"
 
