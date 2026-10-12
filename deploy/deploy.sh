@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# 서버에서 도커 이미지를 불러와 실행한다 (D-105).
-# GitHub Actions가 이미지 파일(blogproject-image.tar.gz)과 이 스크립트를 ~/blogproject에 올린 뒤
-# SSH로 접속해 실행한다. 비밀 값은 Actions가 환경변수로 넘긴다. 이 파일에는 적지 않는다.
+# 서버에서 jar를 실행한다 (D-106, 도커 없이).
+# GitHub Actions가 app.jar와 이 스크립트를 ~/blogproject에 올린 뒤 SSH로 접속해 실행한다.
+# 비밀 값은 Actions가 환경변수로 넘긴다. 이 파일에는 적지 않는다.
 set -euo pipefail
 
-# 서버의 도커를 반 전체가 같이 쓰므로 이름에 계정을 붙여 다른 사람 컨테이너와 겹치지 않게 한다
-APP_NAME="${APP_NAME:-aigj_01_008-mainblog}"
 APP_DIR="$HOME/blogproject"
-IMAGE_FILE="$APP_DIR/blogproject-image.tar.gz"
-IMAGE_TAG="${IMAGE_TAG:?IMAGE_TAG가 비어 있습니다}"
+JAR_NEW="$APP_DIR/app.jar.new"
+JAR="$APP_DIR/app.jar"
+PID_FILE="$APP_DIR/app.pid"
+LOG_FILE="$APP_DIR/app.log"
 
 for name in APP_PORT DB_ADDRESS DB_PORT DB_NAME DB_USERNAME DB_PASSWORD \
             JWT_SECRET CODE_HASH_SECRET BLACKLIST_HASH_SECRET; do
@@ -21,48 +21,57 @@ done
 export DB_URL="jdbc:mysql://${DB_ADDRESS}:${DB_PORT}/${DB_NAME}?serverTimezone=Asia/Seoul&characterEncoding=UTF-8"
 export APP_BASE_URL="${APP_BASE_URL:-http://localhost:${APP_PORT}}"
 export AUTH_COOKIE_SECURE="${AUTH_COOKIE_SECURE:-true}"
+export FILE_STORAGE_ROOT="$APP_DIR/uploads"          # 재배포해도 남는다(D-75)
+export SERVER_PORT="$APP_PORT"
 # nginx 뒤에서 실제 접속 IP를 쓰게 한다(로그인 횟수 제한 등, ClientIpResolver)
 export SERVER_FORWARDHEADERSSTRATEGY=native
+export TZ=Asia/Seoul
 
-mkdir -p "$APP_DIR/uploads"
+mkdir -p "$FILE_STORAGE_ROOT"
 
-echo "이미지 불러오는 중..."
-docker load -i "$IMAGE_FILE"
+# 이전 앱 멈추기: 이 스크립트가 남긴 PID만 멈춘다(같이 쓰는 서버라 다른 프로세스는 건드리지 않는다)
+if [ -f "$PID_FILE" ]; then
+  OLD_PID="$(cat "$PID_FILE")"
+  if kill -0 "$OLD_PID" 2>/dev/null && grep -q "$JAR" "/proc/$OLD_PID/cmdline" 2>/dev/null; then
+    echo "이전 앱(PID $OLD_PID) 멈추는 중..."
+    kill "$OLD_PID"
+    for i in $(seq 1 30); do
+      kill -0 "$OLD_PID" 2>/dev/null || break
+      sleep 1
+    done
+    kill -9 "$OLD_PID" 2>/dev/null || true
+  fi
+  rm -f "$PID_FILE"
+fi
 
-echo "이전 컨테이너 정리 중..."
-docker rm -f "$APP_NAME" > /dev/null 2>&1 || true
+if [ -f "$JAR_NEW" ]; then
+  mv -f "$JAR_NEW" "$JAR"
+fi
 
-echo "새 컨테이너 실행 중 (포트 $APP_PORT)..."
-# -e 이름 만 적으면 값은 지금 셸의 환경변수에서 가져간다. 명령줄에 비밀 값이 남지 않는다.
-docker run -d \
-  --name "$APP_NAME" \
-  --restart unless-stopped \
-  -p "${APP_PORT}:8080" \
-  -v "$APP_DIR/uploads:/app/uploads" \
-  -e DB_URL -e DB_USERNAME -e DB_PASSWORD \
-  -e JWT_SECRET -e CODE_HASH_SECRET -e BLACKLIST_HASH_SECRET \
-  -e MAIL_USERNAME -e MAIL_PASSWORD \
-  -e TURNSTILE_SITE_KEY -e TURNSTILE_SECRET_KEY \
-  -e APP_BASE_URL -e AUTH_COOKIE_SECURE -e SERVER_FORWARDHEADERSSTRATEGY \
-  "$APP_NAME:$IMAGE_TAG"
+echo "새 앱 실행 중 (포트 $APP_PORT)..."
+# setsid + nohup: SSH 접속이 끝나도 앱이 계속 돈다
+setsid nohup java -Xmx512m -jar "$JAR" > "$LOG_FILE" 2>&1 < /dev/null &
+echo $! > "$PID_FILE"
+NEW_PID="$(cat "$PID_FILE")"
 
-rm -f "$IMAGE_FILE"
-# 내 예전 이미지만 지운다(디스크 절약). 같이 쓰는 서버라 docker image prune은 쓰지 않는다.
-docker images --format '{{.Repository}}:{{.Tag}}' "$APP_NAME" \
-  | grep -v ":${IMAGE_TAG}\$" | xargs -r docker rmi > /dev/null 2>&1 || true
+is_up() {  # curl이 없으면 포트가 열렸는지만 본다
+  if command -v curl > /dev/null; then
+    curl -fs -o /dev/null "http://localhost:${APP_PORT}/"
+  else
+    (exec 3<>"/dev/tcp/127.0.0.1/${APP_PORT}") 2>/dev/null
+  fi
+}
 
 echo "앱이 뜨기를 기다리는 중..."
-for i in $(seq 1 30); do
-  if command -v curl > /dev/null && curl -fs -o /dev/null "http://localhost:${APP_PORT}/"; then
-    echo "배포 완료: http://localhost:${APP_PORT}/"
+for i in $(seq 1 60); do
+  if is_up; then
+    echo "배포 완료: http://localhost:${APP_PORT}/ (PID $NEW_PID, 로그 $LOG_FILE)"
     exit 0
   fi
-  if [ "$(docker inspect -f '{{.State.Running}}' "$APP_NAME" 2>/dev/null)" != "true" ]; then
-    break
-  fi
+  kill -0 "$NEW_PID" 2>/dev/null || break
   sleep 3
 done
 
 echo "앱이 응답하지 않습니다. 마지막 로그:" >&2
-docker logs --tail 80 "$APP_NAME" >&2 || true
+tail -n 80 "$LOG_FILE" >&2 || true
 exit 1

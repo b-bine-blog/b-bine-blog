@@ -1,5 +1,5 @@
-# 도커 이미지를 만들어 서버에 배포한다 (D-105).
-# main에 push되면 실행된다. Actions 탭의 "Run workflow"로 다른 브랜치를 골라 실행할 수도 있다.
+# jar를 만들어 서버에 배포한다 (D-106, 도커 없이).
+# main에 push되면 실행된다. "Run workflow" 버튼은 이 파일이 main에 들어간 뒤에 보인다.
 name: deploy
 
 on:
@@ -11,39 +11,39 @@ concurrency:
   group: deploy
   cancel-in-progress: false
 
-env:
-  # 서버 도커를 반 전체가 같이 쓰므로 계정을 붙인 이름을 쓴다
-  APP_NAME: aigj_01_008-mainblog
-  IMAGE_TAG: ${{ github.sha }}
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: 도커 이미지 만들기
-        run: |
-          docker build -t "$APP_NAME:$IMAGE_TAG" .
-          docker save "$APP_NAME:$IMAGE_TAG" | gzip > blogproject-image.tar.gz
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
 
-      - name: 서버로 이미지와 스크립트 보내기
+      - name: jar 만들기
+        # 테스트는 Testcontainers(도커)가 필요해 배포에서는 돌리지 않는다
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon bootJar -x test
+          cp build/libs/*-SNAPSHOT.jar app.jar.new
+
+      - name: 서버로 jar와 스크립트 보내기
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_ADDRESS }}
           username: ${{ secrets.SSH_ID }}
           password: ${{ secrets.SSH_PASSWORD }}
           port: ${{ secrets.SSH_PORT }}
-          source: blogproject-image.tar.gz,deploy/deploy.sh
+          source: app.jar.new,deploy/deploy.sh
           target: ~/blogproject
-          strip_components: 0
           overwrite: true
 
       - name: 서버에서 실행
         uses: appleboy/ssh-action@v1.2.0
         env:
-          APP_NAME: ${{ env.APP_NAME }}
-          IMAGE_TAG: ${{ env.IMAGE_TAG }}
           APP_PORT: ${{ secrets.APP_PORT }}
           APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
           DB_ADDRESS: ${{ secrets.DB_ADDRESS }}
@@ -63,5 +63,5 @@ jobs:
           username: ${{ secrets.SSH_ID }}
           password: ${{ secrets.SSH_PASSWORD }}
           port: ${{ secrets.SSH_PORT }}
-          envs: APP_NAME,IMAGE_TAG,APP_PORT,APP_BASE_URL,DB_ADDRESS,DB_PORT,DB_NAME,DB_USERNAME,DB_PASSWORD,JWT_SECRET,CODE_HASH_SECRET,BLACKLIST_HASH_SECRET,MAIL_USERNAME,MAIL_PASSWORD,TURNSTILE_SITE_KEY,TURNSTILE_SECRET_KEY
+          envs: APP_PORT,APP_BASE_URL,DB_ADDRESS,DB_PORT,DB_NAME,DB_USERNAME,DB_PASSWORD,JWT_SECRET,CODE_HASH_SECRET,BLACKLIST_HASH_SECRET,MAIL_USERNAME,MAIL_PASSWORD,TURNSTILE_SITE_KEY,TURNSTILE_SECRET_KEY
           script: bash ~/blogproject/deploy/deploy.sh
