@@ -1,10 +1,11 @@
 # 도커 이미지를 만들어 서버에 배포한다 (D-105).
-# main에 push되면 실행된다. Actions 탭의 "Run workflow"로 다른 브랜치를 골라 실행할 수도 있다.
+# main(또는 PR 확인용 deploy-docker)에 push되면 실행된다. 실패한 실행은 Actions 탭의 "Re-run jobs"로 다시 돌린다.
+# "Run workflow" 버튼은 이 파일이 main에 들어간 뒤에 보인다.
 name: deploy
 
 on:
   push:
-    branches: [main]
+    branches: [main, deploy-docker]
   workflow_dispatch:
 
 concurrency:
