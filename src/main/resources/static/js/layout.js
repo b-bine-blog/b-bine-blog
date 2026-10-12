@@ -162,7 +162,7 @@
     footer.className = 'site-footer';
     footer.appendChild(link('/privacy.html', '개인정보 처리방침'));
     // 이 사이트를 만든 저장소(2026-10-12 사용자 요청)
-    var source = link('https://github.com/AIGJ-01-008/blogproject', 'GitHub');
+    var source = link('https://github.com/b-bine-blog/b-bine-blog', 'GitHub');
     source.target = '_blank';
     source.rel = 'noopener noreferrer';
     footer.appendChild(document.createTextNode(' · '));
