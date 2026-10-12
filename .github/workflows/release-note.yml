@@ -1,0 +1,58 @@
+# 릴리스 노트를 운영 사이트 공지사항에 올린다 (D-108).
+# release-notes/<날짜-이름>/notice.md(첫 줄 "# 제목", 30자 이하)와 같은 폴더의 캡처 그림을 서버로 보내,
+# 서버 안에서 deploy/post_notice.py가 관리자 계정으로 로그인해 공지를 만든다.
+# 필요한 secrets: SSH_*, APP_PORT, NOTICE_ADMIN_EMAIL, NOTICE_ADMIN_PASSWORD
+name: release-note
+
+on:
+  workflow_dispatch:
+    inputs:
+      note:
+        description: "올릴 노트 폴더 (예: release-notes/2026-10-12-b-bine)"
+        required: true
+
+concurrency:
+  group: release-note
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 노트 폴더 확인
+        env:
+          NOTE: ${{ inputs.note }}
+        run: |
+          [[ "$NOTE" =~ ^release-notes/[A-Za-z0-9._-]+$ ]] || { echo "폴더 이름이 올바르지 않습니다: $NOTE"; exit 1; }
+          test -f "$NOTE/notice.md" || { echo "$NOTE/notice.md가 없습니다"; exit 1; }
+
+      - name: 서버로 복사
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_ADDRESS }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_ID }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          source: "deploy/post_notice.py,${{ inputs.note }}"
+          target: "~/blogproject/notice-upload"
+          overwrite: true
+
+      - name: 공지 올리기
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          NOTE: ${{ inputs.note }}
+          APP_PORT: ${{ secrets.APP_PORT }}
+          NOTICE_ADMIN_EMAIL: ${{ secrets.NOTICE_ADMIN_EMAIL }}
+          NOTICE_ADMIN_PASSWORD: ${{ secrets.NOTICE_ADMIN_PASSWORD }}
+        with:
+          host: ${{ secrets.SSH_ADDRESS }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_ID }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          envs: NOTE,APP_PORT,NOTICE_ADMIN_EMAIL,NOTICE_ADMIN_PASSWORD
+          script: |
+            cd ~/blogproject/notice-upload || exit 1
+            python3 deploy/post_notice.py "$NOTE"; status=$?
+            cd ~ && rm -rf ~/blogproject/notice-upload
+            exit $status
