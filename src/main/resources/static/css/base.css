@@ -6,7 +6,7 @@
   --green-600: #86a51b;
   --green-500: #abd425;
   --green-100: #eef6cf;
-  --green-50: #f8fbe9;
+  --green-50: #f2f6e1;
   /* 함께 쓰는 하늘색(2026-10-12): 연두 #abd425 + 하늘 #a2ddf5 */
   --sky-800: #155a75;
   --sky-700: #1d6f8f;
@@ -16,9 +16,9 @@
   --btn: var(--green-500);
   --btn-hover: #9bc31c;
   --btn-text: var(--green-900);
-  --bg: #f9fbf1;
+  --bg: #e9eedd;
   --surface: #fff;
-  --line: #e6edcf;
+  --line: #dbe3c4;
   --text: #222a17;
   --muted: #646f55;
   --danger: #c0392b;
@@ -470,29 +470,27 @@ button.button-outline:hover:not(:disabled) { background: var(--green-50); color:
 .like-button[aria-pressed="true"]:hover { background: var(--green-800); color: #fff; }
 .comment__actions button:hover:not(:disabled), .link-button:hover:not(:disabled) { background: none; color: var(--green-900); text-decoration: underline; }
 
-/* 연두(#abd425)·하늘(#a2ddf5) 밝은 색감 (2026-10-12). 밝은 바탕이라 글자는 진한 색으로 둔다 */
-.site-header { background: var(--green-500); color: var(--green-900); border-bottom: 3px solid var(--sky-500); box-shadow: 0 2px 8px rgba(43,58,15,.10); }
-.site-header a { color: var(--green-900); }
-.site-logo::before { background: var(--green-800) url("/img/leaf/leaf-white.svg") center / 18px no-repeat; }
-.site-header__search input[type="search"] { background: rgba(255,255,255,.6); color: var(--text); }
-.site-header__search input[type="search"]::placeholder { color: var(--muted); }
-.site-header button { border-color: rgba(43,58,15,.35); color: var(--green-900); }
-.site-header button.site-header__nickname { background: rgba(255,255,255,.55); color: var(--green-900); }
-.site-header button.site-header__nickname[aria-expanded="true"] { background: #fff; color: var(--green-900); }
-.site-header button.site-header__bell { background: rgba(255,255,255,.55); color: var(--green-900); }
-.site-header button.site-header__bell:hover { background: #fff; }
-.site-header .button-light { background: var(--green-800); color: #fff; }
-.site-header .button-light:hover { background: var(--green-900); }
+/* 연두(#abd425)·하늘(#a2ddf5) 색감 (2026-10-12). 너무 밝다는 의견으로 메뉴·띠·바탕을 한 단계 어둡게 */
+.site-header { background: var(--green-800); color: #fff; border-bottom: 3px solid var(--green-500); box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+.site-header a { color: #fff; }
+.site-logo::before { background: var(--green-500) url("/img/leaf/leaf-white.svg") center / 18px no-repeat; }
+.site-header__search input[type="search"] { background: rgba(255,255,255,.14); color: #fff; }
+.site-header__search input[type="search"]::placeholder { color: rgba(255,255,255,.7); }
+.site-header button { border-color: rgba(255,255,255,.5); color: #fff; }
+.site-header button.site-header__nickname { background: rgba(255,255,255,.14); color: #fff; }
+.site-header button.site-header__nickname[aria-expanded="true"] { background: var(--green-500); color: var(--green-900); }
+.site-header button.site-header__bell { background: rgba(255,255,255,.14); color: #fff; }
+.site-header button.site-header__bell:hover { background: rgba(255,255,255,.28); }
+.site-header .button-light { background: var(--green-500); color: var(--green-900); }
+.site-header .button-light:hover { background: var(--btn-hover); }
 
-.hero { background: url("/img/leaf/hero-leaves.svg") right center / cover no-repeat, linear-gradient(120deg, var(--green-500) 0%, #d6eb9a 45%, var(--sky-500) 100%); color: var(--green-900); }
-.hero h1 { color: var(--green-900); }
-.hero p { color: var(--text); }
-.hero .blog-search input { box-shadow: 0 1px 4px rgba(43,58,15,.12); }
-.hero .blog-search button { background: var(--green-800); color: #fff; }
-.hero .blog-search button:hover { background: var(--green-900); }
-.hero__actions a { background: rgba(255,255,255,.6); color: var(--green-900); }
-.hero__actions a:hover { background: #fff; }
-.blog-hero__banner { background: url("/img/leaf/hero-leaves.svg") right center / cover no-repeat, linear-gradient(120deg, var(--green-500), var(--sky-500)); }
+.hero { background: url("/img/leaf/hero-leaves.svg") right center / cover no-repeat, linear-gradient(120deg, var(--green-800) 0%, #6d8a16 50%, #3d8aa8 100%); color: #fff; }
+.hero h1 { color: #fff; }
+.hero p { color: rgba(255,255,255,.88); }
+.hero .blog-search input { box-shadow: 0 1px 4px rgba(0,0,0,.15); }
+.hero__actions a { background: rgba(255,255,255,.16); color: #fff; }
+.hero__actions a:hover { background: rgba(255,255,255,.28); }
+.blog-hero__banner { background: url("/img/leaf/hero-leaves.svg") right center / cover no-repeat, linear-gradient(120deg, var(--green-800), #6d8a16 50%, #3d8aa8); }
 .post-card__head::before { background: linear-gradient(90deg, var(--green-500), var(--sky-500)); }
 
 /* 하늘색은 태그·배지·답글·알림처럼 "곁들이는" 곳에 쓴다 */
