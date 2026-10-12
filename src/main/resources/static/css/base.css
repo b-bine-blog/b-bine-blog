@@ -1,21 +1,27 @@
 /* 공통 화면 틀 (T021). 색은 초록 계열 변수로만 정한다(2026-10-08 디자인 변경) */
 :root {
-  --green-900: #0f3d26;
-  --green-800: #145a37;
-  --green-700: #1a7046;
-  --green-600: #218a56;
-  --green-500: #2fa86b;
-  --green-100: #dff3e7;
-  --green-50: #f1faf4;
-  --bg: #f5f9f6;
+  --green-900: #2b3a0f;
+  --green-800: #3d5414;
+  --green-700: #4f6e17;
+  --green-600: #6f9a22;
+  --green-500: #b6e95c;
+  --green-100: #ecf8d4;
+  --green-50: #f7fced;
+  /* 함께 쓰는 하늘색(2026-10-12): 연두 #b6e95c + 하늘 #a2ddf5 */
+  --sky-800: #155a75;
+  --sky-700: #1d6f8f;
+  --sky-500: #a2ddf5;
+  --sky-100: #e2f5fc;
+  --sky-50: #f2fbfe;
+  --bg: #f8fbf0;
   --surface: #fff;
-  --line: #dce8e0;
-  --text: #1d2a23;
-  --muted: #5f6f66;
+  --line: #e3edcf;
+  --text: #222a17;
+  --muted: #646f55;
   --danger: #c0392b;
   --accent-warm: #fff6e0;
   --radius: 10px;
-  --shadow: 0 1px 3px rgba(15, 61, 38, .08), 0 4px 14px rgba(15, 61, 38, .05);
+  --shadow: 0 1px 3px rgba(43, 58, 15, .08), 0 4px 14px rgba(43, 58, 15, .05);
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -311,7 +317,7 @@ main.reading article > .row > * { margin-top: 0; }
 .site-header button.site-header__bell:hover { background: rgba(255,255,255,.25); }
 .site-header button.site-header__bell[aria-expanded="true"] { background: #fff; color: var(--green-800); }
 .site-header__badge { position: absolute; top: -4px; right: -6px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--danger); color: #fff; font-size: 0.7rem; font-weight: 700; line-height: 18px; text-align: center; }
-.notif-panel { position: fixed; top: 0; right: 0; bottom: 0; z-index: 30; width: 360px; max-width: 100%; display: flex; flex-direction: column; background: var(--surface); border-left: 1px solid var(--line); box-shadow: -6px 0 24px rgba(15, 61, 38, .15); padding: 16px; overflow-y: auto; }
+.notif-panel { position: fixed; top: 0; right: 0; bottom: 0; z-index: 30; width: 360px; max-width: 100%; display: flex; flex-direction: column; background: var(--surface); border-left: 1px solid var(--line); box-shadow: -6px 0 24px rgba(43, 58, 15, .15); padding: 16px; overflow-y: auto; }
 .notif-panel__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .notif-panel__head h2 { margin: 0; }
 .notif-panel__close { margin: 0; padding: 4px 12px; background: var(--green-50); color: var(--green-800); }
@@ -337,7 +343,7 @@ main.reading article > .row > * { margin-top: 0; }
 /* 003 프로필·팔로워 목록·신고 창·알림 설정·차단 목록 */
 .profile-card { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start; border-top: 4px solid var(--green-600); }
 .profile-card__avatar { width: 88px; height: 88px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
-.profile-card__avatar--empty { background: linear-gradient(135deg, var(--green-500), #a7e3bf); }
+.profile-card__avatar--empty { background: linear-gradient(135deg, var(--green-500), #dcefb8); }
 .profile-card__body { flex: 1; min-width: 0; }
 .profile-card__body h1 { margin: 0 0 6px; overflow-wrap: anywhere; }
 .profile-card__bio { margin: 0 0 8px; white-space: pre-line; overflow-wrap: anywhere; }
@@ -352,7 +358,7 @@ main.reading article > .row > * { margin-top: 0; }
 .user-item__meta { color: var(--muted); font-size: 0.85rem; margin-left: auto; white-space: nowrap; }
 .user-item button { margin: 0 0 0 8px; padding: 4px 12px; font-size: 0.85rem; }
 a.author-link { color: inherit; }
-.report-dialog { position: fixed; inset: 0; z-index: 40; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(15, 61, 38, .35); }
+.report-dialog { position: fixed; inset: 0; z-index: 40; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(43, 58, 15, .35); }
 .report-dialog__box { width: 100%; max-width: 440px; max-height: 100%; overflow-y: auto; }
 .report-dialog__reasons { border: 1px solid var(--line); border-radius: 8px; margin: 12px 0 0; padding: 8px 12px; }
 .report-dialog__reasons legend { font-weight: 600; padding: 0 4px; }
@@ -460,3 +466,40 @@ button.button-outline:hover:not(:disabled) { background: var(--green-50); color:
 .like-button:hover:not(:disabled):not([aria-pressed="true"]) { background: var(--green-50); color: var(--green-800); }
 .like-button[aria-pressed="true"]:hover { background: var(--green-800); color: #fff; }
 .comment__actions button:hover:not(:disabled), .link-button:hover:not(:disabled) { background: none; color: var(--green-900); text-decoration: underline; }
+
+/* 연두(#b6e95c)·하늘(#a2ddf5) 밝은 색감 (2026-10-12). 밝은 바탕이라 글자는 진한 색으로 둔다 */
+.site-header { background: var(--green-500); color: var(--green-900); border-bottom: 3px solid var(--sky-500); box-shadow: 0 2px 8px rgba(43,58,15,.10); }
+.site-header a { color: var(--green-900); }
+.site-logo::before { background: var(--green-800) url("/img/leaf/leaf-white.svg") center / 18px no-repeat; }
+.site-header__search input[type="search"] { background: rgba(255,255,255,.6); color: var(--text); }
+.site-header__search input[type="search"]::placeholder { color: var(--muted); }
+.site-header button { border-color: rgba(43,58,15,.35); color: var(--green-900); }
+.site-header button.site-header__nickname { background: rgba(255,255,255,.55); color: var(--green-900); }
+.site-header button.site-header__nickname[aria-expanded="true"] { background: #fff; color: var(--green-900); }
+.site-header button.site-header__bell { background: rgba(255,255,255,.55); color: var(--green-900); }
+.site-header button.site-header__bell:hover { background: #fff; }
+.site-header .button-light { background: var(--green-800); color: #fff; }
+.site-header .button-light:hover { background: var(--green-900); }
+
+.hero { background: url("/img/leaf/hero-leaves.svg") right center / cover no-repeat, linear-gradient(120deg, var(--green-500) 0%, #d4f2b0 45%, var(--sky-500) 100%); color: var(--green-900); }
+.hero h1 { color: var(--green-900); }
+.hero p { color: var(--text); }
+.hero .blog-search input { box-shadow: 0 1px 4px rgba(43,58,15,.12); }
+.hero .blog-search button { background: var(--green-800); color: #fff; }
+.hero .blog-search button:hover { background: var(--green-900); }
+.hero__actions a { background: rgba(255,255,255,.6); color: var(--green-900); }
+.hero__actions a:hover { background: #fff; }
+.blog-hero__banner { background: url("/img/leaf/hero-leaves.svg") right center / cover no-repeat, linear-gradient(120deg, var(--green-500), var(--sky-500)); }
+.post-card__head::before { background: linear-gradient(90deg, var(--green-500), var(--sky-500)); }
+
+/* 하늘색은 태그·배지·답글·알림처럼 "곁들이는" 곳에 쓴다 */
+.badge { background: var(--sky-100); color: var(--sky-800); }
+.blog-card__tags .tag { color: var(--sky-700); }
+.chips li { background: var(--sky-100); }
+.chips li a { color: var(--sky-800); }
+.post-item:hover, .blog-list li:hover { border-color: var(--sky-500); }
+.post-page .comment--reply { background: var(--sky-50); border-left-color: var(--sky-500); }
+.notif-item.is-unread { background: var(--sky-50); border-left-color: var(--sky-500); }
+.post-content blockquote { border-left-color: var(--sky-500); background: var(--sky-50); }
+.cta { border-color: var(--sky-500); background-color: var(--sky-50); }
+input:focus, select:focus, textarea:focus { outline-color: var(--sky-500); border-color: var(--sky-500); }
