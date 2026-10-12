@@ -25,7 +25,7 @@
   }
 
   function render() {
-    document.title = blog.name + ' - Blbine Blog';
+    document.title = blog.name + ' - b-bine blog';
     api.setText($('name'), blog.name);
     api.setText($('description'), blog.description || '');
     api.setText($('owner'), blog.ownerNickname ? '블로그장 ' + blog.ownerNickname : '');

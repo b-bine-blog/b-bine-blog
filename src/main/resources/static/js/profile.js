@@ -24,7 +24,7 @@
   }
 
   function render() {
-    document.title = profile.nickname + ' - Blbine Blog';
+    document.title = profile.nickname + ' - b-bine blog';
     api.setText($('nickname'), profile.nickname);
     api.setText($('bio'), profile.bio || '');
     $('bio').hidden = !profile.bio;

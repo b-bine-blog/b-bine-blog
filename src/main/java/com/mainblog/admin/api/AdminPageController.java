@@ -29,14 +29,14 @@ public class AdminPageController {
     private static final String NOT_FOUND_PAGE = """
             <!doctype html>
             <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-            <title>찾을 수 없음 - Blbine Blog</title><link rel="stylesheet" href="/css/base.css"></head>
+            <title>찾을 수 없음 - b-bine blog</title><link rel="stylesheet" href="/css/base.css"></head>
             <body><main><h1>페이지를 찾을 수 없습니다</h1><p><a href="/">메인으로</a></p></main></body></html>
             """;
     /** 액세스 토큰만 만료됐을 때: 토큰을 새로 받고 다시 연다(api.js 401 처리와 같음). 인라인 스크립트는 CSP로 막혀 파일로 둔다. */
     private static final String REFRESH_PAGE = """
             <!doctype html>
             <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-            <title>관리자 - Blbine Blog</title><link rel="stylesheet" href="/css/base.css"></head>
+            <title>관리자 - b-bine blog</title><link rel="stylesheet" href="/css/base.css"></head>
             <body data-no-header><main><p>로그인 상태를 확인하고 있습니다…</p></main>
             <script src="/js/api.js"></script><script src="/js/admin-refresh.js"></script></body></html>
             """;

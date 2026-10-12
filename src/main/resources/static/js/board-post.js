@@ -38,7 +38,7 @@
   }
 
   function render() {
-    document.title = post.title + ' - Blbine Blog';
+    document.title = post.title + ' - b-bine blog';
     if (!isNotice && post.blog) {
       var link = $('blog-link');
       link.href = '/blog/' + encodeURIComponent(post.blog.address);

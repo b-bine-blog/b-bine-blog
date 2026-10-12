@@ -16,6 +16,6 @@
   }
 
   api.setText($('tag-name'), '#' + name);
-  document.title = '#' + name + ' - Blbine Blog';
+  document.title = '#' + name + ' - b-bine blog';
   load(1);
 })();

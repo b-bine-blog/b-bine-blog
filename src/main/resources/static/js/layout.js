@@ -19,7 +19,7 @@
     header.className = 'site-header';
     var nav = document.createElement('nav');
     nav.setAttribute('aria-label', '상단 메뉴');
-    var logo = link('/', 'Blbine Blog');
+    var logo = link('/', 'b-bine blog');
     logo.className = 'site-logo';
     nav.appendChild(logo);
 
