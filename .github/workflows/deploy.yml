@@ -5,6 +5,7 @@ name: deploy
 on:
   push:
     branches: [main, deploy-docker]   # deploy-docker: main 병합 전 PR 브랜치에서 배포 확인용
+    paths-ignore: ['release-notes/**']   # 노트만 더한 push는 배포하지 않고 release-note가 공지로 올린다(D-108)
   workflow_dispatch:
 
 concurrency:
