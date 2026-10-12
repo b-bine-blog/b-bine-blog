@@ -16,6 +16,6 @@
   }
 
   api.setText($('tag-name'), '#' + name);
-  document.title = '#' + name + ' - 메인블로그';
+  document.title = '#' + name + ' - 블바인 블로그';
   load(1);
 })();

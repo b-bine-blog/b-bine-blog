@@ -65,10 +65,6 @@ h2 { font-size: 1.2rem; }
 .site-header a { color: #fff; text-decoration: none; }
 .site-header a:hover { text-decoration: underline; }
 .site-logo { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; font-size: 1.15rem; letter-spacing: -0.02em; }
-.site-logo::before { /* 나뭇잎 로고(Phosphor Icons, MIT — img/leaf/LICENSE.txt) */
-  content: ""; width: 28px; height: 28px; border-radius: 50%;
-  background: rgba(255,255,255,.14) url("/img/leaf/leaf-white.svg") center / 18px no-repeat;
-}
 .site-header__menu { display: flex; gap: 16px; }
 .site-header__search { flex: 1; min-width: 160px; max-width: 360px; display: flex; }
 .site-header__search input[type="search"] { border: 0; border-radius: 999px; padding: 6px 14px; font-size: 0.95rem; background: rgba(255,255,255,.15); color: #fff; }
@@ -99,8 +95,7 @@ h2 { font-size: 1.2rem; }
   font-size: 0.875rem;
   color: var(--muted);
   border-top: 1px solid var(--line);
-  background: var(--surface) url("/img/leaf/vine.svg") center top / 120px 30px repeat-x;
-  padding-top: 40px;
+  background: var(--surface);
 }
 .site-footer a { color: var(--muted); }
 
@@ -178,7 +173,6 @@ table.data th, table.data td { white-space: nowrap; } /* 좁은 폭에서는 표
 .blog-card__desc { margin: 4px 0; overflow-wrap: anywhere; }
 .blog-card__tags .tag { margin-right: 6px; color: var(--green-700); font-size: 0.875rem; }
 .blog-list__empty { color: var(--muted); text-align: center; }
-.blog-list__empty::before, .post-list__empty::before { content: ""; display: block; width: 40px; height: 40px; margin: 4px auto 6px; background: url("/img/leaf/sprout.svg") center / contain no-repeat; opacity: .7; }
 .badge { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 4px; background: var(--green-100); color: var(--green-700); font-size: 0.75rem; }
 .pagination { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
 .pagination button { margin: 0; min-width: 36px; background: var(--green-50); color: var(--green-800); }
@@ -216,7 +210,7 @@ table.data th, table.data td { white-space: nowrap; } /* 좁은 폭에서는 표
 .feed-more { display: block; margin: 12px auto; }
 
 /* 메인 화면 (2026-10-08): 위 검색 띠, 왼쪽 글 피드, 오른쪽 블로그 둘러보기 */
-.hero { background: url("/img/leaf/hero-leaves.svg") right center / cover no-repeat, linear-gradient(135deg, var(--green-800), var(--green-600)); color: #fff; }
+.hero { background: linear-gradient(135deg, var(--green-800), var(--green-600)); color: #fff; }
 .hero__inner { max-width: 1120px; margin: 0 auto; padding: 36px 16px 32px; }
 .hero h1 { color: #fff; margin: 0 0 6px; font-size: 1.8rem; }
 .hero p { margin: 0 0 18px; color: rgba(255,255,255,.88); }
@@ -234,7 +228,6 @@ main.home { max-width: 1120px; display: grid; grid-template-columns: minmax(0, 2
 .panel__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
 .panel__head h2 { margin: 0; }
 .panel h2 { display: flex; align-items: center; gap: 8px; }
-.panel h2::before { content: ""; width: 18px; height: 18px; flex: none; background: url("/img/leaf/leaf.svg") center / contain no-repeat; }
 .panel .tabs { margin: 10px 0; }
 .panel .post-list, .panel .blog-list { margin: 8px 0 0; }
 .panel .post-item, .panel .blog-list li { box-shadow: none; }
@@ -244,7 +237,7 @@ main.home { max-width: 1120px; display: grid; grid-template-columns: minmax(0, 2
 .side-stack .blog-card__desc { font-size: 0.9rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .side-stack label.inline { display: flex; align-items: center; gap: 6px; margin: 0; font-weight: 400; font-size: 0.9rem; color: var(--muted); }
 .side-stack label.inline select { width: auto; padding: 4px 8px; }
-.cta { background: var(--green-50) url("/img/leaf/sprout.svg") right 12px bottom 10px / 64px no-repeat; border: 1px dashed var(--green-500); border-radius: var(--radius); padding: 16px 16px 16px; padding-right: 84px; }
+.cta { background: var(--green-50); border: 1px dashed var(--green-500); border-radius: var(--radius); padding: 16px; }
 .cta p { margin: 0 0 10px; color: var(--green-900); }
 .cta a.button { display: inline-block; padding: 8px 16px; border-radius: 8px; background: var(--green-700); color: #fff; text-decoration: none; font-weight: 600; }
 
@@ -272,13 +265,9 @@ label.inline select { width: auto; padding: 4px 8px; }
 main.blog-page { max-width: 1120px; }
 .blog-hero { margin-bottom: 20px; padding: 0; overflow: hidden; }
 .blog-hero__banner { position: relative; height: 150px;
-  background: url("/img/leaf/hero-leaves.svg") right center / cover no-repeat, linear-gradient(135deg, var(--green-800), var(--green-500)); }
+  background: linear-gradient(135deg, var(--green-800), var(--green-500)); }
 .blog-hero__cover { display: block; width: 100%; height: 100%; object-fit: cover; }
-.blog-hero__body { position: relative; padding: 0 24px 20px; }
-.blog-hero__body::before { /* 띠에 걸친 나뭇잎 배지 */
-  content: ""; display: block; width: 72px; height: 72px; margin-top: -36px; border-radius: 50%;
-  border: 4px solid var(--surface); box-shadow: var(--shadow);
-  background: var(--green-50) url("/img/leaf/leaf.svg") center / 38px no-repeat; }
+.blog-hero__body { position: relative; padding: 14px 24px 20px; }
 .blog-hero h1 { margin: 10px 0 4px; font-size: 1.7rem; }
 .blog-hero__desc { margin: 0 0 6px; color: var(--muted); white-space: pre-line; }
 .blog-hero__desc:empty { display: none; }
@@ -379,7 +368,7 @@ main.post-page { max-width: 1040px; }
 .post-back a:empty { display: none; }
 .post-page .post-card { padding: 0; overflow: hidden; }
 .post-card__head { position: relative; padding: 36px 40px 22px; border-bottom: 1px solid var(--line);
-  background: url("/img/leaf/leaf-pale.svg") right -20px top -26px / 110px no-repeat, linear-gradient(180deg, var(--green-50), var(--surface)); }
+  background: linear-gradient(180deg, var(--green-50), var(--surface)); }
 .post-card__head::before { content: ""; position: absolute; left: 0; top: 0; right: 0; height: 5px; background: linear-gradient(90deg, var(--green-700), var(--green-500)); }
 .post-page .post-title { margin: 0 0 10px; font-size: 2.2rem; padding-right: 60px; }
 .post-card__meta { margin: 0; }
@@ -473,7 +462,6 @@ button.button-outline:hover:not(:disabled) { background: var(--green-50); color:
 /* 연두(#abd425)·하늘(#a2ddf5) 색감 (2026-10-12). 너무 밝다는 의견으로 메뉴·띠·바탕을 한 단계 어둡게 */
 .site-header { background: var(--green-800); color: #fff; border-bottom: 3px solid var(--green-500); box-shadow: 0 2px 8px rgba(0,0,0,.18); }
 .site-header a { color: #fff; }
-.site-logo::before { background: var(--green-500) url("/img/leaf/leaf-white.svg") center / 18px no-repeat; }
 .site-header__search input[type="search"] { background: rgba(255,255,255,.14); color: #fff; }
 .site-header__search input[type="search"]::placeholder { color: rgba(255,255,255,.7); }
 .site-header button { border-color: rgba(255,255,255,.5); color: #fff; }
@@ -484,14 +472,14 @@ button.button-outline:hover:not(:disabled) { background: var(--green-50); color:
 .site-header .button-light { background: var(--green-500); color: var(--green-900); }
 .site-header .button-light:hover { background: var(--btn-hover); }
 
-/* 띠는 메뉴보다 한 톤 밝게, 나뭇잎은 은행잎·둥근잎·버들잎(2026-10-12) */
-.hero { background: url("/img/leaf/hero-leaves2.svg") right center / cover no-repeat, linear-gradient(120deg, var(--green-700) 0%, #7f9e1a 50%, #4a9fc0 100%); color: #fff; }
+/* 띠는 메뉴보다 한 톤 밝게, 그림 없이 색만(2026-10-12) */
+.hero { background: linear-gradient(120deg, var(--green-700) 0%, #7f9e1a 50%, #4a9fc0 100%); color: #fff; }
 .hero h1 { color: #fff; }
 .hero p { color: rgba(255,255,255,.88); }
 .hero .blog-search input { box-shadow: 0 1px 4px rgba(0,0,0,.15); }
 .hero__actions a { background: rgba(255,255,255,.16); color: #fff; }
 .hero__actions a:hover { background: rgba(255,255,255,.28); }
-.blog-hero__banner { background: url("/img/leaf/hero-leaves2.svg") right center / cover no-repeat, linear-gradient(120deg, var(--green-700), #7f9e1a 50%, #4a9fc0); }
+.blog-hero__banner { background: linear-gradient(120deg, var(--green-700), #7f9e1a 50%, #4a9fc0); }
 .post-card__head::before { background: linear-gradient(90deg, var(--green-500), var(--sky-500)); }
 
 /* 하늘색은 태그·배지·답글·알림처럼 "곁들이는" 곳에 쓴다 */

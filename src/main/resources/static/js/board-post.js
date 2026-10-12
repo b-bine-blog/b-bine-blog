@@ -38,7 +38,7 @@
   }
 
   function render() {
-    document.title = post.title + ' - 메인블로그';
+    document.title = post.title + ' - 블바인 블로그';
     if (!isNotice && post.blog) {
       var link = $('blog-link');
       link.href = '/blog/' + encodeURIComponent(post.blog.address);
