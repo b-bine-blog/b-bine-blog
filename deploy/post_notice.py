@@ -5,7 +5,7 @@
 노트 폴더의 그림을 공지 이미지로 올린 뒤 그 주소로 바꿔 공지를 만든다.
 
 사용: python3 post_notice.py <노트 폴더>
-  노트 폴더/notice.md 첫 줄 "# 제목", 나머지는 본문(마크다운). 그림은 ![설명](파일.png)처럼 같은 폴더 파일을 가리킨다.
+  노트 폴더/notice.md 첫 줄 "# v1.00 제목"(버전으로 시작), 나머지는 본문(마크다운). 그림은 ![설명](파일.png)처럼 같은 폴더 파일을 가리킨다.
 환경 변수: APP_PORT, NOTICE_ADMIN_EMAIL, NOTICE_ADMIN_PASSWORD
 표준 라이브러리만 쓴다(서버에 따로 설치하지 않게).
 """
@@ -71,6 +71,8 @@ def main():
     title = first.lstrip("#").strip()
     if not title:
         sys.exit("notice.md 첫 줄에 '# 제목'이 필요합니다")
+    if not re.match(r"^v\d+\.\d{2} ", title):  # 버전 표시로 시작(예: "v1.02 이메일 인증", D-108)
+        sys.exit(f"제목은 'v1.00 ' 같은 버전으로 시작해야 합니다: {title}")
     if len(title) > 30:  # 글 제목 최대 30자(FR-003)
         sys.exit(f"제목이 30자를 넘습니다({len(title)}자): {title}")
 
@@ -88,8 +90,16 @@ def main():
         return f"![{alt}]({upload(os.path.join(folder, src))})"
 
     content = re.sub(r"!\[([^\]]*)\]\(([^)\s]+)\)", replace, content.strip())
-    notice = json_call("POST", "/api/notices", {"title": title, "content": content, "categoryId": None, "tags": []})
-    print(f"공지 등록: id={notice.get('id')} 제목={title}")
+    body = {"title": title, "content": content, "categoryId": None, "tags": []}
+    id_file = os.path.join(folder, "notice-id")
+    if os.path.exists(id_file):
+        with open(id_file, encoding="utf-8") as f:
+            notice_id = int(f.read().strip())
+        json_call("PUT", f"/api/posts/{notice_id}", body)
+        print(f"공지 수정: id={notice_id} 제목={title}")
+    else:
+        notice = json_call("POST", "/api/notices", body)
+        print(f"공지 등록: id={notice.get('id')} 제목={title}")
     request("POST", "/api/auth/logout")
 
 

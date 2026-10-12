@@ -36,7 +36,9 @@ jobs:
           if [ -n "$INPUT_NOTE" ]; then
             notes="$INPUT_NOTE"
           else
-            notes=$(git diff --no-renames --diff-filter=A --name-only "$BEFORE" "$GITHUB_SHA" -- 'release-notes/*/notice.md' | xargs -r -n1 dirname | tr '\n' ' ')
+            # 새 노트는 등록하고, 이미 올린 노트(notice-id 있음)를 고친 경우는 그 공지를 수정한다
+            notes=$(git diff --no-renames --diff-filter=AM --name-only "$BEFORE" "$GITHUB_SHA" -- 'release-notes/*/notice.md' \
+              | while read -r f; do d=$(dirname "$f"); if git diff --no-renames --diff-filter=A --quiet "$BEFORE" "$GITHUB_SHA" -- "$f" && [ ! -f "$d/notice-id" ]; then continue; fi; echo "$d"; done | tr '\n' ' ')
           fi
           for n in $notes; do
             [[ "$n" =~ ^release-notes/[A-Za-z0-9._-]+$ ]] || { echo "폴더 이름이 올바르지 않습니다: $n"; exit 1; }
