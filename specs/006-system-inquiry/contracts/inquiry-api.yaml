@@ -1,0 +1,77 @@
+openapi: 3.0.3
+info:
+  title: 메인블로그 시스템 문의 API (006-system-inquiry)
+  version: 0.1.0
+  description: |
+    시스템 문의 보내기(회원·비회원), 내 문의(회원), 관리자 문의함·답변. 근거는 specs/006-system-inquiry/spec.md와 ADM-08, D-112.
+    - 상태를 바꾸는 요청은 `X-XSRF-TOKEN` 헤더가 있어야 한다(SEC-10).
+    - /api/admin/** 는 메인 관리자만. 로그인하지 않았으면 401, 관리자가 아니면 403 `ADMIN_ONLY`.
+    - 비회원 이메일은 관리자에게도 가려서 준다(D-22).
+servers:
+  - url: /
+paths:
+  /api/inquiries:
+    post:
+      summary: 문의 보내기 (로그인 없이도 가능)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, content]
+              properties:
+                title: { type: string, maxLength: 30 }
+                content: { type: string, maxLength: 2000 }
+                email: { type: string, description: 비회원만. 답변 받을 이메일 }
+                captchaToken: { type: string, description: 비회원만. Turnstile 토큰 }
+      responses:
+        '201':
+          content:
+            application/json:
+              schema: { type: object, properties: { id: { type: integer } } }
+        '400': { description: VALIDATION_FAILED, CAPTCHA_REQUIRED, CAPTCHA_FAILED }
+        '429': { description: RATE_LIMITED }
+  /api/inquiries/mine:
+    get:
+      summary: 내 문의 (회원)
+      parameters:
+        - { name: page, in: query, schema: { type: integer, minimum: 1 } }
+      responses:
+        '200': { description: items(id, title, content, status, answer, createdAt, answeredAt), page, size, totalElements, totalPages }
+        '401': { description: UNAUTHENTICATED }
+  /api/admin/inquiries:
+    get:
+      summary: 관리자 문의함
+      parameters:
+        - { name: status, in: query, schema: { type: string, enum: [PENDING, ANSWERED], default: PENDING } }
+        - { name: page, in: query, schema: { type: integer } }
+        - { name: size, in: query, schema: { type: integer, enum: [10, 20, 50] } }
+      responses:
+        '200': { description: items(id, title, status, sender, maskedEmail, createdAt, answeredAt) }
+  /api/admin/inquiries/{inquiryId}:
+    get:
+      summary: 문의 상세
+      parameters:
+        - { name: inquiryId, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200': { description: id, title, content, status, sender, maskedEmail, answer, answeredBy, createdAt, answeredAt }
+        '404': { description: NOT_FOUND }
+  /api/admin/inquiries/{inquiryId}/answer:
+    post:
+      summary: 답변 달기 (한 번만)
+      parameters:
+        - { name: inquiryId, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [answer]
+              properties:
+                answer: { type: string, maxLength: 2000 }
+      responses:
+        '200': { description: 답변한 문의 상세 }
+        '404': { description: NOT_FOUND }
+        '409': { description: INQUIRY_ALREADY_ANSWERED }

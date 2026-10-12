@@ -1,5 +1,6 @@
 -- 원천은 Crowfoot 문서 654 "메인블로그"(https://crowfoot.java21.net/workspaces/54/models/654). 손으로 고치지 않음.
 -- Crowfoot export_ddl로 다시 만든다(research R-02). 2026-10-08, 문서 버전 41, 36개 테이블(shedlock 포함).
+-- ADM-08(D-112): system_inquiries는 문서 버전 45에서 더하고 운영 DB에 만든 표를 그대로 옮겼다(2026-10-12).
 -- 005(D-103 #11·#12): comments.deleted_by, owner_warnings.reason과 admin_actions.action_type 설명은 개발 DB에 먼저 반영된 것을 손으로 맞췄다(005 T057).
 
 -- 메인블로그 — MySQL DDL
@@ -472,6 +473,22 @@ CREATE TABLE shedlock (
     locked_by VARCHAR(255) NOT NULL COMMENT '잠근 서버',
     PRIMARY KEY (name)
 ) COMMENT='배치 잠금-----ShedLock 잠금 테이블. 매일 04:00 정리 작업이 서버 여러 대에서도 한 번만 돌게 한다. 라이브러리가 정한 구조라 공통 컬럼 규칙의 예외';
+CREATE TABLE system_inquiries (
+    id BIGINT NOT NULL AUTO_INCREMENT COMMENT '번호',
+    user_id BIGINT COMMENT '보낸 회원 번호-----users.id(FK 선 없음). 비회원은 NULL',
+    email VARCHAR(255) COMMENT '답변 받을 이메일-----비회원만. 관리자 화면에는 가려서 보임(D-22)',
+    title VARCHAR(30) NOT NULL COMMENT '제목',
+    content VARCHAR(2000) NOT NULL COMMENT '내용',
+    status VARCHAR(10) NOT NULL DEFAULT 'PENDING' COMMENT '상태-----PENDING, ANSWERED',
+    answer VARCHAR(2000) COMMENT '답변',
+    answered_by BIGINT COMMENT '답변한 관리자 번호-----users.id(FK 선 없음)',
+    answered_at DATETIME COMMENT '답변 시각',
+    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) COMMENT '생성 일시',
+    updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6) COMMENT '수정 일시',
+    PRIMARY KEY (id),
+    CONSTRAINT ck_system_inquiries_status CHECK (status IN ('PENDING', 'ANSWERED')),
+    CONSTRAINT ck_system_inquiries_sender CHECK (user_id IS NOT NULL OR email IS NOT NULL)
+) COMMENT='시스템 문의-----회원·비회원이 메인 관리자에게 보내는 문의(ADM-08). 1년 보관 뒤 04:00 배치가 삭제';
 
 ALTER TABLE user_agreements ADD CONSTRAINT fk_user_agreements_users FOREIGN KEY (user_id) REFERENCES users (id);
 ALTER TABLE refresh_tokens ADD CONSTRAINT fk_refresh_tokens_users FOREIGN KEY (user_id) REFERENCES users (id);
@@ -554,3 +571,5 @@ CREATE INDEX idx_admin_actions_created_at ON admin_actions (created_at DESC);
 CREATE INDEX idx_admin_actions_target_type_target_id ON admin_actions (target_type ASC, target_id ASC);
 CREATE INDEX idx_owner_warnings_blog_id_created_at ON owner_warnings (blog_id ASC, created_at ASC);
 CREATE INDEX idx_login_failures_last_failed_at ON login_failures (last_failed_at ASC);
+CREATE INDEX idx_system_inquiries_status_created_at ON system_inquiries (status ASC, created_at ASC);
+CREATE INDEX idx_system_inquiries_user_id ON system_inquiries (user_id ASC);

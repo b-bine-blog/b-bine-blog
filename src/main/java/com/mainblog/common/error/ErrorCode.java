@@ -41,6 +41,7 @@ public enum ErrorCode {
     NOT_SUSPENDED(HttpStatus.CONFLICT, "정지 중이 아닙니다."),
     ALREADY_SUSPENDED(HttpStatus.CONFLICT, "이미 정지 중입니다."),
     REPORT_ALREADY_HANDLED(HttpStatus.CONFLICT, "이미 처리한 신고입니다."),
+    INQUIRY_ALREADY_ANSWERED(HttpStatus.CONFLICT, "이미 답변한 문의입니다."), // ADM-08, D-112
     NOT_BLACKLISTED(HttpStatus.CONFLICT, "이 블로그의 블랙리스트에 있지 않습니다."),
     APPEAL_PENDING_EXISTS(HttpStatus.CONFLICT, "이미 문의를 남겼습니다. 처리를 기다려 주세요."),
     APPEAL_RETRY_TOO_SOON(HttpStatus.CONFLICT, "거절된 뒤 7일이 지나야 다시 문의할 수 있습니다."),

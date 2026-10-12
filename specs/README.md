@@ -10,6 +10,7 @@
 | [003-social-notification](003-social-notification/spec.md) ([plan](003-social-notification/plan.md)) | 소셜(팔로우·구독·차단·신고)과 알림 | SOC-01~06, 3.6, 6.5, 6.7 | 0 (D-102로 모두 확정) |
 | [004-board](004-board/spec.md) | 게시판(글·댓글·검색·피드·공유) | BRD-01~11, SEC-06·08, 6.1~6.4, 6.6, 6.7 | 0 (D-100으로 모두 확정) |
 | [005-admin-moderation](005-admin-moderation/spec.md) | 메인 관리자와 제재 | ADM-01~07, 3.7, SEC-09, 4.4, 4.5 | 25 |
+| [006-system-inquiry](006-system-inquiry/spec.md) | 시스템 문의(회원·비회원 → 관리자) | ADM-08(신설), SEC-13, D-112 | 0 |
 
 ## 확인 필요 항목
 

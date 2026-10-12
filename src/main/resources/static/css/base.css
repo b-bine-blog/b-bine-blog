@@ -515,3 +515,57 @@ a.button-outline:hover, button.button-outline:hover:not(:disabled) { background:
 .like-button[aria-pressed="true"]:hover { background: var(--btn-hover); color: var(--btn-text); }
 .site-header button, .comment__actions button, .link-button, .chips button, .profile-menu__list button { box-shadow: none; }
 button.button-danger, button.button-danger:hover:not(:disabled) { color: #fff; }
+
+/* 시스템 문의 (ADM-08, D-112) */
+.inquiry-list { list-style: none; padding: 0; margin: 0 0 16px; display: grid; gap: 12px; }
+.inquiry-item { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; }
+.inquiry-item__head { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.inquiry-item__body { white-space: pre-wrap; overflow-wrap: anywhere; margin: 6px 0 0; }
+.inquiry-item__answer { margin-top: 10px; padding: 10px 12px; border-radius: 8px; background: var(--green-50); }
+.tab-count { display: inline-block; min-width: 20px; margin-left: 4px; padding: 0 6px; border-radius: 999px; background: var(--danger); color: #fff; font-size: 0.75rem; line-height: 18px; text-align: center; }
+
+/* 밝기 버튼 (D-113) */
+.site-header button.site-header__theme { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; padding: 0; border: 0; border-radius: 999px; background: rgba(255,255,255,.14); color: #fff; box-shadow: none; }
+.site-header button.site-header__theme:hover { background: rgba(255,255,255,.28); }
+
+/* 다크 모드 (2026-10-12 사용자 요청, D-113). theme.js가 <html data-theme="dark">를 붙인다.
+   글자에 쓰는 진한 초록(900·800)과 바탕에 쓰는 옅은 초록(100·50)만 바꾸고, 버튼의 중간 초록(700~500)은 그대로 둔다.
+   진한 초록을 바탕으로 쓰는 곳(상단 메뉴·첫 화면 띠)과 흰색을 직접 쓴 곳은 아래에서 따로 맞춘다. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --green-900: #d4efdf;
+  --green-800: #a6dabd;
+  --green-100: #1f3a2c;
+  --green-50: #17271e;
+  --bg: #0e1511;
+  --surface: #16201a;
+  --line: #2a3a31;
+  --text: #e2ebe5;
+  --muted: #98a99f;
+  --danger: #ff8270;
+  --accent-warm: #3a3018;
+  --shadow: 0 1px 3px rgba(0, 0, 0, .45), 0 4px 14px rgba(0, 0, 0, .3);
+}
+[data-theme="dark"] .site-header { background: #0f2a1c; border-bottom-color: var(--green-600); }
+[data-theme="dark"] .hero { background: linear-gradient(120deg, #0f2a1c 0%, #165237 55%, #1d6b45 100%); }
+[data-theme="dark"] .site-header .button-light { background: var(--green-700); color: #fff; }
+[data-theme="dark"] .site-header button.site-header__nickname[aria-expanded="true"],
+[data-theme="dark"] .site-header button.site-header__bell[aria-expanded="true"] { background: var(--surface); color: var(--text); }
+[data-theme="dark"] .site-header__search input[type="search"]:focus { background: var(--surface); color: var(--text); }
+[data-theme="dark"] .hero .blog-search button { background: var(--surface); color: var(--text); }
+[data-theme="dark"] button:hover:not(:disabled), [data-theme="dark"] a.button:hover,
+[data-theme="dark"] .tabs button[aria-selected="true"]:hover, [data-theme="dark"] .pagination button.is-current:hover,
+[data-theme="dark"] .like-button[aria-pressed="true"]:hover { background: #145a37; color: #fff; }
+[data-theme="dark"] .profile-menu__list, [data-theme="dark"] .pager button, [data-theme="dark"] table.data { background: var(--surface); }
+[data-theme="dark"] select, [data-theme="dark"] textarea, [data-theme="dark"] input { background: var(--surface); color: var(--text); }
+[data-theme="dark"] table.data th, [data-theme="dark"] table.data td,
+[data-theme="dark"] .post-content th, [data-theme="dark"] .post-content td, [data-theme="dark"] .comment { border-color: var(--line); }
+[data-theme="dark"] .post-content pre { background: #0b110d; }
+[data-theme="dark"] .post-content blockquote, [data-theme="dark"] .chips button { color: var(--muted); }
+[data-theme="dark"] .comment__deleted { color: var(--muted); }
+[data-theme="dark"] .notice { border-color: #6b5320; }
+[data-theme="dark"] .status-chip--warn { color: #f0c36a; }
+[data-theme="dark"] .status-chip--danger { background: #3d201b; }
+[data-theme="dark"] .post-content img, [data-theme="dark"] .post-item__thumb { filter: brightness(.92); }
+/* Toast UI 에디터는 밝은 화면용이라 상자 안은 밝게 둔다 */
+[data-theme="dark"] .editor-box { background: #fff; color: #1d2a23; border-radius: 8px; }

@@ -47,6 +47,7 @@
 
     var right = document.createElement('div');
     right.className = 'site-header__right';
+    right.appendChild(themeButton()); // 다크 모드(D-113)
     if (me && me.admin) {
       // 메인 관리자는 블로그 활동을 하지 않으므로 "내 블로그·블로그 만들기" 대신 관리자 화면 링크(005 T010, D-90)
       right.appendChild(link('/admin', '관리자'));
@@ -83,6 +84,7 @@
     list.hidden = true;
     toggle.setAttribute('aria-controls', list.id);
     list.appendChild(link('/me/index.html', '내 정보'));
+    if (!me.admin) { list.appendChild(link('/inquiry.html#mine', '내 문의')); } // ADM-08, D-112
     if (!me.admin) {
       // 운영하는 블로그가 이미 있으면 메뉴에서는 뺀다. 더 만들 때는 내 블로그 화면의 링크를 쓴다(2026-10-12 사용자 결정, D-109)
       var create = link('/blogs/new.html', '블로그 만들기');
@@ -118,6 +120,39 @@
     box.appendChild(toggle);
     box.appendChild(list);
     return box;
+  }
+
+  // 밝기 버튼(D-113). 지금 어두우면 해, 밝으면 달 그림을 보이고 누르면 바꾼다. 값은 theme.js가 저장한다.
+  var SUN = 'M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0-5 1.2 3h-2.4L12 2zm0 20-1.2-3h2.4L12 22zM2 12l3-1.2v2.4L2 12zm20 0-3 1.2v-2.4L22 12zM4.9 4.9l3 1.3-1.7 1.7-1.3-3zm14.2 14.2-3-1.3 1.7-1.7 1.3 3zM4.9 19.1l1.3-3 1.7 1.7-3 1.3zM19.1 4.9l-1.3 3-1.7-1.7 3-1.3z';
+  var MOON = 'M21 14.5A8.5 8.5 0 0 1 9.5 3a8.5 8.5 0 1 0 11.5 11.5z';
+
+  function themeButton() {
+    var ns = 'http://www.w3.org/2000/svg';
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'site-header__theme';
+    var svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('width', '18');
+    svg.setAttribute('height', '18');
+    svg.setAttribute('aria-hidden', 'true');
+    var path = document.createElementNS(ns, 'path');
+    path.setAttribute('fill', 'currentColor');
+    svg.appendChild(path);
+    button.appendChild(svg);
+    function paint() {
+      var dark = window.theme && window.theme.current() === 'dark';
+      path.setAttribute('d', dark ? SUN : MOON);
+      var label = dark ? '밝은 화면으로 보기' : '어두운 화면으로 보기';
+      button.setAttribute('aria-label', label);
+      button.title = label;
+    }
+    button.addEventListener('click', function () {
+      if (window.theme) { window.theme.toggle(); }
+      paint();
+    });
+    paint();
+    return button;
   }
 
   // 종 아이콘 버튼. 그림은 SVG 요소로 만들고 안 읽은 개수는 배지에 textContent로 넣는다.
@@ -161,6 +196,8 @@
     var footer = document.createElement('footer');
     footer.className = 'site-footer';
     footer.appendChild(link('/privacy.html', '개인정보 처리방침'));
+    footer.appendChild(document.createTextNode(' · '));
+    footer.appendChild(link('/inquiry.html', '시스템 문의')); // ADM-08, D-112
     // 이 사이트를 만든 저장소(2026-10-12 사용자 요청)
     var source = link('https://github.com/b-bine-blog/b-bine-blog', 'GitHub');
     source.target = '_blank';

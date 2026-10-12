@@ -14,7 +14,8 @@
     BLOG_HIDE: '블로그 숨김', BLOG_UNHIDE: '블로그 숨김 해제', BLOG_FORCE_CLOSE: '강제 폐쇄',
     POST_HIDE: '글 숨김', POST_UNHIDE: '글 숨김 해제', POST_DELETE: '글 삭제',
     COMMENT_HIDE: '댓글 숨김', COMMENT_UNHIDE: '댓글 숨김 해제', COMMENT_DELETE: '댓글 삭제',
-    RESTORE: '복구', REPORT_HANDLE: '신고 처리', PRIVACY_VIEW: '개인정보 전체 보기'
+    RESTORE: '복구', REPORT_HANDLE: '신고 처리', PRIVACY_VIEW: '개인정보 전체 보기',
+    INQUIRY_ANSWER: '문의 답변' // ADM-08, D-112
   };
   var BLOG_STATUS = { ACTIVE: '운영 중', CLOSING: '폐쇄 예정', CLOSED: '폐쇄됨' };
   var VISIBILITY = { PUBLIC: '공개', LINK: '일부 공개', PRIVATE: '비공개' };
@@ -22,7 +23,7 @@
   var CONTENT_STATUS = { VISIBLE: '보임', HIDDEN: '숨김', DELETED: '삭제' };
   var DELETED_BY = { AUTHOR: '작성자', BLOG_MANAGER: '블로그장·관리 권한자', ADMIN: '관리자' };
   var REPORT_RESULT = { NONE: '문제 없음', OWNER_WARNING: '블로그장 경고', OWNER_KICK: '블로그장 강퇴', BLOG_CLOSE: '블로그 폐쇄' };
-  var TARGET = { USER: '회원', BLOG: '블로그', POST: '글', COMMENT: '댓글', REPORT: '신고' };
+  var TARGET = { USER: '회원', BLOG: '블로그', POST: '글', COMMENT: '댓글', REPORT: '신고', INQUIRY: '문의' };
 
   function el(tag, className, text) {
     var e = document.createElement(tag);

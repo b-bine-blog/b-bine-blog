@@ -221,6 +221,15 @@ admin:
   stats:
     daily-days: ${ADMIN_STATS_DAILY_DAYS:30}                     # D-103 #21. 30(board.purge-after)보다 크면 지운 글이 빠진다
 
+inquiry:
+  # 시스템 문의 설정값 (ADM-08, D-112, D-68). 글자 수는 system_inquiries 칸 길이 이하
+  title-max-length: ${INQUIRY_TITLE_MAX_LENGTH:30}
+  content-max-length: ${INQUIRY_CONTENT_MAX_LENGTH:2000}
+  answer-max-length: ${INQUIRY_ANSWER_MAX_LENGTH:2000}
+  rate-limit: ${INQUIRY_RATE_LIMIT:5}                           # 같은 IP 하루 5건
+  rate-window: ${INQUIRY_RATE_WINDOW:1d}
+  retention: ${INQUIRY_RETENTION:365d}                          # 1년 뒤 04:00 배치가 삭제
+
 app:
   base-url: ${APP_BASE_URL:http://localhost:8080}                # og 절대 주소(004 research R-12)
 

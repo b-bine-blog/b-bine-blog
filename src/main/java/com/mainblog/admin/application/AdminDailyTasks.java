@@ -1,6 +1,7 @@
 package com.mainblog.admin.application;
 
 import com.mainblog.common.config.AdminProperties;
+import com.mainblog.common.config.InquiryProperties;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.function.IntSupplier;
@@ -20,11 +21,14 @@ public class AdminDailyTasks {
 
     private final JdbcTemplate jdbc;
     private final AdminProperties props;
+    private final InquiryProperties inquiryProps;
     private final TransactionTemplate transaction;
 
-    public AdminDailyTasks(JdbcTemplate jdbc, AdminProperties props, PlatformTransactionManager transactionManager) {
+    public AdminDailyTasks(JdbcTemplate jdbc, AdminProperties props, InquiryProperties inquiryProps,
+                           PlatformTransactionManager transactionManager) {
         this.jdbc = jdbc;
         this.props = props;
+        this.inquiryProps = inquiryProps;
         this.transaction = new TransactionTemplate(transactionManager);
     }
 
@@ -35,7 +39,10 @@ public class AdminDailyTasks {
         int revocations = inTx(() -> jdbc.update("DELETE FROM owner_revocations WHERE created_at < ?", cutoff));
         int sanctions = inTx(() -> purgeSanctions(cutoff, now));
         int reports = inTx(() -> purgeReports(cutoff));
-        return new Result(actions, warnings, revocations, sanctions, reports);
+        // 시스템 문의는 따로 정한 보관 기간(ADM-08, D-112). 비회원 이메일이 들어 있어 기간이 지나면 지운다
+        LocalDateTime inquiryCutoff = now.minus(inquiryProps.retention());
+        int inquiries = inTx(() -> jdbc.update("DELETE FROM system_inquiries WHERE created_at < ?", inquiryCutoff));
+        return new Result(actions, warnings, revocations, sanctions, reports, inquiries);
     }
 
     /**
@@ -71,8 +78,8 @@ public class AdminDailyTasks {
         return n == null ? 0 : n;
     }
 
-    public record Result(int actions, int warnings, int revocations, int sanctions, int reports) {
+    public record Result(int actions, int warnings, int revocations, int sanctions, int reports, int inquiries) {
 
-        public static final Result EMPTY = new Result(0, 0, 0, 0, 0);
+        public static final Result EMPTY = new Result(0, 0, 0, 0, 0, 0);
     }
 }

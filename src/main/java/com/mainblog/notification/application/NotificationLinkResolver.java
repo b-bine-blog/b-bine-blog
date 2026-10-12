@@ -33,6 +33,8 @@ public class NotificationLinkResolver {
             case "BLOG_SUBSCRIBED", "BLOG_CLOSING", "BLOG_CLOSING_WITHDRAWN", "BLOG_PRIVATE", "DELEGATION_REQUESTED" ->
                     blogHome(targetType, targetId, "");
             case "JOIN_REQUESTED" -> blogHome(targetType, targetId, "/manage?tab=requests");
+            case "INQUIRY_RECEIVED" -> "/admin#inquiries"; // ADM-08, D-112
+            case "INQUIRY_ANSWERED" -> "/inquiry.html#mine";
             default -> null;
         };
     }

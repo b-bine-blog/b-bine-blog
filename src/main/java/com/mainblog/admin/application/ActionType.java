@@ -20,5 +20,6 @@ public enum ActionType {
     COMMENT_DELETE,
     RESTORE,
     REPORT_HANDLE,
-    PRIVACY_VIEW
+    PRIVACY_VIEW,
+    INQUIRY_ANSWER // 시스템 문의 답변(ADM-08, D-112)
 }

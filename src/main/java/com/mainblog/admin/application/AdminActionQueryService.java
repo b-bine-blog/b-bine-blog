@@ -34,6 +34,7 @@ public class AdminActionQueryService {
               WHEN 'POST' THEN (SELECT tp.title FROM posts tp WHERE tp.id = a.target_id)
               WHEN 'COMMENT' THEN (SELECT CONCAT('댓글 #', tc.id) FROM comments tc WHERE tc.id = a.target_id)
               WHEN 'REPORT' THEN (SELECT CONCAT('신고 #', tr.id) FROM reports tr WHERE tr.id = a.target_id)
+              WHEN 'INQUIRY' THEN (SELECT CONCAT('문의 #', ti.id) FROM system_inquiries ti WHERE ti.id = a.target_id)
             END""";
 
     private final JdbcTemplate jdbc;

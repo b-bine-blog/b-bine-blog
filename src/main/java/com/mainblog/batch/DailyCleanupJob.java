@@ -74,14 +74,14 @@ public class DailyCleanupJob {
         log.info("04:00 정리: 탈퇴 개인정보 {}명, RT {}건, 로그인 실패 기록 {}건, 인증번호 {}건, 지운 프로필 사진 {}건, "
                         + "위임 만료 {}건, 폐쇄 알림 {}건, 폐쇄 {}개, 30일 정리 {}개, 지운 대표 이미지 {}건, "
                         + "글 {}개, 댓글 {}개, 연결 안 된 글 이미지 {}건, 지운 글 이미지 {}건, 조회 기록 {}건, 보관 기간 지난 알림 {}건, "
-                        + "1년 지난 관리자 활동 {}건·블로그장 경고 {}건·권한 박탈 {}건·멤버 제재 {}건·신고 {}건",
+                        + "1년 지난 관리자 활동 {}건·블로그장 경고 {}건·권한 박탈 {}건·멤버 제재 {}건·신고 {}건, 보관 기간 지난 시스템 문의 {}건",
                 result.purgedMembers(), result.refreshTokens(), result.loginFailures(), result.codes(),
                 result.profileImages(), result.blog().expiredDelegations(), result.blog().closingNotices(), result.blog().closedBlogs(),
                 result.blog().purgedBlogs(), result.blog().coverImages(), result.board().purgedPosts(),
                 result.board().purgedComments(), result.board().orphanImages(), result.board().purgedImages(),
                 result.board().purgedViews(), result.notifications(), result.admin().actions(),
                 result.admin().warnings(), result.admin().revocations(), result.admin().sanctions(),
-                result.admin().reports());
+                result.admin().reports(), result.admin().inquiries());
     }
 
     /** 회원 정리는 한 트랜잭션, 블로그·게시판 단계는 BlogDailyTasks·BoardDailyTasks가 단계마다 따로 트랜잭션을 쓴다. */

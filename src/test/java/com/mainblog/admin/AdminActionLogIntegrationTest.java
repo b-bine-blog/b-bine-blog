@@ -36,7 +36,7 @@ class AdminActionLogIntegrationTest extends AdminTestBase {
     }
 
     @Test
-    void 열여섯_가지_조치마다_관리자_종류_대상이_맞는_행이_하나씩_남는다() throws Exception {
+    void 조치_종류마다_관리자_종류_대상이_맞는_행이_하나씩_남는다() throws Exception {
         Member admin = admin("기록관리자");
         BlogFixture a = blog("log-a", "PUBLIC");
         BlogFixture b = blog("log-b", "PUBLIC");
@@ -67,6 +67,9 @@ class AdminActionLogIntegrationTest extends AdminTestBase {
         postAs(admin, base + "posts/" + post + "/restore", null);
         postAs(admin, base + "reports/" + report + "/resolution", "{\"result\":\"NONE\"}");
         postAs(admin, base + "blogs/" + a.blogId() + "/force-close", null);
+        jdbc.update("INSERT INTO system_inquiries (user_id, title, content) VALUES (?, '문의', '내용')", writer.id());
+        long inquiry = jdbc.queryForObject("SELECT MAX(id) FROM system_inquiries", Long.class);
+        postAs(admin, base + "inquiries/" + inquiry + "/answer", "{\"answer\":\"답변\"}"); // ADM-08, D-112
 
         // 자동 위임과 폐쇄 예약을 둘 다 보려고 두 블로그장을 강퇴해서 OWNER_KICK만 두 행이다
         List<String> expected = new ArrayList<>(Arrays.stream(ActionType.values()).map(Enum::name).toList());
@@ -96,6 +99,8 @@ class AdminActionLogIntegrationTest extends AdminTestBase {
         assertThat(targetType("COMMENT_DELETE")).isEqualTo("COMMENT");
         assertThat(one("REPORT_HANDLE")).isEqualTo(report);
         assertThat(targetType("REPORT_HANDLE")).isEqualTo("REPORT");
+        assertThat(one("INQUIRY_ANSWER")).isEqualTo(inquiry);
+        assertThat(targetType("INQUIRY_ANSWER")).isEqualTo("INQUIRY");
     }
 
     @Test

@@ -42,7 +42,11 @@ public enum NotificationType {
     OWNER_REVOKED("OPERATION", null),
     BLOG_HIDDEN("OPERATION", null),
     POST_HIDDEN("OPERATION", null),
-    POST_RESTORED("OPERATION", null);
+    POST_RESTORED("OPERATION", null),
+
+    // 시스템 문의 (ADM-08, D-112). 관리자에게 새 문의, 회원에게 답변. 운영 탭이고 끌 수 없다
+    INQUIRY_RECEIVED("OPERATION", null),
+    INQUIRY_ANSWERED("OPERATION", null);
 
     private final String tab;
     private final String settingColumn;

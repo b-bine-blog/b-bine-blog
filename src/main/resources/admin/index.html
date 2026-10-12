@@ -6,6 +6,7 @@
   <meta name="robots" content="noindex">
   <title>관리자 - b-bine blog</title>
   <link rel="stylesheet" href="/css/base.css">
+  <script src="/js/theme.js"></script>
 </head>
 <body>
   <!-- 메인 관리자 화면 (005 T009, D-103 #1). 서버가 role = ADMIN을 확인한 뒤에만 내려준다. 모든 값은 textContent로 넣는다(D-64). -->
@@ -16,6 +17,7 @@
       <button type="button" role="tab" data-tab="members" aria-selected="true">회원</button>
       <button type="button" role="tab" data-tab="blogs" aria-selected="false">블로그</button>
       <button type="button" role="tab" data-tab="reports" aria-selected="false">신고</button>
+      <button type="button" role="tab" data-tab="inquiries" aria-selected="false">문의 <span class="tab-count" id="inquiry-count" hidden></span></button>
       <button type="button" role="tab" data-tab="content" aria-selected="false">글·댓글</button>
       <button type="button" role="tab" data-tab="actions" aria-selected="false">활동 기록</button>
       <button type="button" role="tab" data-tab="stats" aria-selected="false">통계</button>
@@ -80,6 +82,19 @@
       <div class="admin-detail" id="report-detail" hidden></div>
     </section>
 
+    <!-- 시스템 문의 (ADM-08, D-112). 비회원 이메일은 서버가 가려서 준다(D-22) -->
+    <section class="panel" data-panel="inquiries" aria-label="문의" hidden>
+      <h2>시스템 문의함</h2>
+      <div class="tabs" role="tablist" id="inquiry-status-tabs">
+        <button type="button" role="tab" data-status="PENDING" aria-selected="true">답변 대기</button>
+        <button type="button" role="tab" data-status="ANSWERED" aria-selected="false">답변 완료</button>
+      </div>
+      <p class="message" id="inquiry-message"></p>
+      <div id="inquiry-list"></div>
+      <div class="pagination" id="inquiry-pager"></div>
+      <div class="admin-detail" id="inquiry-detail" hidden></div>
+    </section>
+
     <section class="panel" data-panel="content" aria-label="글·댓글" hidden>
       <h2>글·댓글</h2>
       <form class="admin-filter" id="post-search">
@@ -130,6 +145,7 @@
             <option value="POST">글</option>
             <option value="COMMENT">댓글</option>
             <option value="REPORT">신고</option>
+            <option value="INQUIRY">문의</option>
           </select>
         </div>
         <div>
@@ -165,6 +181,7 @@
   <script src="/js/admin-members.js"></script>
   <script src="/js/admin-blogs.js"></script>
   <script src="/js/admin-reports.js"></script>
+  <script src="/js/admin-inquiries.js"></script>
   <script src="/js/admin-content.js"></script>
   <script src="/js/admin-actions.js"></script>
   <script src="/js/admin-stats.js"></script>
