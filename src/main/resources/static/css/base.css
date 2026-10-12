@@ -242,9 +242,6 @@ main.home { max-width: 1120px; display: grid; grid-template-columns: minmax(0, 2
 .side-stack .blog-card__desc { font-size: 0.9rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .side-stack label.inline { display: flex; align-items: center; gap: 6px; margin: 0; font-weight: 400; font-size: 0.9rem; color: var(--muted); }
 .side-stack label.inline select { width: auto; padding: 4px 8px; }
-.cta { background: var(--green-50); border: 1px dashed var(--green-500); border-radius: var(--radius); padding: 16px; }
-.cta p { margin: 0 0 10px; color: var(--green-900); }
-.cta a.button { display: inline-block; padding: 8px 16px; border-radius: 8px; background: var(--green-700); color: #fff; text-decoration: none; font-weight: 600; }
 
 /* 목록·카드 공통 다듬기 */
 .post-item, .blog-list li { transition: border-color .15s, box-shadow .15s; }
@@ -496,11 +493,10 @@ button.button-outline:hover:not(:disabled) { background: var(--green-50); color:
 .post-page .comment--reply { background: var(--sky-50); border-left-color: var(--sky-500); }
 .notif-item.is-unread { background: var(--sky-50); border-left-color: var(--sky-500); }
 .post-content blockquote { border-left-color: var(--sky-500); background: var(--sky-50); }
-.cta { border-color: var(--sky-500); background-color: var(--sky-50); }
 input:focus, select:focus, textarea:focus { outline-color: var(--sky-500); border-color: var(--sky-500); }
 
 /* 버튼(2026-10-12): 연두 바탕 + 진한 글자, 둥근 모양. 마우스를 올리면 조금 진해진다 */
-button, a.button, .cta a.button { background: var(--btn); color: var(--btn-text); border-radius: 999px; font-weight: 700;
+button, a.button { background: var(--btn); color: var(--btn-text); border-radius: 999px; font-weight: 700;
   box-shadow: 0 1px 0 rgba(48,59,10,.12); transition: background .15s, box-shadow .15s, transform .05s; }
 button:hover:not(:disabled), a.button:hover { background: var(--btn-hover); color: var(--btn-text); box-shadow: 0 2px 6px rgba(48,59,10,.18); }
 button:active:not(:disabled), a.button:active { transform: translateY(1px); }
