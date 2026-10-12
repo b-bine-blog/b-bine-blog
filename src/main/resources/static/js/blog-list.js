@@ -12,6 +12,9 @@
     page: Math.max(1, parseInt(params.get('page'), 10) || 1),
     size: SIZES.indexOf(params.get('size')) >= 0 ? params.get('size') : '10'
   };
+  // 메인 화면은 목록에 적힌 개수(data-size, 5개)만 카드로 보여 준다
+  var fixedSize = $('blogs').getAttribute('data-size');
+  if (fixedSize) { state.size = fixedSize; }
 
   function go(changes) {
     Object.keys(changes).forEach(function (k) { state[k] = changes[k]; });
@@ -32,7 +35,36 @@
     return node;
   }
 
+  // 표지 카드: 블로그 표지 이미지(없으면 이름 첫 글자)를 크게 보여 주고, 카드 전체가 블로그로 가는 링크다
+  function renderTile(blog) {
+    var li = el('li', 'blog-tile');
+    var a = el('a', 'blog-tile__link');
+    a.href = '/blog/' + encodeURIComponent(blog.address);
+    var cover = el('div', 'blog-tile__cover');
+    if (blog.coverImageUrl) {
+      var img = el('img');
+      img.src = blog.coverImageUrl;
+      img.alt = '';
+      img.loading = 'lazy';
+      cover.appendChild(img);
+    } else {
+      cover.classList.add('is-empty');
+      cover.appendChild(el('span', 'blog-tile__initial', Array.from(blog.name || '?')[0]));
+    }
+    a.appendChild(cover);
+    var body = el('div', 'blog-tile__body');
+    body.appendChild(el('strong', 'blog-tile__name', blog.name));
+    if (blog.description) {
+      body.appendChild(el('p', 'blog-tile__desc', blog.description));
+    }
+    body.appendChild(el('p', 'blog-list__meta', '멤버 ' + blog.memberCount + '명'));
+    a.appendChild(body);
+    li.appendChild(a);
+    return li;
+  }
+
   function renderItem(blog) {
+    if (fixedSize) { return renderTile(blog); }
     var li = el('li', 'blog-card');
     if (blog.coverImageUrl) {
       var img = el('img', 'blog-card__cover');
@@ -60,7 +92,7 @@
 
   function renderPages(totalCount) {
     var nav = $('pages');
-    if (!nav) { return; } // 메인 블로그 둘러보기는 번호 페이지 없이 첫 10개만 보여 준다
+    if (!nav) { return; } // 메인 블로그 둘러보기는 번호 페이지 없이 첫 5개만 보여 준다
     nav.textContent = '';
     var last = Math.max(1, Math.ceil(totalCount / Number(state.size)));
     var start = Math.max(1, state.page - 4);
@@ -80,7 +112,7 @@
 
   function syncControls() {
     $('q').value = state.q;
-    if ($('size')) { $('size').value = state.size; } // 메인 화면에는 블로그 개수 선택이 없다(10개 고정)
+    if ($('size')) { $('size').value = state.size; } // 메인 화면에는 블로그 개수 선택이 없다(5개 고정)
     document.querySelectorAll('[data-sort]').forEach(function (b) {
       var on = b.getAttribute('data-sort') === state.sort;
       b.classList.toggle('is-active', on);

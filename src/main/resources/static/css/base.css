@@ -565,3 +565,27 @@ button.button-danger, button.button-danger:hover:not(:disabled) { color: #fff; }
 [data-theme="dark"] .post-content img, [data-theme="dark"] .post-item__thumb { filter: brightness(.92); }
 /* Toast UI 에디터는 밝은 화면용이라 상자 안은 밝게 둔다 */
 [data-theme="dark"] .editor-box { background: #fff; color: #1d2a23; border-radius: 8px; }
+
+/* 메인 블로그 둘러보기 (2026-10-13): 글 위에 한 줄, 블로그마다 표지 카드 5개 */
+main.home { grid-template-columns: minmax(0, 1fr); }
+.blog-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+.blog-list.blog-grid li.blog-tile { padding: 0; margin: 0; overflow: hidden; }
+.blog-grid .blog-list__empty { grid-column: 1 / -1; }
+.blog-tile__link { display: flex; flex-direction: column; height: 100%; color: var(--text); text-decoration: none; }
+.blog-tile__cover { aspect-ratio: 4 / 3; background: var(--line); overflow: hidden; }
+.blog-tile__cover img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .2s; }
+.blog-tile__link:hover .blog-tile__cover img { transform: scale(1.04); }
+.blog-tile__cover.is-empty { display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, var(--green-700), var(--green-500)); }
+.blog-tile__initial { font-size: 2.2rem; font-weight: 800; color: #fff; }
+.blog-tile__body { padding: 10px 12px 12px; }
+.blog-tile__name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.blog-tile__link:hover .blog-tile__name { color: var(--green-700); text-decoration: underline; }
+.blog-tile__desc { margin: 4px 0 0; font-size: 0.875rem; color: var(--muted); display: -webkit-box;
+  -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.blog-tile .blog-list__meta { margin: 6px 0 0; font-size: 0.8rem; }
+@media (max-width: 860px) {
+  .blog-grid { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 42%; overflow-x: auto;
+    scroll-snap-type: x mandatory; padding-bottom: 4px; }
+  .blog-grid li.blog-tile { scroll-snap-align: start; }
+}
