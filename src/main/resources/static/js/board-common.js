@@ -25,8 +25,13 @@
     return '/blog/' + encodeURIComponent(p.blog.address) + '/posts/' + p.id;
   }
 
+  // 릴리스 노트 공지(D-108)는 제목이 "v1.02 …"처럼 버전으로 시작한다.
+  var UPDATE_TITLE = /^v\d+\.\d+/i;
+  function isUpdate(p) { return UPDATE_TITLE.test(p.title || ''); }
+
   // PostSummary 목록을 그린다. options.showBlog면 블로그 이름을 함께 보인다.
-  // options.pinned: 목록 위에 고정하는 공지(D-109). 지우지 않고 이어 붙이며 "공지" 표시를 단다.
+  // options.pinned: 목록 위에 고정하는 공지(D-109). 지우지 않고 이어 붙이며 "공지"("v1.02 …" 같은 버전 글은 "업데이트") 표시를 단다.
+  // options.updateBadge: 공지사항 목록에서 버전 글에만 "업데이트" 표시를 단다(D-111).
   function renderPosts(list, items, options) {
     options = options || {};
     if (!options.append) { clear(list); }
@@ -37,7 +42,11 @@
     items.forEach(function (p) {
       var li = el('li', options.pinned ? 'post-item post-item--notice' : 'post-item');
       var body = el('div', 'post-item__body');
-      if (options.pinned) { body.appendChild(el('span', 'post-item__badge', '공지')); } // D-109
+      if (options.pinned) {
+        body.appendChild(el('span', 'post-item__badge', isUpdate(p) ? '업데이트' : '공지')); // D-109, D-111
+      } else if (options.updateBadge && isUpdate(p)) {
+        body.appendChild(el('span', 'post-item__badge', '업데이트')); // D-111
+      }
       var a = el('a', 'post-item__title', p.title);
       a.href = postUrl(p);
       body.appendChild(a);

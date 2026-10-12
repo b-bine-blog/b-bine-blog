@@ -1,7 +1,6 @@
 package com.mainblog.common.config;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -58,5 +57,5 @@ public record BoardProperties(
 
     public record Feed(@Positive int recentDays, @Positive int pageSize, @PositiveOrZero int pinnedNotices) {}
 
-    public record Og(@Positive int summaryLength, @NotBlank String defaultImage) {}
+    public record Og(@Positive int summaryLength, @NotNull Duration cardMaxAge) {}
 }

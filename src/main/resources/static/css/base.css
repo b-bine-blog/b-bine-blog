@@ -188,7 +188,7 @@ table.data th, table.data td { white-space: nowrap; } /* 좁은 폭에서는 표
 .post-item__meta { color: var(--muted); font-size: 0.875rem; overflow-wrap: anywhere; }
 .post-item--notice { background: var(--green-50); border-color: var(--green-100); } /* 피드 위 고정 공지(D-109) */
 .post-item__badge { display: inline-block; margin-right: 6px; padding: 1px 8px; border-radius: 999px; background: var(--green-600); color: #fff; font-size: 0.75rem; font-weight: 700; vertical-align: 2px; }
-.post-item--notice .post-item__title { display: inline; }
+.post-item--notice .post-item__title, .post-item__badge + .post-item__title { display: inline; }
 .post-item__thumb { width: 64px; height: 64px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
 /* PC는 마우스를 올리면 첫 사진, 모바일은 오른쪽 작은 첫 사진(D-100 #7) */
 @media (hover: hover) and (min-width: 768px) {

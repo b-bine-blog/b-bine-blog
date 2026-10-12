@@ -4,13 +4,15 @@ import com.mainblog.common.config.AppProperties;
 import com.mainblog.common.config.BoardProperties;
 import com.mainblog.common.markdown.MarkdownRenderer;
 import com.mainblog.common.markdown.MarkdownText;
-import com.mainblog.common.storage.FileStorage;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -20,35 +22,42 @@ import org.springframework.web.util.UriUtils;
 /**
  * 글 상세 화면의 미리보기(og·twitter 메타 태그) (004 T049, FR-048~FR-050, D-59, D-66, D-100 #5·#6·#14·#15, research R-12).
  * 정적 HTML의 {@code <!--OG-->} 자리에 메타 태그만 넣는다. 본문은 화면 스크립트가 API로 그린다.
- * 못 보는 글(비공개 블로그, 삭제, 없는 글, share 값이 맞지 않는 일부 공개 글)은 사이트 기본 미리보기다.
+ * 그림은 글 화면 모양의 미리보기 그림(OgCardImage)이다. 못 보는 글(비공개 블로그, 삭제, 없는 글,
+ * share 값이 맞지 않는 일부 공개 글)은 그림 없이 "비공개글입니다"만 보인다(D-110).
  */
 @Component
 public class OgTagRenderer {
 
+    private static final Logger log = LoggerFactory.getLogger(OgTagRenderer.class);
+
     static final String PLACEHOLDER = "<!--OG-->";
     static final String SITE_NAME = "b-bine blog";
-    static final String SITE_DESCRIPTION = "함께 쓰는 블로그";
+    static final String PRIVATE_DESCRIPTION = "비공개글입니다";
 
     private final JdbcTemplate jdbc;
     private final MarkdownRenderer renderer;
-    private final FileStorage fileStorage;
+    private final OgCardImage cardImage;
     private final AppProperties app;
     private final BoardProperties props;
     private final Map<String, String> templates = new ConcurrentHashMap<>();
 
-    public OgTagRenderer(JdbcTemplate jdbc, MarkdownRenderer renderer, FileStorage fileStorage, AppProperties app,
+    public OgTagRenderer(JdbcTemplate jdbc, MarkdownRenderer renderer, OgCardImage cardImage, AppProperties app,
                          BoardProperties props) {
         this.jdbc = jdbc;
         this.renderer = renderer;
-        this.fileStorage = fileStorage;
+        this.cardImage = cardImage;
         this.app = app;
         this.props = props;
     }
 
     record Meta(String url, String title, String description, String image) {}
 
-    private record Row(long id, Long blogId, String address, String visibility, String title, String content,
-                       String nickname, String userStatus, boolean authorLeft, String coverName) {}
+    private record Row(long id, Long blogId, String address, String blogName, String visibility, String title,
+                       String content, String nickname, String userStatus, boolean authorLeft, String share) {
+        Row withShare(String s) {
+            return new Row(id, blogId, address, blogName, visibility, title, content, nickname, userStatus, authorLeft, s);
+        }
+    }
 
     /** 블로그 글 상세 HTML. address가 글의 블로그와 다르면 기본 미리보기. */
     public String blogPostPage(String address, long postId, String share) {
@@ -62,50 +71,77 @@ public class OgTagRenderer {
     }
 
     Meta meta(long postId, String address, String share, String path) {
-        Meta fallback = new Meta(app.absolute(path), SITE_NAME, SITE_DESCRIPTION, app.absolute(props.og().defaultImage()));
-        List<Row> rows = jdbc.query("SELECT p.id, p.blog_id, b.address, b.visibility, p.title, p.content, u.nickname, "
-                + "u.status AS user_status, p.author_left, "
-                + "(SELECT ci.stored_name FROM images ci WHERE ci.owner_type = 'BLOG_COVER' AND ci.owner_id = b.id "
-                + "AND ci.deleted_at IS NULL ORDER BY ci.id DESC LIMIT 1) AS cover_name "
+        Optional<Row> row = visible(postId, address, share);
+        if (row.isEmpty()) {
+            return new Meta(app.absolute(path), SITE_NAME, PRIVATE_DESCRIPTION, null);
+        }
+        Row r = row.get();
+        String query = r.share() == null ? "" : "?share=" + UriUtils.encodeQueryParam(r.share(), StandardCharsets.UTF_8);
+        String html = renderer.toSafeHtml(r.content());
+        return new Meta(app.absolute(path + query), r.title() + " - " + authorName(r),
+                MarkdownText.summary(html, props.og().summaryLength()), app.absolute(cardPath(r) + query));
+    }
+
+    /** 블로그 글 미리보기 그림. 못 보는 글이면 빈 값(D-110). */
+    public Optional<byte[]> blogPostCard(String address, long postId, String share) {
+        return visible(postId, address, share).map(this::card);
+    }
+
+    /** 공지 미리보기 그림. */
+    public Optional<byte[]> noticeCard(long postId) {
+        return visible(postId, null, null).map(this::card);
+    }
+
+    private byte[] card(Row r) {
+        try {
+            return drawCard(r);
+        } catch (RuntimeException | LinkageError | InternalError e) {
+            log.warn("미리보기 그림을 만들지 못했습니다: post={}", r.id(), e);
+            return null;
+        }
+    }
+
+    private byte[] drawCard(Row r) {
+        String html = renderer.toSafeHtml(r.content());
+        String where = r.blogId() == null ? "공지사항" : r.blogName();
+        return cardImage.render(SITE_NAME, r.title(), where + " · " + authorName(r),
+                MarkdownText.summary(html, props.og().summaryLength()));
+    }
+
+    private static String cardPath(Row r) {
+        return r.blogId() == null ? "/og/notices/" + r.id() + ".png"
+                : "/og/blog/" + r.address() + "/posts/" + r.id() + ".png";
+    }
+
+    /**
+     * 누구나 볼 수 있는 글만 돌려준다. 비공개 블로그, 삭제, 없는 글, share 값이 맞지 않는 일부 공개 글,
+     * 주소의 블로그가 글의 블로그와 다른 경우는 빈 값. share는 일부 공개 글일 때만 채운다.
+     */
+    private Optional<Row> visible(long postId, String address, String share) {
+        List<Row> rows = jdbc.query("SELECT p.id, p.blog_id, b.address, b.name AS blog_name, b.visibility, p.title, "
+                + "p.content, u.nickname, u.status AS user_status, p.author_left "
                 + "FROM posts p JOIN users u ON u.id = p.author_id LEFT JOIN blogs b ON b.id = p.blog_id "
                 + "WHERE p.id = ? AND p.status = 'VISIBLE' AND (p.board_type = 'NOTICE' "
                 + "OR (b.status IN ('ACTIVE', 'CLOSING') AND b.hidden = FALSE))",
                 (rs, i) -> new Row(rs.getLong("id"), rs.getObject("blog_id", Long.class), rs.getString("address"),
-                        rs.getString("visibility"), rs.getString("title"), rs.getString("content"),
-                        rs.getString("nickname"), rs.getString("user_status"), rs.getBoolean("author_left"),
-                        rs.getString("cover_name")), postId);
+                        rs.getString("blog_name"), rs.getString("visibility"), rs.getString("title"),
+                        rs.getString("content"), rs.getString("nickname"), rs.getString("user_status"),
+                        rs.getBoolean("author_left"), null), postId);
         if (rows.isEmpty()) {
-            return fallback;
+            return Optional.empty();
         }
         Row r = rows.get(0);
-        String url = path;
-        if (r.blogId() != null) {
-            if (address == null || !address.equals(r.address())) {
-                return fallback;
-            }
-            switch (r.visibility()) {
-                case "PUBLIC" -> { }
-                case "LINK" -> {
-                    if (!validShare(r.blogId(), share)) {
-                        return fallback;
-                    }
-                    url = path + "?share=" + UriUtils.encodeQueryParam(share, StandardCharsets.UTF_8);
-                }
-                default -> {
-                    return fallback;
-                }
-            }
+        if (r.blogId() == null) {
+            return address == null ? Optional.of(r) : Optional.empty();
         }
-        String html = renderer.toSafeHtml(r.content());
-        String image = MarkdownText.firstImage(html);
-        if (image == null && r.coverName() != null) {
-            image = fileStorage.url(r.coverName());
+        if (address == null || !address.equals(r.address())) {
+            return Optional.empty();
         }
-        if (image == null) {
-            image = props.og().defaultImage();
-        }
-        return new Meta(app.absolute(url), r.title() + " - " + authorName(r),
-                MarkdownText.summary(html, props.og().summaryLength()), app.absolute(image));
+        return switch (r.visibility()) {
+            case "PUBLIC" -> Optional.of(r);
+            case "LINK" -> validShare(r.blogId(), share) ? Optional.of(r.withShare(share)) : Optional.empty();
+            default -> Optional.empty();
+        };
     }
 
     private static String authorName(Row r) {
@@ -136,11 +172,17 @@ public class OgTagRenderer {
         meta(sb, "property", "og:url", m.url());
         meta(sb, "property", "og:title", m.title());
         meta(sb, "property", "og:description", m.description());
-        meta(sb, "property", "og:image", m.image());
-        meta(sb, "name", "twitter:card", "summary_large_image");
+        if (m.image() != null) {
+            meta(sb, "property", "og:image", m.image());
+            meta(sb, "property", "og:image:width", String.valueOf(OgCardImage.WIDTH));
+            meta(sb, "property", "og:image:height", String.valueOf(OgCardImage.HEIGHT));
+        }
+        meta(sb, "name", "twitter:card", m.image() == null ? "summary" : "summary_large_image");
         meta(sb, "name", "twitter:title", m.title());
         meta(sb, "name", "twitter:description", m.description());
-        meta(sb, "name", "twitter:image", m.image());
+        if (m.image() != null) {
+            meta(sb, "name", "twitter:image", m.image());
+        }
         sb.append("<title>").append(HtmlUtils.htmlEscape(m.title())).append("</title>");
         return sb.toString();
     }

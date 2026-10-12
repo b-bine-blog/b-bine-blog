@@ -6,7 +6,7 @@
 
   function load(page) {
     api.get('/api/notices?page=' + page).then(function (r) {
-      board.renderPosts($('post-list'), r.items, { empty: '공지사항이 없습니다.' });
+      board.renderPosts($('post-list'), r.items, { empty: '공지사항이 없습니다.', updateBadge: true });
       board.renderPager($('post-pages'), r.page, r.totalPages, load);
     }, function (err) { board.sayError($('message'), err, function () { load(page); }); });
   }
