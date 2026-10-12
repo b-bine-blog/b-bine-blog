@@ -1,21 +1,24 @@
 /* 공통 화면 틀 (T021). 색은 초록 계열 변수로만 정한다(2026-10-08 디자인 변경) */
 :root {
-  --green-900: #2b3a0f;
-  --green-800: #3d5414;
-  --green-700: #4f6e17;
-  --green-600: #6f9a22;
-  --green-500: #b6e95c;
-  --green-100: #ecf8d4;
-  --green-50: #f7fced;
-  /* 함께 쓰는 하늘색(2026-10-12): 연두 #b6e95c + 하늘 #a2ddf5 */
+  --green-900: #303b0a;
+  --green-800: #475a0e;
+  --green-700: #5c7413;
+  --green-600: #86a51b;
+  --green-500: #abd425;
+  --green-100: #eef6cf;
+  --green-50: #f8fbe9;
+  /* 함께 쓰는 하늘색(2026-10-12): 연두 #abd425 + 하늘 #a2ddf5 */
   --sky-800: #155a75;
   --sky-700: #1d6f8f;
   --sky-500: #a2ddf5;
   --sky-100: #e2f5fc;
   --sky-50: #f2fbfe;
-  --bg: #f8fbf0;
+  --btn: var(--green-500);
+  --btn-hover: #9bc31c;
+  --btn-text: var(--green-900);
+  --bg: #f9fbf1;
   --surface: #fff;
-  --line: #e3edcf;
+  --line: #e6edcf;
   --text: #222a17;
   --muted: #646f55;
   --danger: #c0392b;
@@ -467,7 +470,7 @@ button.button-outline:hover:not(:disabled) { background: var(--green-50); color:
 .like-button[aria-pressed="true"]:hover { background: var(--green-800); color: #fff; }
 .comment__actions button:hover:not(:disabled), .link-button:hover:not(:disabled) { background: none; color: var(--green-900); text-decoration: underline; }
 
-/* 연두(#b6e95c)·하늘(#a2ddf5) 밝은 색감 (2026-10-12). 밝은 바탕이라 글자는 진한 색으로 둔다 */
+/* 연두(#abd425)·하늘(#a2ddf5) 밝은 색감 (2026-10-12). 밝은 바탕이라 글자는 진한 색으로 둔다 */
 .site-header { background: var(--green-500); color: var(--green-900); border-bottom: 3px solid var(--sky-500); box-shadow: 0 2px 8px rgba(43,58,15,.10); }
 .site-header a { color: var(--green-900); }
 .site-logo::before { background: var(--green-800) url("/img/leaf/leaf-white.svg") center / 18px no-repeat; }
@@ -481,7 +484,7 @@ button.button-outline:hover:not(:disabled) { background: var(--green-50); color:
 .site-header .button-light { background: var(--green-800); color: #fff; }
 .site-header .button-light:hover { background: var(--green-900); }
 
-.hero { background: url("/img/leaf/hero-leaves.svg") right center / cover no-repeat, linear-gradient(120deg, var(--green-500) 0%, #d4f2b0 45%, var(--sky-500) 100%); color: var(--green-900); }
+.hero { background: url("/img/leaf/hero-leaves.svg") right center / cover no-repeat, linear-gradient(120deg, var(--green-500) 0%, #d6eb9a 45%, var(--sky-500) 100%); color: var(--green-900); }
 .hero h1 { color: var(--green-900); }
 .hero p { color: var(--text); }
 .hero .blog-search input { box-shadow: 0 1px 4px rgba(43,58,15,.12); }
@@ -503,3 +506,22 @@ button.button-outline:hover:not(:disabled) { background: var(--green-50); color:
 .post-content blockquote { border-left-color: var(--sky-500); background: var(--sky-50); }
 .cta { border-color: var(--sky-500); background-color: var(--sky-50); }
 input:focus, select:focus, textarea:focus { outline-color: var(--sky-500); border-color: var(--sky-500); }
+
+/* 버튼(2026-10-12): 연두 바탕 + 진한 글자, 둥근 모양. 마우스를 올리면 조금 진해진다 */
+button, a.button, .cta a.button { background: var(--btn); color: var(--btn-text); border-radius: 999px; font-weight: 700;
+  box-shadow: 0 1px 0 rgba(48,59,10,.12); transition: background .15s, box-shadow .15s, transform .05s; }
+button:hover:not(:disabled), a.button:hover { background: var(--btn-hover); color: var(--btn-text); box-shadow: 0 2px 6px rgba(48,59,10,.18); }
+button:active:not(:disabled), a.button:active { transform: translateY(1px); }
+a.button-outline, button.button-outline { background: var(--surface); color: var(--green-800); border: 1.5px solid var(--btn); box-shadow: none; }
+a.button-outline:hover, button.button-outline:hover:not(:disabled) { background: var(--sky-50); color: var(--green-900); border-color: var(--sky-500); }
+.hero .blog-search button { background: var(--btn); color: var(--btn-text); }
+.hero .blog-search button:hover { background: var(--btn-hover); }
+.site-header .button-light { background: var(--green-800); color: #fff; }
+.tabs button, .pagination button { border-radius: 999px; box-shadow: none; }
+.tabs button[aria-selected="true"], .pager button[aria-current="page"], .pagination button.is-current { background: var(--btn); color: var(--btn-text); }
+.tabs button[aria-selected="true"]:hover, .pagination button.is-current:hover { background: var(--btn-hover); color: var(--btn-text); }
+.like-button { box-shadow: none; }
+.like-button[aria-pressed="true"] { background: var(--btn); color: var(--btn-text); border-color: var(--btn); }
+.like-button[aria-pressed="true"]:hover { background: var(--btn-hover); color: var(--btn-text); }
+.site-header button, .comment__actions button, .link-button, .chips button, .profile-menu__list button { box-shadow: none; }
+button.button-danger, button.button-danger:hover:not(:disabled) { color: #fff; }
