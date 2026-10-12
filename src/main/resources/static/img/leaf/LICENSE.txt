@@ -2,6 +2,7 @@
 - leaf.svg, leaf-white.svg, hero-leaves.svg, vine.svg: Phosphor Icons "leaf" (fill)를 색·배치만 바꿔 씀
 - sprout.svg: Phosphor Icons "plant" (duotone)
   https://phosphoricons.com  @phosphor-icons/core 2.1.1
+- hero-leaves2.svg: 직접 그린 그림(은행잎·둥근잎·버들잎), 외부 출처 없음 (2026-10-12)
 
 MIT License
 Copyright (c) 2023 Phosphor Icons

@@ -484,13 +484,14 @@ button.button-outline:hover:not(:disabled) { background: var(--green-50); color:
 .site-header .button-light { background: var(--green-500); color: var(--green-900); }
 .site-header .button-light:hover { background: var(--btn-hover); }
 
-.hero { background: url("/img/leaf/hero-leaves.svg") right center / cover no-repeat, linear-gradient(120deg, var(--green-800) 0%, #6d8a16 50%, #3d8aa8 100%); color: #fff; }
+/* 띠는 메뉴보다 한 톤 밝게, 나뭇잎은 은행잎·둥근잎·버들잎(2026-10-12) */
+.hero { background: url("/img/leaf/hero-leaves2.svg") right center / cover no-repeat, linear-gradient(120deg, var(--green-700) 0%, #7f9e1a 50%, #4a9fc0 100%); color: #fff; }
 .hero h1 { color: #fff; }
 .hero p { color: rgba(255,255,255,.88); }
 .hero .blog-search input { box-shadow: 0 1px 4px rgba(0,0,0,.15); }
 .hero__actions a { background: rgba(255,255,255,.16); color: #fff; }
 .hero__actions a:hover { background: rgba(255,255,255,.28); }
-.blog-hero__banner { background: url("/img/leaf/hero-leaves.svg") right center / cover no-repeat, linear-gradient(120deg, var(--green-800), #6d8a16 50%, #3d8aa8); }
+.blog-hero__banner { background: url("/img/leaf/hero-leaves2.svg") right center / cover no-repeat, linear-gradient(120deg, var(--green-700), #7f9e1a 50%, #4a9fc0); }
 .post-card__head::before { background: linear-gradient(90deg, var(--green-500), var(--sky-500)); }
 
 /* 하늘색은 태그·배지·답글·알림처럼 "곁들이는" 곳에 쓴다 */
