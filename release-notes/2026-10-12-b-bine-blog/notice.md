@@ -13,8 +13,3 @@
 - 글꼴은 무료 글꼴 Pretendard(본문)와 Fredoka(로고)를 씁니다.
 
 ![블로그 첫 화면 위쪽](blog-top.png)
-
-## 아래쪽에 GitHub 링크
-화면 맨 아래 개인정보 처리방침 옆에 이 사이트의 GitHub 주소를 더했습니다.
-
-![화면 아래쪽](footer.png)
