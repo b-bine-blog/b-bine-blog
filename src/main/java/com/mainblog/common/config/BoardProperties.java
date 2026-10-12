@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import java.time.Duration;
 import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -55,7 +56,7 @@ public record BoardProperties(
     public record Search(@Positive int minLength, @Positive int maxLength, @Positive int recentMax,
                          @Positive int blogPreviewSize) {}
 
-    public record Feed(@Positive int recentDays, @Positive int pageSize) {}
+    public record Feed(@Positive int recentDays, @Positive int pageSize, @PositiveOrZero int pinnedNotices) {}
 
     public record Og(@Positive int summaryLength, @NotBlank String defaultImage) {}
 }

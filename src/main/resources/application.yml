@@ -167,6 +167,7 @@ board:
   feed:
     recent-days: ${BOARD_FEED_RECENT_DAYS:30}                    # D-100 #18
     page-size: ${BOARD_FEED_PAGE_SIZE:20}                        # D-100 #18
+    pinned-notices: ${BOARD_FEED_PINNED_NOTICES:3}               # D-109, 최신 1페이지 위에 고정하는 메인 공지 수(0이면 안 보임)
   og:
     summary-length: ${BOARD_OG_SUMMARY_LENGTH:100}               # D-100 #14
     default-image: ${BOARD_OG_DEFAULT_IMAGE:/img/og-default.png} # D-100 #15

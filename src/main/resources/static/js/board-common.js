@@ -26,16 +26,18 @@
   }
 
   // PostSummary 목록을 그린다. options.showBlog면 블로그 이름을 함께 보인다.
+  // options.pinned: 목록 위에 고정하는 공지(D-109). 지우지 않고 이어 붙이며 "공지" 표시를 단다.
   function renderPosts(list, items, options) {
     options = options || {};
-    clear(list);
+    if (!options.append) { clear(list); }
     if (!items || items.length === 0) {
       list.appendChild(el('li', 'blog-list__empty', options.empty || '글이 없습니다.'));
       return;
     }
     items.forEach(function (p) {
-      var li = el('li', 'post-item');
+      var li = el('li', options.pinned ? 'post-item post-item--notice' : 'post-item');
       var body = el('div', 'post-item__body');
+      if (options.pinned) { body.appendChild(el('span', 'post-item__badge', '공지')); } // D-109
       var a = el('a', 'post-item__title', p.title);
       a.href = postUrl(p);
       body.appendChild(a);

@@ -59,6 +59,7 @@ public final class BoardViews {
 
     public record RecentSearch(long id, String keyword, LocalDateTime searchedAt) {}
 
+    /** notices: 최신 탭 1페이지 위에 고정해 보여 주는 최근 메인 공지(D-109). 그 밖에는 빈 목록. */
     public record FeedResult(String tab, List<PostSummary> items, Integer page, Integer totalPages,
-                             String nextCursor) {}
+                             String nextCursor, List<PostSummary> notices) {}
 }

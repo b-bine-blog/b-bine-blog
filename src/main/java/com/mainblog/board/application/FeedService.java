@@ -48,7 +48,8 @@ public class FeedService {
                 String where = PostVisibility.PUBLIC_BLOG_POST + PostVisibility.notBlocked(viewerId, args);
                 PostPage result = reader.page(where, args, tab == Tab.LATEST ? LATEST_ORDER : POPULAR_ORDER,
                         paging.page(page), paging.size(size));
-                yield new FeedResult(tab.name(), result.items(), result.page(), result.totalPages(), null);
+                yield new FeedResult(tab.name(), result.items(), result.page(), result.totalPages(), null,
+                        tab == Tab.LATEST && result.page() == 1 ? pinnedNotices() : List.of());
             }
             case SUBSCRIBED, FOLLOWING -> cursorFeed(tab, viewerId, cursor);
         };
@@ -88,7 +89,16 @@ public class FeedService {
             PostSummary last = rows.get(limit - 1);
             next = new Cursor(last.createdAt(), last.id()).format();
         }
-        return new FeedResult(tab.name(), rows, null, null, next);
+        return new FeedResult(tab.name(), rows, null, null, next, List.of());
+    }
+
+    /** 최근 메인 공지 몇 개를 최신 글 위에 고정한다(D-109). 개수는 설정값(board.feed.pinned-notices). */
+    private List<PostSummary> pinnedNotices() {
+        int count = props.feed().pinnedNotices();
+        if (count == 0) {
+            return List.of();
+        }
+        return reader.list(PostVisibility.NOTICE_POST, List.of(), LATEST_ORDER, count, 0);
     }
 
     private static Tab parse(String raw) {

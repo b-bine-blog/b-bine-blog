@@ -32,6 +32,26 @@ class FeedIntegrationTest extends BoardTestBase {
     }
 
     @Test
+    void 최신_탭_1페이지에만_최근_공지를_고정한다() throws Exception {
+        BlogFixture b = blog("feed-notice", "PUBLIC");
+        for (int i = 1; i <= 11; i++) {
+            insertPost(b.blogId(), b.owner().id(), "블로그 글" + i, "c", clock.now().minusHours(i));
+        }
+        Member adm = admin("관리자");
+        for (int i = 1; i <= 4; i++) {
+            postAs(adm, "/api/notices", postJson("공지" + i, "내용", null, null));
+        }
+        JsonNode first = getAs(null, "/api/feed?size=10").json();
+        // 기본 3개, 최근 순(D-109). 공지는 일반 글 목록(items)에는 섞이지 않는다
+        assertThat(titles(first.get("notices"))).containsExactly("공지4", "공지3", "공지2");
+        assertThat(titles(first.get("items"))).hasSize(10).allMatch(t -> t.startsWith("블로그 글"));
+        JsonNode second = getAs(null, "/api/feed?page=2&size=10").json();
+        assertThat(second.get("page").asInt()).isEqualTo(2);
+        assertThat(second.get("notices")).isEmpty();
+        assertThat(getAs(null, "/api/feed?tab=POPULAR").json().get("notices")).isEmpty();
+    }
+
+    @Test
     void 인기_탭은_좋아요_많은_순_같으면_최신() throws Exception {
         BlogFixture b = blog("feed-pop", "PUBLIC");
         long p = insertPost(b.blogId(), b.owner().id(), "P", "c", clock.now().minusHours(3));

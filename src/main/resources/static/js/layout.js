@@ -67,7 +67,7 @@
     document.body.insertBefore(header, document.body.firstChild);
   }
 
-  // 닉네임을 누르면 여는 프로필 메뉴(2026-10-08 사용자 요청): 내 정보, 블로그 만들기(BLG-01), 로그아웃.
+  // 닉네임을 누르면 여는 프로필 메뉴(2026-10-08 사용자 요청): 내 정보, 블로그 만들기(BLG-01, 블로그가 없을 때만), 로그아웃.
   function profileMenu(me) {
     var box = document.createElement('div');
     box.className = 'profile-menu';
@@ -84,7 +84,13 @@
     toggle.setAttribute('aria-controls', list.id);
     list.appendChild(link('/me/index.html', '내 정보'));
     if (!me.admin) {
-      list.appendChild(link('/blogs/new.html', '블로그 만들기'));
+      // 운영하는 블로그가 이미 있으면 메뉴에서는 뺀다. 더 만들 때는 내 블로그 화면의 링크를 쓴다(2026-10-12 사용자 결정, D-109)
+      var create = link('/blogs/new.html', '블로그 만들기');
+      create.hidden = true;
+      list.appendChild(create);
+      api.get('/api/me/blogs').then(function (res) {
+        create.hidden = res.owned.length > 0;
+      }, function () { create.hidden = false; });
     }
     var logout = document.createElement('button');
     logout.type = 'button';

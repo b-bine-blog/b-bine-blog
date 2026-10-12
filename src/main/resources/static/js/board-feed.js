@@ -25,7 +25,13 @@
     board.say($('feed-message'), '');
     api.get(url).then(function (r) {
       if (paged) {
-        board.renderPosts($('feed-list'), r.items, { showBlog: true });
+        // 최신 1페이지는 최근 메인 공지를 위에 고정한다(D-109)
+        if (r.notices && r.notices.length) {
+          board.renderPosts($('feed-list'), r.notices, { pinned: true });
+          if (r.items.length) { board.renderPosts($('feed-list'), r.items, { showBlog: true, append: true }); }
+        } else {
+          board.renderPosts($('feed-list'), r.items, { showBlog: true });
+        }
         board.renderPager($('feed-pages'), r.page, r.totalPages, load);
         $('feed-more').hidden = true;
       } else {
