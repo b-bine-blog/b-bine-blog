@@ -743,3 +743,12 @@ label.button-file:hover { background: var(--green-100); }
 /* 창 안에 뜬 화면: 머리 메뉴·아래 링크 없이 여백만 줄인다 */
 .is-embedded body { min-height: 0; }
 .is-embedded main { padding: 20px 24px 24px; max-width: none; }
+
+/* "보기 10개" 같은 개수 고르기(2026-10-13, D-122): 글자와 고르는 칸을 한 덩어리 알약 모양으로 묶어 다른 버튼과 어울리게 한다 */
+label.inline:has(> select) { gap: 2px; padding: 0 4px 0 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--green-50); color: var(--green-800); font-size: .85rem; }
+label.inline > select { -webkit-appearance: none; appearance: none; margin: 0; padding: 5px 24px 5px 6px; border: 0; border-radius: 999px; box-shadow: none;
+  background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23888' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 8px center;
+  color: var(--text); font-size: .85rem; font-weight: 600; cursor: pointer; }
+label.inline > select:focus-visible { outline: 2px solid var(--green-500); outline-offset: 1px; }
+[data-theme="dark"] label.inline > select { background-color: transparent; }
+[data-theme="dark"] label.inline > select option { background: var(--surface); }
