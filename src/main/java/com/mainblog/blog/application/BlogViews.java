@@ -20,7 +20,7 @@ public final class BlogViews {
                              String visibility, String joinPolicy, String status, LocalDateTime closeScheduledAt,
                              String closeReason, String ownerNickname, String myRole,
                              Set<BlogPermission> myPermissions, boolean subscribed, Long myPendingJoinRequestId,
-                             boolean canDelegate, boolean shareable) {}
+                             boolean canDelegate, boolean shareable, String backgroundImageUrl) {}
 
     public record BlogPage(List<BlogSummary> items, int page, int size, long totalCount) {}
 

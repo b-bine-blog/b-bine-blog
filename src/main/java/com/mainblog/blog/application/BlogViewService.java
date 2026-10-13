@@ -69,13 +69,19 @@ public class BlogViewService {
                 b.getJoinPolicy().name(), b.getStatus().name(), b.getCloseScheduledAt(),
                 b.getCloseReason() == null ? null : b.getCloseReason().name(), ownerNickname,
                 m == null ? null : m.getRole().name(), BlogPermissionService.permissionsOf(m), subscribed, pending,
-                owner && b.getMemberCount() > 1 && !b.isClosing(), b.getVisibility() == Visibility.LINK);
+                owner && b.getMemberCount() > 1 && !b.isClosing(), b.getVisibility() == Visibility.LINK,
+                imageUrl("BLOG_BACKGROUND", b.getId()));
     }
 
     public String coverUrl(long blogId) {
-        return jdbc.query("SELECT stored_name FROM images WHERE owner_type = 'BLOG_COVER' AND owner_id = ? "
+        return imageUrl("BLOG_COVER", blogId);
+    }
+
+    /** 블로그 이미지(대표 BLOG_COVER, 배경 BLOG_BACKGROUND D-121) 가운데 지금 쓰는 것의 주소. 없으면 null */
+    private String imageUrl(String ownerType, long blogId) {
+        return jdbc.query("SELECT stored_name FROM images WHERE owner_type = ? AND owner_id = ? "
                         + "AND deleted_at IS NULL ORDER BY id DESC LIMIT 1",
-                rs -> rs.next() ? fileStorage.url(rs.getString(1)) : null, blogId);
+                rs -> rs.next() ? fileStorage.url(rs.getString(1)) : null, ownerType, blogId);
     }
 
     public Map<Long, String> coverUrls(Collection<Long> blogIds) {

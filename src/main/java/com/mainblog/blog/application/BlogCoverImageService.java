@@ -3,6 +3,7 @@ package com.mainblog.blog.application;
 import com.mainblog.blog.domain.Blog;
 import com.mainblog.blog.domain.BlogCoverImage;
 import com.mainblog.blog.domain.BlogCoverImageRepository;
+import com.mainblog.blog.domain.BlogImageKind;
 import com.mainblog.blog.domain.BlogRepository;
 import com.mainblog.common.config.BlogProperties;
 import com.mainblog.common.error.BusinessException;
@@ -23,7 +24,8 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /**
- * 블로그 대표 이미지 (T026, FR-007, 6.3, SEC-08, research R-05).
+ * 블로그 대표 이미지와 배경 이미지 (T026, FR-007, 6.3, SEC-08, research R-05, D-121).
+ * 배경 이미지는 대표 이미지와 같은 크기 제한(blog.cover-image)과 검사를 쓴다.
  * 001 프로필 사진과 같은 검사(확장자·MIME·파일 앞부분)와 재인코딩을 거쳐 UUID 이름으로 저장한다.
  * 바꾸거나 지운 이미지는 deleted_at을 채우고 30일 뒤 04:00 정리에서 파일까지 지운다.
  */
@@ -56,7 +58,7 @@ public class BlogCoverImageService {
     }
 
     @Transactional
-    public String change(long blogId, long userId, byte[] content, String originalFilename, String contentType) {
+    public String change(BlogImageKind kind, long blogId, long userId, byte[] content, String originalFilename, String contentType) {
         lockAndCheck(blogId, userId);
         ImageType type = imageValidator.validate(content, originalFilename, contentType,
                 properties.coverImage().maxSize().toBytes());
@@ -69,17 +71,17 @@ public class BlogCoverImageService {
         }
         deleteFileIfRolledBack(storedName);
         LocalDateTime now = LocalDateTime.now(clock);
-        repository.findAllByOwnerIdAndDeletedAtIsNull(blogId).forEach(old -> old.delete(now));
-        repository.save(new BlogCoverImage(blogId, userId, storedName, originalFilename, type.mimeType(),
+        repository.findAllByOwnerTypeAndOwnerIdAndDeletedAtIsNull(kind.ownerType(), blogId).forEach(old -> old.delete(now));
+        repository.save(new BlogCoverImage(kind, blogId, userId, storedName, originalFilename, type.mimeType(),
                 clean.length));
         return fileStorage.url(storedName);
     }
 
     @Transactional
-    public void delete(long blogId, long userId) {
+    public void delete(BlogImageKind kind, long blogId, long userId) {
         lockAndCheck(blogId, userId);
         LocalDateTime now = LocalDateTime.now(clock);
-        repository.findAllByOwnerIdAndDeletedAtIsNull(blogId).forEach(old -> old.delete(now));
+        repository.findAllByOwnerTypeAndOwnerIdAndDeletedAtIsNull(kind.ownerType(), blogId).forEach(old -> old.delete(now));
     }
 
     private void lockAndCheck(long blogId, long userId) {

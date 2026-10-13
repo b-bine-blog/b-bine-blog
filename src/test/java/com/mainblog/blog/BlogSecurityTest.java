@@ -46,6 +46,7 @@ class BlogSecurityTest extends BlogTestBase {
             "DELETE /api/blogs/{blog}/categories/{categoryId}");
     /** multipart라 BlogRoleCheckIntegrationTest 목록 대신 아래에서 따로 확인한다. */
     static final String COVER_UPLOAD = "PUT /api/blogs/{blog}/cover-image";
+    static final String BACKGROUND_UPLOAD = "PUT /api/blogs/{blog}/background-image"; // D-121, 권한은 BlogBackgroundImageIntegrationTest
 
     @Autowired
     @Qualifier("requestMappingHandlerMapping")
@@ -69,6 +70,7 @@ class BlogSecurityTest extends BlogTestBase {
         unknown.removeAll(checked);
         unknown.removeAll(MEMBER_FACING);
         unknown.remove(COVER_UPLOAD);
+        unknown.remove(BACKGROUND_UPLOAD);
         unknown.removeAll(BOARD_APIS);
         assertThat(unknown).as("새 블로그 API는 BlogRoleCheckIntegrationTest.MANAGE_APIS나 MEMBER_FACING에 더한다")
                 .isEmpty();

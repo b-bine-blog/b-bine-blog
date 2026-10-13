@@ -10,13 +10,12 @@ import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import org.hibernate.annotations.SQLRestriction;
 
-/** 블로그 대표 이미지(images, owner_type = BLOG_COVER) (T008, FR-007, D-75). */
+/** 블로그 대표 이미지(owner_type = BLOG_COVER)와 배경 이미지(BLOG_BACKGROUND, D-121) (T008, FR-007, D-75). */
 @Entity
 @Table(name = "images")
-@SQLRestriction("owner_type = 'BLOG_COVER'")
+@SQLRestriction("owner_type IN ('BLOG_COVER', 'BLOG_BACKGROUND')")
 public class BlogCoverImage extends BaseTimeEntity {
 
-    private static final String OWNER_TYPE = "BLOG_COVER";
     private static final int ORIGINAL_NAME_MAX = 255;
 
     @Id
@@ -50,10 +49,10 @@ public class BlogCoverImage extends BaseTimeEntity {
     protected BlogCoverImage() {
     }
 
-    public BlogCoverImage(Long blogId, Long uploaderId, String storedName, String originalName, String contentType,
+    public BlogCoverImage(BlogImageKind kind, Long blogId, Long uploaderId, String storedName, String originalName, String contentType,
                           int sizeBytes) {
         this.uploaderId = uploaderId;
-        this.ownerType = OWNER_TYPE;
+        this.ownerType = kind.ownerType();
         this.ownerId = blogId;
         this.storedName = storedName;
         String name = originalName == null || originalName.isBlank() ? "cover" : originalName.strip();

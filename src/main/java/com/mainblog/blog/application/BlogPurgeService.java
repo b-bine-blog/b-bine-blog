@@ -55,7 +55,7 @@ public class BlogPurgeService {
         List<Map<String, Object>> images = jdbc.queryForList("""
                 SELECT id, stored_name FROM images
                 WHERE (owner_type = 'POST' AND owner_id IN (SELECT id FROM posts WHERE blog_id = ?))
-                   OR (owner_type = 'BLOG_COVER' AND owner_id = ?)""", blogId, blogId);
+                   OR (owner_type IN ('BLOG_COVER', 'BLOG_BACKGROUND') AND owner_id = ?)""", blogId, blogId);
         for (Map<String, Object> image : images) {
             jdbc.update("DELETE FROM images WHERE id = ?", image.get("id"));
         }
@@ -72,11 +72,11 @@ public class BlogPurgeService {
         afterCommit(() -> files.forEach(this::deleteQuietly));
     }
 
-    /** 바꾸거나 지운 대표 이미지는 purge-after 뒤 파일과 행을 지운다(images 테이블 설명). */
+    /** 바꾸거나 지운 대표·배경 이미지(D-121)는 purge-after 뒤 파일과 행을 지운다(images 테이블 설명). */
     @Transactional
     public int purgeDeletedCoverImages(LocalDateTime now) {
         List<Map<String, Object>> rows = jdbc.queryForList("SELECT id, stored_name FROM images "
-                + "WHERE owner_type = 'BLOG_COVER' AND deleted_at <= ?", now.minus(properties.coverImage().purgeAfter()));
+                + "WHERE owner_type IN ('BLOG_COVER', 'BLOG_BACKGROUND') AND deleted_at <= ?", now.minus(properties.coverImage().purgeAfter()));
         for (Map<String, Object> row : rows) {
             jdbc.update("DELETE FROM images WHERE id = ?", row.get("id"));
         }

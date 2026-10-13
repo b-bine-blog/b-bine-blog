@@ -118,6 +118,21 @@
       .then(function () { say('대표 이미지를 지웠습니다.'); }).catch(fail);
   });
 
+  // 배경 이미지(D-121). 대표 이미지와 같은 검사·크기 제한
+  $('background-upload').addEventListener('click', function () {
+    var file = $('background').files[0];
+    if (!file) { say('이미지를 골라 주세요.', true); return; }
+    var form = new FormData();
+    form.append('file', file);
+    api.put(base() + '/background-image', form, { activity: true })
+      .then(function () { say('배경 이미지를 바꿨습니다.'); }).catch(fail);
+  });
+
+  $('background-delete').addEventListener('click', function () {
+    api.del(base() + '/background-image', null, { activity: true })
+      .then(function () { say('배경 이미지를 지웠습니다. 기본 배경으로 보입니다.'); }).catch(fail);
+  });
+
   $('share-regenerate').addEventListener('click', function () {
     if (!confirm('지금 링크로는 더 이상 들어올 수 없습니다. 새로 만들까요?')) { return; }
     api.post(base() + '/share-link', null, { activity: true })

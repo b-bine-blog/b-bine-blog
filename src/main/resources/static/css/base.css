@@ -284,6 +284,9 @@ main.blog-page { max-width: 1120px; }
 .blog-meta li:has(> span:empty) { display: none; }
 .blog-hero .chips { margin-top: 6px; }
 .blog-hero .chips:empty { display: none; }
+/* 블로그 배경 이미지(D-121): 화면 뒤에 고정해 깔고, 카드는 그 위에 그대로 보인다 */
+.blog-backdrop { position: fixed; inset: 0; z-index: -1; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+body.has-backdrop { background: transparent; }
 #posts .blog-toolbar h2 { margin: 0; }
 @media (max-width: 860px) {
   .blog-banner { height: 160px; }

@@ -20,6 +20,7 @@ class BlogRoleCheckIntegrationTest extends BlogTestBase {
             new Api("POST", "/api/blogs/{blog}/join-requests/{req}/approval", null),
             new Api("POST", "/api/blogs/{blog}/join-requests/{req}/rejection", null),
             new Api("DELETE", "/api/blogs/{blog}/cover-image", null),
+            new Api("DELETE", "/api/blogs/{blog}/background-image", null), // D-121
             new Api("PATCH", "/api/blogs/{blog}", "{\"name\":\"남의 블로그\"}"),
             new Api("PATCH", "/api/blogs/{blog}", "{\"visibility\":\"PRIVATE\"}"),
             new Api("POST", "/api/blogs/{blog}/share-link", null),

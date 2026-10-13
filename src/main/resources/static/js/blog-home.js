@@ -39,6 +39,16 @@
     } else {
       show('banner', false);
     }
+    // 배경 이미지가 있으면 화면 뒤 전체에 깐다. 없거나 열리지 않으면 기본 배경(D-121)
+    if (blog.backgroundImageUrl) {
+      $('backdrop').onerror = function () { show('backdrop', false); document.body.classList.remove('has-backdrop'); };
+      $('backdrop').src = blog.backgroundImageUrl;
+      show('backdrop', true);
+      document.body.classList.add('has-backdrop');
+    } else {
+      show('backdrop', false);
+      document.body.classList.remove('has-backdrop');
+    }
     var tags = $('tags');
     while (tags.firstChild) { tags.removeChild(tags.firstChild); }
     (blog.tags || []).forEach(function (t) {

@@ -362,7 +362,7 @@ CREATE TABLE blog_tags (
 CREATE TABLE images (
     id BIGINT NOT NULL AUTO_INCREMENT COMMENT '번호',
     uploader_id BIGINT NOT NULL COMMENT '올린 회원 번호',
-    owner_type VARCHAR(15) NOT NULL COMMENT '소속 종류-----POST, PROFILE, BLOG_COVER',
+    owner_type VARCHAR(15) NOT NULL COMMENT '소속 종류-----POST, PROFILE, BLOG_COVER, BLOG_BACKGROUND',
     owner_id BIGINT COMMENT '소속 번호-----글·회원·블로그 번호. 글 저장 전에는 NULL',
     stored_name VARCHAR(64) NOT NULL COMMENT '저장 이름(UUID)',
     original_name VARCHAR(255) NOT NULL COMMENT '원래 파일 이름',
@@ -373,8 +373,8 @@ CREATE TABLE images (
     updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6) COMMENT '수정 일시',
     PRIMARY KEY (id),
     CONSTRAINT uk_images_stored_name UNIQUE (stored_name),
-    CONSTRAINT ck_images_owner_type CHECK (owner_type IN ('POST', 'PROFILE', 'BLOG_COVER'))
-) COMMENT='이미지-----글 이미지·프로필 사진·블로그 대표 이미지. 파일은 FileStorage, DB에는 정보만. 삭제 30일 뒤 완전 삭제';
+    CONSTRAINT ck_images_owner_type CHECK (owner_type IN ('POST', 'PROFILE', 'BLOG_COVER', 'BLOG_BACKGROUND'))
+) COMMENT='이미지-----글 이미지·프로필 사진·블로그 대표 이미지·블로그 배경 이미지. 파일은 FileStorage, DB에는 정보만. 삭제 30일 뒤 완전 삭제';
 CREATE TABLE comments (
     id BIGINT NOT NULL AUTO_INCREMENT COMMENT '댓글 번호',
     parent_id BIGINT COMMENT '부모 댓글 번호',
