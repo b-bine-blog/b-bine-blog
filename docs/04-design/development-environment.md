@@ -20,7 +20,7 @@ flowchart LR
   CF -.ERD 문서 654.- ERD[Crowfoot ERD]
   C -->|feature → develop → main| GH[GitHub<br/>p-minsu/b-bine-blog]
   GH -->|main push| GA[GitHub Actions<br/>jar 빌드]
-  GA -->|SSH| S[운영 서버<br/>nginx → Spring Boot :8370]
+  GA -->|SSH| S[운영 서버<br/>nginx → 도커 컨테이너<br/>Spring Boot :8370·8371]
   S --> PDB[(운영 MySQL)]
 ```
 
@@ -34,7 +34,7 @@ flowchart LR
 
 - 테스트는 데이터를 지우고 다시 넣기 때문에 Crowfoot DB에 연결하지 않고 매번 새 MySQL을 씁니다. 테이블은 [schema.sql](schema.sql)로 만듭니다.
 - 로컬은 http라 `AUTH_COOKIE_SECURE=false`로 쿠키의 Secure를 끕니다. 운영은 켭니다.
-- Docker는 로컬의 가짜 메일함과 테스트용 MySQL에만 씁니다. 운영 배포에는 쓰지 않습니다(D-106).
+- Docker는 로컬의 가짜 메일함, 테스트용 MySQL, 운영 컨테이너(D-127)에 씁니다. 운영 이미지에 Java 21이 들어 있어 서버의 Java 버전과 상관없이 돕니다.
 
 ## 도구와 버전
 
@@ -49,6 +49,7 @@ flowchart LR
 | ERD·DB 관리 | [Crowfoot](https://crowfoot.java21.net) | 문서 "메인블로그"(654) |
 | AI 개발 | Claude Code + [Spec Kit](https://github.com/github/spec-kit) | `.claude/skills/speckit-*` |
 | 저장소·CI/CD | GitHub, GitHub Actions | `.github/workflows/` |
+| 운영 실행 | Docker(`Dockerfile`, `eclipse-temurin:21-jre`) | 서버 Docker 29.7.2 |
 | 운영 웹 서버 | nginx(공용 인프라가 관리) | 설정 사본 `deploy/nginx/` |
 
 Gradle Wrapper가 정해진 Gradle을 내려받으므로 Gradle은 따로 설치하지 않습니다. 필요한 것은 JDK 21과 (로컬 메일함용) Docker뿐입니다.
@@ -57,7 +58,7 @@ Gradle Wrapper가 정해진 Gradle을 내려받으므로 Gradle은 따로 설치
 
 - 모든 숫자 규칙(만료 시간, 제한 횟수, 용량)은 `src/main/resources/application.yml`에 `${환경변수:기본값}` 형태로 둡니다(D-68). 코드에 숫자를 박지 않습니다.
 - 로컬의 비밀 값은 저장소 루트의 `.env`에 둡니다. `local/start.sh`가 처음 실행할 때 무작위 키로 만들어 주고, 이 파일은 저장소에 올리지 않습니다. 어떤 값이 필요한지는 [.env.example](../../.env.example)에 있습니다.
-- 운영의 비밀 값(DB, JWT·HMAC 키, Gmail 앱 비밀번호, Turnstile, 소셜 로그인 키, SSH 접속 정보)은 GitHub Repository secrets에 두고, 배포할 때 GitHub Actions가 환경변수로 넘깁니다. 서버 파일에는 적지 않습니다.
+- 운영의 비밀 값(DB, JWT·HMAC 키, Gmail 앱 비밀번호, Turnstile, 소셜 로그인 키, SSH 접속 정보)은 GitHub Repository secrets에 둡니다. 배포할 때 서버에 나만 읽을 수 있는 `secrets.env`로 만들어 컨테이너에 붙입니다. 같이 쓰는 서버에서 `docker inspect`로 보이지 않게 `-e`로는 넘기지 않습니다(D-127).
 - 소셜 로그인 키(`OAUTH_*`)는 비워 두면 그 버튼이 나오지 않을 뿐 앱은 그대로 뜹니다.
 
 ## DB 구조 바꾸기
@@ -73,12 +74,12 @@ Gradle Wrapper가 정해진 Gradle을 내려받으므로 Gradle은 따로 설치
 3. **브랜치**: Git Flow(D-123). `feature/*`에서 작업해 `develop`에 합치고, 배포할 때 `main`에 합칩니다. 자세한 순서는 [CONTRIBUTING.md](../../CONTRIBUTING.md).
 4. **테스트**: 합치기 전에 `./gradlew test`로 통합 테스트 전체(Testcontainers)를 돌립니다.
 5. **배포**: `main`에 push되면 GitHub Actions가
-   - `deploy.yml`: jar를 만들어 SSH로 서버에 올리고 `deploy/deploy.sh`로 실행
+   - `deploy.yml`: jar를 만들어 `Dockerfile`과 함께 SSH로 서버에 올리고, `deploy/deploy.sh`가 서버에서 이미지를 만들어 컨테이너로 실행(D-127). 새 컨테이너를 쉬는 포트에 먼저 띄운 뒤 옛 것을 끈다(D-126)
    - `tag.yml`: 사이트 버전(`layout.js`의 `SITE_VERSION`)으로 태그를 단다(D-124)
    - `release-note.yml`: `release-notes/`의 노트를 사이트 공지로 올림(D-108)
 
 ## 운영 서버
 
-- 서버 폴더 `~/blogproject`: 실행 jar, 실행 로그, 업로드 이미지(`uploads/`, 재배포해도 남음).
-- nginx가 https를 받아 `127.0.0.1:8370`의 앱으로 넘기고, 앱이 꺼져 있으면 점검 중 화면을 보여 줍니다.
+- 서버 폴더 `~/blogproject`: 업로드 이미지(`uploads/`, 재배포해도 남음), 비밀 값 파일(`secrets.env`, 나만 읽기), 지금 쓰는 포트(`active-port`). 실행 로그는 `docker logs mainttblog-<포트>`.
+- nginx가 https를 받아 앱(`127.0.0.1:8370`, 무중단 설정 후에는 8370·8371)으로 넘기고, 앱이 꺼져 있으면 점검 중 화면을 보여 줍니다.
 - 서버 접속은 `ssh -p 8822 <계정>@<주소>`입니다. 계정과 주소는 학원 공통 인프라 문서에 있고, 저장소에는 적지 않습니다.
