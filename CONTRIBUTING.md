@@ -40,10 +40,10 @@ gitGraph
 
 1. 기능: `develop`에서 `feature/<이름>`을 만들어 작업하고, 끝나면 `develop`에 합친다(`--no-ff`).
 2. 배포 준비: `develop`에서 `release/vX.YY`를 만들고 버전 표시와 README 업데이트 줄을 고친다.
-3. 배포: `release/vX.YY`를 `main`에 합치고 `vX.YY` 태그를 단다. `main`에 push되면 배포된다.
+3. 배포: `release/vX.YY`를 `main`에 합친다. `main`에 push되면 배포되고, 태그 워크플로(tag.yml)가 `layout.js`의 버전으로 `vX.YY` 태그를 자동으로 단다(D-124).
 4. 릴리스 노트: 배포를 확인한 뒤 `release/vX.YY`에 `release-notes/<날짜-이름>/notice.md`를 더해 `main`에 한 번 더 합친다. 노트만 바뀐 push는 배포하지 않고 사이트 공지로만 올린다(D-108).
 5. 마무리: `release/vX.YY`를 `develop`에 합치고 release 브랜치를 지운다.
-6. 급한 수정: `main`에서 `hotfix/vX.YY.Z`를 만들어 고친 뒤 `main`(태그)과 `develop`에 모두 합친다.
+6. 급한 수정: `main`에서 `hotfix/vX.YY.Z`를 만들어 고치고 버전 표시를 `vX.YY.Z`로 올린 뒤 `main`과 `develop`에 모두 합친다. 태그는 자동으로 달린다.
 
 ## 커밋 메시지
 

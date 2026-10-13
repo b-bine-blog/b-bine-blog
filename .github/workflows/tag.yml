@@ -1,0 +1,44 @@
+# main에 합쳐지면 사이트 버전(layout.js의 SITE_VERSION)으로 태그를 단다 (D-124).
+# 같은 이름의 태그가 이미 있으면 건너뛴다. 버전을 올리지 않은 합치기(문서만 바뀐 경우 등)는 태그가 생기지 않는다.
+# 머리 커밋에 [skip ci]가 있으면 GitHub가 이 워크플로도 건너뛴다.
+name: tag
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tag
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 버전 읽기
+        id: version
+        run: |
+          v=$(sed -n "s/^ *var SITE_VERSION = '\(v[0-9][0-9.]*\)';.*/\1/p" src/main/resources/static/js/layout.js | head -1)
+          [[ "$v" =~ ^v[0-9]+\.[0-9]+(\.[0-9]+)?$ ]] || { echo "layout.js에서 SITE_VERSION을 읽지 못했습니다: '$v'"; exit 1; }
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+
+      - name: 태그 달기
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          if git rev-parse -q --verify "refs/tags/$VERSION" >/dev/null; then
+            echo "$VERSION 태그가 이미 있어 건너뜁니다 ($(git rev-parse --short "$VERSION^{commit}"))."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$VERSION" -m "$VERSION" "$GITHUB_SHA"
+          git push origin "refs/tags/$VERSION"
+          echo "$VERSION 태그를 $(git rev-parse --short "$GITHUB_SHA")에 달았습니다."
