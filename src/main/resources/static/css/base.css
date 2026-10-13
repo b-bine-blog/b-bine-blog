@@ -628,12 +628,23 @@ main.home { grid-template-columns: minmax(0, 1fr); }
 .hero-mine__title { font-weight: 700; color: #fff; text-decoration: none; }
 .hero-mine__title:hover { color: #fff; text-decoration: underline; }
 .hero-mine__tools { display: flex; align-items: center; gap: 8px; }
-.hero-mine__remove { display: grid; place-items: center; width: 22px; height: 22px; min-width: 0; margin: 0; padding: 0; border-radius: 50%;
+.hero-mine { position: relative; }
+.hero-mine__add { display: grid; place-items: center; width: 22px; height: 22px; min-width: 0; margin: 0; padding: 0; border-radius: 50%;
   background: rgba(255,255,255,.2); color: #fff; font-size: 1rem; font-weight: 700; line-height: 1; box-shadow: none; }
-.hero-mine__remove:hover:not(:disabled) { background: rgba(255,255,255,.35); color: #fff; }
-.hero-mine.is-removed { background: transparent; padding: 0; justify-items: end; }
-.hero-mine__restore { margin: 0; padding: 6px 14px; border-radius: 999px; background: rgba(255,255,255,.16); color: #fff; font-size: 0.85rem; box-shadow: none; }
-.hero-mine__restore:hover:not(:disabled) { background: rgba(255,255,255,.28); color: #fff; }
+.hero-mine__add:hover:not(:disabled), .hero-mine__add[aria-expanded="true"] { background: rgba(255,255,255,.35); color: #fff; }
+.hero-mine__add:disabled { opacity: .45; }
+.hero-mine__delete { flex-shrink: 0; margin: 0; padding: 2px 8px; border-radius: 999px; background: transparent; box-shadow: none;
+  font-size: 0.75rem; font-weight: 400; color: rgba(255,255,255,.75); }
+.hero-mine__delete:hover:not(:disabled) { background: rgba(255,255,255,.18); color: #fff; }
+.hero-mine__picker { display: grid; gap: 2px; padding: 6px; border-radius: 10px; background: var(--surface); box-shadow: var(--shadow); }
+.hero-mine__choice { display: flex; align-items: center; gap: 8px; width: 100%; margin: 0; padding: 6px 8px; border-radius: 8px;
+  background: transparent; color: var(--text); box-shadow: none; text-align: left; font-weight: 400; }
+.hero-mine__choice:hover:not(:disabled) { background: var(--green-50); color: var(--text); }
+.hero-mine__choice .hero-mine__initial { background: var(--green-600); color: #fff; }
+.hero-mine__choice .hero-mine__name { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hero-mine__choice .hero-mine__role { color: var(--muted); }
+.hero-mine__empty { margin: 4px 6px; font-size: 0.8rem; color: rgba(255,255,255,.8); }
+.hero-mine__picker .hero-mine__empty { color: var(--muted); }
 .hero-mine__row { display: flex; align-items: center; gap: 4px; min-width: 0; }
 .hero-mine__row .hero-mine__item { flex: 1; }
 .hero-mine__all { color: rgba(255,255,255,.85); text-decoration: none; }

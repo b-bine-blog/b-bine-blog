@@ -1,13 +1,17 @@
-// 메인 위쪽 띠 오른쪽의 관리 블로그 (2026-10-13 사용자 요청, BLG-06, D-117). − 버튼으로 이 칸을 빼고, + 버튼으로 다시 넣는다(블로그 자체를 만들거나 지우는 버튼이 아니다).
-// 로그인하지 않았거나 운영·참여하는 블로그가 없으면 아무것도 보여 주지 않는다. 글자는 textContent로만 넣는다(D-64).
+// 메인 위쪽 띠 오른쪽의 관리 블로그 (2026-10-13 사용자 요청, BLG-06, D-117).
+// 내가 운영(블로그장)하거나 관리(부블로그장)하는 블로그 가운데 고른 것을 최대 MAX_ITEMS개 보여 준다.
+// 각 줄의 "삭제"는 그 블로그를 이 칸에서만 뺀다(블로그는 그대로). + 버튼은 운영·관리하는 블로그 목록을 펼쳐 하나를 골라 넣는다.
+// 고른 목록은 이 브라우저에만 기억한다. 고른 적이 없으면 만든 순서로 앞의 MAX_ITEMS개를 보여 준다.
+// 로그인하지 않았거나 운영·관리하는 블로그가 없으면 아무것도 보여 주지 않는다. 글자는 textContent로만 넣는다(D-64).
 (function () {
   'use strict';
 
   var MAX_ITEMS = 3;
+  var KEY = 'mb.heroMine.pinned';
   var box = document.getElementById('hero-my-blogs');
   if (!box) { return; }
 
-  var ROLE_LABEL = { OWNER: '블로그장', MANAGER: '부블로그장', MEMBER: '멤버' };
+  var ROLE_LABEL = { OWNER: '블로그장', MANAGER: '부블로그장' };
 
   function el(tag, className, text) {
     var node = document.createElement(tag);
@@ -16,72 +20,115 @@
     return node;
   }
 
-  function renderItem(blog) {
-    var row = el('div', 'hero-mine__row');
-    var a = el('a', 'hero-mine__item');
+  function button(cls, text, label, onClick) {
+    var b = el('button', cls, text);
+    b.type = 'button';
+    if (label) { b.title = label; b.setAttribute('aria-label', label); }
+    b.addEventListener('click', onClick);
+    return b;
+  }
+
+  function loadPinned() {
+    try {
+      var v = JSON.parse(localStorage.getItem(KEY));
+      return Array.isArray(v) ? v.filter(function (id) { return typeof id === 'number'; }) : null;
+    } catch (e) { return null; }
+  }
+  function savePinned(ids) {
+    try { localStorage.setItem(KEY, JSON.stringify(ids)); } catch (e) { /* 이번 화면에만 */ }
+  }
+
+  function blogLink(blog, cls) {
+    var a = el('a', cls);
     a.href = '/blog/' + encodeURIComponent(blog.address);
     a.appendChild(el('span', 'hero-mine__initial', Array.from(blog.name || '?')[0]));
     var text = el('span', 'hero-mine__text');
     text.appendChild(el('span', 'hero-mine__name', blog.name));
     text.appendChild(el('span', 'hero-mine__role', ROLE_LABEL[blog.role] || ''));
     a.appendChild(text);
-    row.appendChild(a);
-    return row;
+    return a;
   }
 
-  // 상자를 빼 두었는지는 이 브라우저에만 기억한다(저장이 안 되면 늘 보인다)
-  var KEY = 'mb.heroMine';
-  function isRemoved() { try { return localStorage.getItem(KEY) === 'off'; } catch (e) { return false; } }
-  function remember(removed) {
-    try { if (removed) { localStorage.setItem(KEY, 'off'); } else { localStorage.removeItem(KEY); } } catch (e) { /* 이번 화면에만 */ }
-  }
+  function start(blogs) {
+    var byId = {};
+    blogs.forEach(function (b) { byId[b.id] = b; });
+    var stored = loadPinned();
+    // 고른 목록 가운데 지금도 운영·관리하는 블로그만 남긴다
+    var pinned = stored ? stored.filter(function (id) { return byId[id]; }).slice(0, MAX_ITEMS)
+      : blogs.slice(0, MAX_ITEMS).map(function (b) { return b.id; });
+    var pickerOpen = false;
+    var firstOwned = blogs.filter(function (b) { return b.role === 'OWNER'; })[0];
 
-  function iconButton(cls, text, label, onClick) {
-    var b = el('button', cls, text);
-    b.type = 'button';
-    b.title = label;
-    b.setAttribute('aria-label', label);
-    b.addEventListener('click', onClick);
-    return b;
-  }
+    function set(ids) { pinned = ids; savePinned(ids); render(); }
 
-  function render(res, blogs) {
-    box.textContent = '';
-    box.classList.toggle('is-removed', isRemoved());
-    if (isRemoved()) {
-      // 뺀 상태: 다시 넣는 + 버튼만 둔다
-      box.appendChild(iconButton('hero-mine__restore', '+ 관리 블로그', '관리 블로그 칸 다시 보기', function () {
-        remember(false); render(res, blogs);
-      }));
-      return;
+    function render() {
+      box.textContent = '';
+      var head = el('div', 'hero-mine__head');
+      var title = el('a', 'hero-mine__title', '관리 블로그');
+      // 제목을 누르면 내가 처음 만든 블로그로, 만든 블로그가 없으면 내 정보의 내 블로그로 간다
+      title.href = firstOwned ? '/blog/' + encodeURIComponent(firstOwned.address) : '/me/index.html#blogs';
+      head.appendChild(title);
+      var full = pinned.length >= MAX_ITEMS;
+      var add = button('hero-mine__add', '+', full ? '최대 ' + MAX_ITEMS + '개까지 넣을 수 있어요' : '블로그 골라 넣기', function (e) {
+        e.stopPropagation();
+        pickerOpen = !pickerOpen;
+        render();
+      });
+      add.disabled = full;
+      add.setAttribute('aria-expanded', String(pickerOpen));
+      head.appendChild(add);
+      box.appendChild(head);
+
+      if (pickerOpen && !full) {
+        var picker = el('div', 'hero-mine__picker');
+        picker.setAttribute('role', 'listbox');
+        picker.setAttribute('aria-label', '넣을 블로그 고르기');
+        var choices = blogs.filter(function (b) { return pinned.indexOf(b.id) < 0; });
+        if (!choices.length) { picker.appendChild(el('p', 'hero-mine__empty', '더 넣을 블로그가 없어요.')); }
+        choices.forEach(function (b) {
+          var opt = button('hero-mine__choice', null, null, function () {
+            pickerOpen = false;
+            set(pinned.concat(b.id));
+          });
+          opt.setAttribute('role', 'option');
+          opt.appendChild(el('span', 'hero-mine__initial', Array.from(b.name || '?')[0]));
+          opt.appendChild(el('span', 'hero-mine__name', b.name));
+          opt.appendChild(el('span', 'hero-mine__role', ROLE_LABEL[b.role] || ''));
+          picker.appendChild(opt);
+        });
+        box.appendChild(picker);
+      }
+
+      if (!pinned.length) {
+        box.appendChild(el('p', 'hero-mine__empty', '+를 눌러 블로그를 골라 넣으세요.'));
+      }
+      pinned.forEach(function (id) {
+        var blog = byId[id];
+        var row = el('div', 'hero-mine__row');
+        row.appendChild(blogLink(blog, 'hero-mine__item'));
+        row.appendChild(button('hero-mine__delete', '삭제', blog.name + ' 칸에서 빼기', function () {
+          set(pinned.filter(function (x) { return x !== id; }));
+        }));
+        box.appendChild(row);
+      });
     }
-    var head = el('div', 'hero-mine__head');
-    // 제목을 누르면 내가 처음 만든 블로그로, 만든 블로그가 없으면 내 정보의 내 블로그로 간다
-    var title = el('a', 'hero-mine__title', '관리 블로그');
-    title.href = res.owned && res.owned.length
-      ? '/blog/' + encodeURIComponent(res.owned[0].address) : '/me/index.html#blogs';
-    head.appendChild(title);
-    var tools = el('span', 'hero-mine__tools');
-    if (blogs.length > MAX_ITEMS) {
-      var all = el('a', 'hero-mine__all', '전체 ' + blogs.length + '개');
-      all.href = '/me/index.html#blogs';
-      tools.appendChild(all);
-    }
-    // − 버튼: 이 칸을 뺀다(블로그를 지우는 것이 아니다)
-    tools.appendChild(iconButton('hero-mine__remove', '−', '관리 블로그 칸 빼기', function () {
-      remember(true); render(res, blogs);
-    }));
-    head.appendChild(tools);
-    box.appendChild(head);
-    blogs.slice(0, MAX_ITEMS).forEach(function (b) { box.appendChild(renderItem(b)); });
+
+    document.addEventListener('click', function (e) {
+      if (pickerOpen && !box.contains(e.target)) { pickerOpen = false; render(); }
+    });
+    document.addEventListener('keydown', function (e) {
+      if (pickerOpen && e.key === 'Escape') { pickerOpen = false; render(); }
+    });
+    render();
+    box.hidden = false;
   }
 
   // 로그인하지 않았으면 401이 오고, 빈 곳으로 둔다
   api.get('/api/me/blogs').then(function (res) {
-    // 운영·참여 구분 없이 블로그가 만들어진 순서로 보여 준다(id가 만든 순서, 2026-10-13 사용자 요청)
-    var blogs = (res.owned || []).concat(res.joined || []).sort(function (a, b) { return a.id - b.id; });
-    if (!blogs.length) { return; } // 블로그가 없으면 칸도, + 버튼도 보이지 않는다
-    render(res, blogs);
-    box.hidden = false;
+    // 운영(블로그장)·관리(부블로그장)하는 블로그만, 만든 순서로(id가 만든 순서)
+    var blogs = (res.owned || []).concat((res.joined || []).filter(function (b) { return b.role === 'MANAGER'; }))
+      .sort(function (a, b) { return a.id - b.id; });
+    if (!blogs.length) { return; } // 운영·관리하는 블로그가 없으면 칸도 + 버튼도 보이지 않는다
+    start(blogs);
   }, function () { /* 로그인 전이면 빈 곳으로 둔다 */ });
 })();
