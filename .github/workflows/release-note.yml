@@ -74,6 +74,8 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           envs: NOTES,APP_PORT,NOTICE_ADMIN_EMAIL,NOTICE_ADMIN_PASSWORD
           script: |
+            # 무중단 배포(D-126): 지금 떠 있는 앱의 포트로 보낸다
+            APP_PORT=$(cat ~/blogproject/active-port 2>/dev/null || echo "$APP_PORT"); export APP_PORT
             cd ~/blogproject/notice-upload || exit 1
             status=0
             for n in $NOTES; do python3 deploy/post_notice.py "$n" || status=1; done

@@ -43,7 +43,7 @@
 | 메일 | Gmail SMTP (로컬은 Mailpit 가짜 메일함) |
 | 파일 | `FileStorage` 인터페이스로 서버 디스크에 저장(나중에 S3로 바꿀 수 있게 분리) |
 | 테스트 | JUnit 5, Testcontainers(MySQL), GreenMail |
-| 배포 | GitHub Actions → SSH로 서버에 jar 배포, nginx |
+| 배포 | GitHub Actions → SSH로 서버에 jar 배포, 두 포트를 번갈아 쓰는 무중단 배포(D-126), nginx |
 
 ## 구조
 
