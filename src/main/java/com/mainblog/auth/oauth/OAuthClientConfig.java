@@ -46,7 +46,8 @@ public class OAuthClientConfig {
                     .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
                     .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                     .redirectUri(redirect(app, "kakao"))
-                    .scope("account_email")
+                    // 범위를 적지 않으면 카카오 콘솔의 동의항목을 그대로 묻는다. 이메일 권한이 없는 앱이
+                    // account_email을 요청하면 KOE205로 로그인이 막혀서 적지 않는다(FR-016, D-125)
                     .authorizationUri("https://kauth.kakao.com/oauth/authorize")
                     .tokenUri("https://kauth.kakao.com/oauth/token")
                     .userInfoUri("https://kapi.kakao.com/v2/user/me")
