@@ -2,6 +2,90 @@
 
 여러 사람이 함께 쓰는 블로그 플랫폼입니다. 👉 **https://mainttblog.java21.net**
 
+회원은 메인 사이트에서 가입·로그인하고, 자기 블로그를 만들거나 다른 블로그에 참여해 함께 운영합니다.
+블로그장·부블로그장·멤버는 계정 종류가 아니라 블로그마다 정해지는 역할입니다.
+
+## 목차
+
+- [주요 기능](#주요-기능)
+- [기술 스택](#기술-스택)
+- [구조](#구조)
+- [데이터베이스(ERD)](#데이터베이스erd)
+- [폴더 구조](#폴더-구조)
+- [개발 방식](#개발-방식)
+- [업데이트](#업데이트)
+- [내 컴퓨터에서 바로 써 보기](#내-컴퓨터에서-바로-써-보기)
+- [문서](#문서)
+
+## 주요 기능
+
+| 영역 | 기능 |
+|---|---|
+| 회원 | 이메일 인증(6자리 번호) 회원가입, 로그인·로그인 유지(14일), 이메일·비밀번호 찾기, 내 정보·프로필 사진, 탈퇴 |
+| 블로그 | 블로그 만들기(공개 3·비공개 5개까지), 참여 신청·승인, 부블로그장 권한(정보·멤버·글 관리), 블로그장 위임, 제재·블랙리스트, 폐쇄, 대표·배경 이미지 |
+| 게시판 | 글 쓰기(마크다운 에디터), 카테고리·태그, 이미지 첨부, 댓글·대댓글·좋아요, 링크 공유 미리보기(og), 통합 검색, 메인 피드(최신·인기·구독·팔로우) |
+| 소셜·알림 | 팔로우·차단·신고, 블로그 구독, 알림(30초마다 확인)과 알림 설정 |
+| 관리자 | 회원·블로그·신고·글 관리, 활동 기록, 통계, 공지사항, 시스템 문의 |
+| 화면 | 다크 모드, 시간대에 따라 바뀌는 사이트 색, 로그인·회원가입 창, 휴대폰 화면 |
+
+## 기술 스택
+
+| 구분 | 사용 |
+|---|---|
+| 백엔드 | Java 21, Spring Boot 3.5, Spring Security, Spring Data JPA·JdbcTemplate |
+| DB | MySQL 8 (ERD와 DB는 [Crowfoot](https://crowfoot.java21.net)으로 관리) |
+| 인증 | JWT + HttpOnly 쿠키, Refresh Token DB 저장, bcrypt, Cloudflare Turnstile |
+| 화면 | 정적 HTML + JavaScript(API 호출), Toast UI Editor, 글 상세만 서버가 og 태그를 채움 |
+| 보안 | CSRF 토큰, CSP·보안 헤더, 서버에서 마크다운→HTML 변환 후 jsoup으로 걸러냄, 개인정보는 서버에서 가려서 응답 |
+| 메일 | Gmail SMTP (로컬은 Mailpit 가짜 메일함) |
+| 파일 | `FileStorage` 인터페이스로 서버 디스크에 저장(나중에 S3로 바꿀 수 있게 분리) |
+| 테스트 | JUnit 5, Testcontainers(MySQL), GreenMail |
+| 배포 | GitHub Actions → SSH로 서버에 jar 배포, nginx |
+
+## 구조
+
+```mermaid
+flowchart LR
+  U[브라우저<br/>정적 HTML + JS] -->|HTTPS| N[nginx]
+  N --> A[Spring Boot 앱<br/>REST API · og 태그]
+  A --> D[(MySQL<br/>Crowfoot DB)]
+  A --> F[[업로드 파일<br/>FileStorage · 서버 디스크]]
+  A --> M[Gmail SMTP]
+  U -.사람 확인.-> T[Cloudflare Turnstile]
+  G[GitHub Actions] -->|jar 빌드 · SSH 배포| A
+```
+
+- 화면은 `src/main/resources/static`의 정적 파일이고, 모든 데이터는 `/api/**`로 주고받습니다. 공통 `api.js`가 CSRF 헤더(`X-XSRF-TOKEN`)를 붙입니다.
+- 서버는 기능별 패키지(`member`, `auth`, `blog`, `board`, `social`, `notification`, `admin`, `inquiry`)로 나누고, 각 패키지 안에서 `api`(컨트롤러) → `application`(서비스) → `domain`(엔티티·저장소)으로 나눕니다.
+- 블로그 안에서 할 수 있는 일은 계정 종류가 아니라 그 블로그에서의 역할로 매번 확인합니다(`BlogPermissionService`).
+
+## 데이터베이스(ERD)
+
+- ERD 원본은 Crowfoot 문서 "메인블로그"(654)이고, 실제 DB도 그 문서에 연결돼 있습니다.
+- 테이블 정의(DDL): [docs/04-design/schema.sql](docs/04-design/schema.sql). 테스트도 이 파일로 DB를 만듭니다.
+- DB 구조를 바꿀 때는 Crowfoot 문서를 먼저 고치고, 변경 계획을 확인한 뒤 DB에 반영합니다.
+
+## 폴더 구조
+
+```
+src/main/java/com/mainblog/   기능별 패키지(api → application → domain)
+src/main/resources/static/    화면(HTML·CSS·JS)
+src/main/resources/application.yml   설정값(제한값·만료 시간 등, 환경변수로 바꿈)
+src/test/                     통합 테스트(Testcontainers)
+docs/                         요구사항, 정책, 결정 기록(D-번호), 설계(schema.sql)
+specs/                        기능별 명세·계획·API 계약·작업 목록(Spec Kit)
+release-notes/                버전별 업데이트 노트(사이트 공지로도 올라감)
+deploy/                       서버 실행 스크립트, nginx 설정
+local/                        내 컴퓨터에서 실행(start.sh, 예시 데이터)
+.github/workflows/            배포·릴리스 노트 자동화
+```
+
+## 개발 방식
+
+- 요구사항분석서 → 기능별 명세(`specs/`) → 계획 → 작업 목록 → 구현 순서로 만듭니다([Spec Kit](https://github.com/github/spec-kit)).
+- 정하거나 바꾼 것은 이유와 함께 [결정 기록](docs/03-decisions/README.md)(D-번호)에 남깁니다.
+- 커밋 메시지와 코드 주석에 관련 요구사항 ID(USR·BLG·SOC·BRD·ADM·SEC·SCL)와 결정 번호를 적습니다.
+
 ## 업데이트
 
 새 버전이 나가면 맨 위에 더합니다. 사이트의 공지사항에도 같은 내용이 "업데이트"로 올라갑니다.
@@ -19,10 +103,6 @@
 | [v1.02](release-notes/2026-10-12-feed-notice/notice.md) | 2026-10-12 | 메인 글 목록 위에 최근 공지 고정, 메뉴 정리 |
 | [v1.01](release-notes/2026-10-12-github-link/notice.md) | 2026-10-12 | 화면 아래에 GitHub 링크 |
 | [v1.00](release-notes/2026-10-12-b-bine-blog/notice.md) | 2026-10-12 | 새 이름 b-bine blog와 초록 디자인 |
-
-## 프로젝트 소개
-
-티스토리형 블로그 플랫폼(메인블로그) 프로젝트입니다.
 
 ## 내 컴퓨터에서 바로 써 보기
 
