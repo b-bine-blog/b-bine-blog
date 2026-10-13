@@ -12,6 +12,7 @@
 | [005-admin-moderation](005-admin-moderation/spec.md) | 메인 관리자와 제재 | ADM-01~07, 3.7, SEC-09, 4.4, 4.5 | 25 |
 | [006-system-inquiry](006-system-inquiry/spec.md) | 시스템 문의(회원·비회원 → 관리자) | ADM-08(신설), SEC-13, D-112 | 0 |
 | [007-site-rules](007-site-rules/spec.md) | 운영 규칙 안내(삭제 시점·제한) | D-114, D-68, 4.5 | 0 |
+| [008-social-login](008-social-login/spec.md) | 소셜 로그인(구글·카카오·네이버) | USR-09(신설), D-125 | 0 |
 
 ## 확인 필요 항목
 
