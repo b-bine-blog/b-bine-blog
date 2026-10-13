@@ -27,3 +27,9 @@ file-storage:
 
 blacklist:
   hash-secret: test-blacklist-hash-secret-0123456789abcdef
+
+oauth:
+  # 테스트 전용 가짜 키. 구글만 켜서 이동 주소를 확인한다(008)
+  google:
+    client-id: test-google-client
+    client-secret: test-google-secret

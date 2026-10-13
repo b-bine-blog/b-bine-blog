@@ -79,7 +79,15 @@ public enum ErrorCode {
     BLOG_ALREADY_CLOSED(HttpStatus.CONFLICT, "이미 폐쇄된 블로그입니다."),
     // 관리자 강제 폐쇄는 관리자만 철회 (ADM-02, BLG-09, D-104)
     ADMIN_CLOSE_LOCKED(HttpStatus.FORBIDDEN, "관리자가 폐쇄한 블로그는 블로그장이 철회할 수 없습니다."),
-    NOT_ADMIN_CLOSE(HttpStatus.CONFLICT, "관리자가 폐쇄한 블로그가 아닙니다.");
+    NOT_ADMIN_CLOSE(HttpStatus.CONFLICT, "관리자가 폐쇄한 블로그가 아닙니다."),
+
+    // 008 소셜 로그인 (contracts/social-login-api.yaml, D-125)
+    SOCIAL_PENDING_INVALID(HttpStatus.GONE, "시간이 지났어요. 소셜 로그인을 처음부터 다시 해 주세요."),
+    SOCIAL_ALREADY_LINKED(HttpStatus.CONFLICT, "이미 다른 계정에 연결된 소셜 계정이에요."),
+    SOCIAL_LAST_LOGIN_METHOD(HttpStatus.CONFLICT, "로그인할 방법이 없어져요. 먼저 비밀번호를 만들어 주세요."),
+    SOCIAL_LINK_FROM_ME(HttpStatus.CONFLICT, "이미 다른 소셜 계정으로 가입한 이메일이에요. 그 계정으로 로그인한 뒤 내 정보에서 연결해 주세요."),
+    SOCIAL_NOT_ALLOWED(HttpStatus.FORBIDDEN, "관리자 계정은 소셜 로그인을 쓸 수 없어요."),
+    SOCIAL_LOGIN_FAILED(HttpStatus.BAD_REQUEST, "소셜 로그인에 실패했어요. 다시 시도해 주세요.");
 
     private final HttpStatus status;
     private final String message;

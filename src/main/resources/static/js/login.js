@@ -79,6 +79,8 @@
   }
 
   document.addEventListener('DOMContentLoaded', function () {
+    socialLogin.showError($('message'));
+    socialLogin.render($('social-buttons'), { remember: function () { return $('remember-me').checked; } });
     $('login-form').addEventListener('submit', function (e) {
       e.preventDefault();
       api.setText($('message'), '');

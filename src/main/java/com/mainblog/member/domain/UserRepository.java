@@ -2,7 +2,10 @@ package com.mainblog.member.domain;
 
 import java.util.List;
 import java.util.Optional;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 
@@ -14,6 +17,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     /** 닉네임 변경: 자기 자신은 빼고 대소문자 무시 중복 확인(FR-042). */
     boolean existsByNicknameIgnoreCaseAndIdNot(String nickname, Long id);
+
+    /** 소셜 연결 끊기처럼 로그인 수단을 세는 동안 회원 행을 잠근다(008 FR-010, SC-006). */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT u FROM User u WHERE u.id = :id")
+    Optional<User> findByIdForUpdate(Long id);
 
     /** 이메일 찾기: 이름 + 전화번호(USR-08). */
     List<User> findAllByNameAndPhoneAndStatus(String name, String phone, UserStatus status);

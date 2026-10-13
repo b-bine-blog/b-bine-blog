@@ -104,7 +104,7 @@ public class MemberController {
         return node.asText();
     }
 
-    public record PasswordChangeRequest(@NotNull @Size(max = 100) String currentPassword,
+    public record PasswordChangeRequest(@Size(max = 100) String currentPassword, // 비밀번호 없는 소셜 회원은 비움(008)
                                         @NotNull @Size(max = 100) String newPassword,
                                         @NotNull @Size(max = 100) String newPasswordConfirm) {}
 

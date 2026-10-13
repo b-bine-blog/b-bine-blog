@@ -2,6 +2,17 @@ package com.mainblog.common.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mainblog.auth.application.TokenService;
+import com.mainblog.auth.oauth.CookieAuthorizationRequestRepository;
+import com.mainblog.auth.oauth.NoStoreAuthorizedClientRepository;
+import com.mainblog.auth.oauth.SocialAuthorizationRequestResolver;
+import com.mainblog.auth.oauth.SocialClients;
+import com.mainblog.auth.oauth.SocialLoginHandlers;
+import com.mainblog.auth.oauth.SocialLoginService;
+import com.mainblog.auth.security.AuthCookies;
+import com.mainblog.common.ratelimit.ClientIpResolver;
+import com.mainblog.common.ratelimit.RateLimiter;
+import java.time.Clock;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import com.mainblog.auth.security.ActivityTrackingFilter;
 import com.mainblog.auth.security.JwtAuthenticationFilter;
 import com.mainblog.auth.security.JwtProvider;
@@ -51,7 +62,11 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationEntryPoint entryPoint,
                                                    AccessDeniedHandler accessDeniedHandler, JwtProvider jwtProvider,
                                                    UserRepository userRepository,
-                                                   TokenService tokenService) throws Exception {
+                                                   TokenService tokenService, SocialClients socialClients,
+                                                   SocialLoginService socialLoginService, AuthCookies authCookies,
+                                                   RateLimiter rateLimiter, ClientIpResolver ipResolver,
+                                                   AuthProperties authProperties, OAuthProperties oauthProperties,
+                                                   ObjectMapper objectMapper, Clock clock) throws Exception {
         // api.js가 쿠키 값을 그대로 헤더에 담으므로 XOR 마스킹 없는 처리기를 쓴다.
         // 요청 속성 이름을 비워 토큰을 매 요청 바로 읽게 해, 모든 응답에 XSRF-TOKEN 쿠키가 실린다.
         CsrfTokenRequestAttributeHandler csrfHandler = new CsrfTokenRequestAttributeHandler();
@@ -78,6 +93,7 @@ public class SecurityConfig {
                 .addFilterAfter(new ActivityTrackingFilter(tokenService), JwtAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/social/**").permitAll() // 소셜 가입·연결 대기(008). 대기 토큰으로 확인한다
                         .requestMatchers(HttpMethod.GET, "/api/members/nickname-availability").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/public-config").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/site-rules").permitAll() // 운영 규칙 화면(D-114)
@@ -99,6 +115,24 @@ public class SecurityConfig {
                         .requestMatchers("/api/**").authenticated()
                         // 정적 화면(D-66). 화면이 부르는 API에서 권한을 확인한다.
                         .anyRequest().permitAll());
+
+        // 소셜 로그인(008, D-125). 키가 하나도 없으면 켜지 않는다(FR-014).
+        if (socialClients.any()) {
+            ClientRegistrationRepository registrations = socialClients.repository();
+            SocialLoginHandlers handlers = new SocialLoginHandlers(socialLoginService, authCookies, rateLimiter,
+                    ipResolver, authProperties);
+            http.oauth2Login(o -> o
+                    .clientRegistrationRepository(registrations)
+                    .authorizedClientRepository(new NoStoreAuthorizedClientRepository())
+                    .authorizationEndpoint(a -> a
+                            .authorizationRequestResolver(
+                                    new SocialAuthorizationRequestResolver(registrations, jwtProvider))
+                            .authorizationRequestRepository(new CookieAuthorizationRequestRepository(
+                                    objectMapper, authProperties, oauthProperties, authCookies, clock)))
+                    .redirectionEndpoint(r -> r.baseUri("/login/oauth2/code/*"))
+                    .successHandler(handlers)
+                    .failureHandler(handlers));
+        }
         return http.build();
     }
 

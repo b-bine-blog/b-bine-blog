@@ -6,7 +6,6 @@ import com.mainblog.common.config.ClockConfig;
 import com.mainblog.member.application.WithdrawalService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
@@ -48,7 +47,7 @@ public class WithdrawalController {
         return ResponseEntity.noContent().build();
     }
 
-    public record WithdrawalRequest(@NotNull String password) {}
+    public record WithdrawalRequest(String password) {} // 비밀번호 없는 소셜 회원은 비워 보낸다(008)
 
     public record WithdrawalStatus(boolean canWithdraw, List<OwnedBlogView> ownedBlogs) {}
 

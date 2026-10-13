@@ -31,8 +31,8 @@ public class User extends BaseTimeEntity {
 
     @Column(name = "withdrawn_email")
     private String withdrawnEmail;
-
-    @Column(name = "password_hash", nullable = false)
+    /** 소셜로만 가입하면 NULL(008 FR-009, D-125). */
+    @Column(name = "password_hash")
     private String passwordHash;
 
     @Column(name = "name")

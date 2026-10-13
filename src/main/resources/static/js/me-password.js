@@ -24,7 +24,23 @@
     return err.message;
   }
 
+  var hasPassword = true;
+
+  // 소셜로만 가입한 회원은 현재 비밀번호 없이 비밀번호를 만든다(008 FR-009, D-125)
+  function loadMode() {
+    api.get('/api/members/me/social', { activity: true }).then(function (res) {
+      hasPassword = res.hasPassword;
+      $('current-box').hidden = hasPassword;
+      if (!hasPassword) {
+        api.setText($('title'), '비밀번호 만들기');
+        api.setText($('submit'), '만들기');
+        document.title = '비밀번호 만들기 - b-bine blog';
+      }
+    }, function () { /* 실패하면 바꾸기 화면 그대로 둔다 */ });
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
+    loadMode();
     $('password-form').addEventListener('submit', function (e) {
       e.preventDefault();
       var next = $('new-password').value;
@@ -38,13 +54,17 @@
       }
       $('submit').disabled = true;
       api.put('/api/members/me/password', {
-        currentPassword: $('current-password').value,
+        currentPassword: hasPassword ? $('current-password').value : null,
         newPassword: next,
         newPasswordConfirm: $('new-password-confirm').value
       }, { activity: true }).then(function () {
         $('password-form').reset();
         $('submit').disabled = false;
-        show('비밀번호를 바꿨습니다. 다른 기기에서는 로그아웃되었습니다.', false);
+        show(hasPassword ? '비밀번호를 바꿨습니다. 다른 기기에서는 로그아웃되었습니다.'
+          : '비밀번호를 만들었습니다. 이제 이메일로도 로그인할 수 있습니다.', false);
+        if (!hasPassword) {
+          loadMode();
+        }
       }, function (err) {
         $('submit').disabled = false;
         show(errorMessage(err), true);
