@@ -673,3 +673,41 @@ main.home { grid-template-columns: minmax(0, 1fr); }
 [data-daytime][data-theme="dark"] .site-header { background: hsl(var(--hue) 47% 11%); }
 [data-daytime][data-theme="dark"] .hero { background: linear-gradient(120deg, hsl(var(--hue) 47% 11%) 0%, hsl(var(--hue) 57% 20%) 55%, hsl(var(--hue) 57% 27%) 100%); }
 [data-daytime][data-theme="dark"] button:hover:not(:disabled), [data-daytime][data-theme="dark"] a.button:hover { background: hsl(var(--hue) 62% 22%); }
+
+/* 내 정보 (2026-10-13 정리, D-117): 카드로 나누고 넓은 화면에서는 두 칸 */
+main.me-page { max-width: 960px; }
+.me-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.me-grid[hidden] { display: none; }
+.me-card h2 { margin: 0 0 8px; }
+.me-card--wide { grid-column: 1 / -1; }
+.me-card form > button[type="submit"] { margin-top: 12px; }
+.me-profile { display: flex; gap: 20px; align-items: flex-start; border-top: 4px solid var(--green-600); }
+.me-profile__photo img, .me-profile__empty { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; flex-shrink: 0; margin: 0; }
+.me-profile__empty { display: grid; place-items: center; background: var(--green-50); color: var(--muted); font-size: 0.85rem; }
+.me-profile__body { flex: 1; min-width: 0; }
+.me-facts { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 0; }
+.me-facts dt { color: var(--muted); font-weight: 600; }
+.me-facts dd { margin: 0; overflow-wrap: anywhere; }
+.me-profile__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
+.me-profile__actions button { margin-top: 0; }
+label.button-file { display: inline-block; margin: 0; padding: 5px 12px; border-radius: 8px; background: var(--green-50); color: var(--green-800);
+  border: 1px solid var(--line); font-size: 0.875rem; cursor: pointer; }
+label.button-file:hover { background: var(--green-100); }
+#profile-file:focus-visible + label.button-file { outline: 2px solid var(--green-500); outline-offset: 2px; }
+.me-inline { display: flex; gap: 8px; align-items: center; }
+.me-inline input { flex: 1; min-width: 0; }
+.me-inline button { margin-top: 0; flex-shrink: 0; }
+.me-links { display: flex; flex-wrap: wrap; gap: 8px; }
+.me-links a { padding: 6px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--text); text-decoration: none; font-size: 0.9rem; }
+.me-links a:hover { border-color: var(--green-500); color: var(--green-800); }
+.me-links a.me-links__danger { color: var(--danger); }
+.me-blogs { margin-top: 16px; }
+.me-blogs .panel__head a { font-size: 0.9rem; padding: 5px 12px; border-radius: 8px; text-decoration: none; background: var(--green-50); color: var(--green-800); border: 1px solid var(--line); }
+.me-blogs__cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.me-blogs__cols h3 { margin: 8px 0 4px; font-size: 1rem; }
+@media (max-width: 720px) {
+  .me-grid, .me-blogs__cols { grid-template-columns: minmax(0, 1fr); }
+  .me-profile { flex-direction: column; align-items: center; text-align: center; }
+  .me-facts { text-align: left; }
+  .me-profile__actions { justify-content: center; }
+}
