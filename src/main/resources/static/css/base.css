@@ -636,3 +636,29 @@ main.home { grid-template-columns: minmax(0, 1fr); }
 .hero-mine__name { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hero-mine__role { flex-shrink: 0; font-size: 0.75rem; color: rgba(255,255,255,.8); }
 @media (max-width: 860px) { .hero__inner--split { grid-template-columns: minmax(0, 1fr); } .hero-mine { display: none !important; } }
+
+/* 시간대별 사이트 색 (시안, 2026-10-13). theme.js가 --hue를 정하면 초록 계열 변수를 그 색상으로 다시 만든다.
+   밝기는 원래 초록과 같게 두고 색상만 바꾼다. */
+:root[data-daytime] {
+  --green-900: hsl(var(--hue) 60% 15%);
+  --green-800: hsl(var(--hue) 62% 22%);
+  --green-700: hsl(var(--hue) 62% 27%);
+  --green-600: hsl(var(--hue) 61% 33%);
+  --green-500: hsl(var(--hue) 56% 42%);
+  --green-100: hsl(var(--hue) 50% 91%);
+  --green-50: hsl(var(--hue) 55% 96%);
+  --bg: hsl(var(--hue) 25% 97%);
+  --line: hsl(var(--hue) 22% 89%);
+}
+:root[data-daytime][data-theme="dark"] {
+  --green-900: hsl(var(--hue) 45% 88%);
+  --green-800: hsl(var(--hue) 40% 75%);
+  --green-100: hsl(var(--hue) 30% 17%);
+  --green-50: hsl(var(--hue) 25% 12%);
+  --bg: hsl(var(--hue) 20% 7%);
+  --surface: hsl(var(--hue) 18% 11%);
+  --line: hsl(var(--hue) 16% 20%);
+}
+[data-daytime][data-theme="dark"] .site-header { background: hsl(var(--hue) 47% 11%); }
+[data-daytime][data-theme="dark"] .hero { background: linear-gradient(120deg, hsl(var(--hue) 47% 11%) 0%, hsl(var(--hue) 57% 20%) 55%, hsl(var(--hue) 57% 27%) 100%); }
+[data-daytime][data-theme="dark"] button:hover:not(:disabled), [data-daytime][data-theme="dark"] a.button:hover { background: hsl(var(--hue) 62% 22%); }
