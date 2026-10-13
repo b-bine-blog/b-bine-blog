@@ -12,9 +12,9 @@
     page: Math.max(1, parseInt(params.get('page'), 10) || 1),
     size: SIZES.indexOf(params.get('size')) >= 0 ? params.get('size') : '10'
   };
-  // 메인 화면은 목록에 적힌 개수(data-size, 5개)만 카드로 보여 준다
-  var fixedSize = $('blogs').getAttribute('data-size');
-  if (fixedSize) { state.size = fixedSize; }
+  // 메인 화면은 목록에 적힌 개수(data-size, 5개)만 카드로 보여 준다.
+  // API는 한 페이지 10·20·30개만 받으므로(BRD-02) 기본 10개를 받아 앞에서부터 자른다
+  var fixedSize = Number($('blogs').getAttribute('data-size')) || 0;
 
   function go(changes) {
     Object.keys(changes).forEach(function (k) { state[k] = changes[k]; });
@@ -132,7 +132,8 @@
       if (!res.items.length) {
         list.appendChild(el('li', 'blog-list__empty', state.q ? '검색 결과가 없습니다' : '아직 블로그가 없습니다'));
       }
-      res.items.forEach(function (b) { list.appendChild(renderItem(b)); });
+      var items = fixedSize ? res.items.slice(0, fixedSize) : res.items;
+      items.forEach(function (b) { list.appendChild(renderItem(b)); });
       renderPages(res.totalCount);
     }, function (err) {
       api.setText($('message'), err.status === 400 && state.q
