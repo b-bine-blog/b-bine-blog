@@ -91,6 +91,11 @@
         captchaToken: captcha.token
       }, { activity: true, noRefresh: true }).then(function () {
         session.rememberLogin(rememberMe);
+        // 메인 화면 위 로그인 창 안이면 바깥 화면을 로그인한 상태로 새로 고친다(D-118)
+        if (window.top !== window.self) {
+          window.top.location.reload();
+          return;
+        }
         location.href = returnUrl();
       }, function (err) {
         $('submit').disabled = false;

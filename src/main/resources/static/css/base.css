@@ -731,3 +731,15 @@ label.button-file:hover { background: var(--green-100); }
   .me-facts { text-align: left; }
   .me-profile__actions { justify-content: center; }
 }
+
+/* 로그인·회원가입 창 (2026-10-13, D-118) */
+.auth-modal { width: min(480px, calc(100vw - 32px)); padding: 0; border: 0; border-radius: 16px; background: var(--bg);
+  box-shadow: 0 20px 60px rgba(0,0,0,.35); overflow: hidden; }
+.auth-modal::backdrop { background: rgba(0,0,0,.45); }
+.auth-modal__frame { display: block; width: 100%; height: 520px; border: 0; }
+.auth-modal__close { position: absolute; top: 10px; right: 10px; z-index: 1; width: 32px; height: 32px; min-width: 0; margin: 0; padding: 0;
+  border-radius: 50%; background: var(--surface); color: var(--muted); font-size: 1.3rem; line-height: 1; box-shadow: none; }
+.auth-modal__close:hover:not(:disabled) { background: var(--green-50); color: var(--text); }
+/* 창 안에 뜬 화면: 머리 메뉴·아래 링크 없이 여백만 줄인다 */
+.is-embedded body { min-height: 0; }
+.is-embedded main { padding: 20px 24px 24px; max-width: none; }

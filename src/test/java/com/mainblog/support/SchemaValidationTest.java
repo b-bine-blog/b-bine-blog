@@ -20,11 +20,11 @@ class SchemaValidationTest extends IntegrationTestBase {
     void 보안_헤더와_CSRF_쿠키가_응답에_있다() throws Exception {
         mvc.perform(get("/privacy.html").secure(true))
                 .andExpect(status().isOk())
-                .andExpect(header().string("X-Frame-Options", "DENY"))
+                .andExpect(header().string("X-Frame-Options", "SAMEORIGIN"))
                 .andExpect(header().string("X-Content-Type-Options", "nosniff"))
                 .andExpect(header().string("Content-Security-Policy",
                         "default-src 'self'; script-src 'self' https://challenges.cloudflare.com; "
-                                + "frame-src https://challenges.cloudflare.com; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'"))
+                                + "frame-src 'self' https://challenges.cloudflare.com; frame-ancestors 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'"))
                 .andExpect(header().string("Strict-Transport-Security", "max-age=31536000 ; includeSubDomains"))
                 .andExpect(header().string("Referrer-Policy", "strict-origin-when-cross-origin"))
                 .andExpect(cookie().exists("XSRF-TOKEN"))

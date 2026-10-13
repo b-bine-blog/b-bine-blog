@@ -39,7 +39,9 @@ public class SecurityConfig {
 
     static final String CSP = "default-src 'self'; "
             + "script-src 'self' https://challenges.cloudflare.com; "
-            + "frame-src https://challenges.cloudflare.com; "
+            // 로그인·회원가입 창은 같은 사이트 화면을 iframe으로 띄운다(D-118). 다른 사이트는 우리 화면을 품을 수 없다
+            + "frame-src 'self' https://challenges.cloudflare.com; "
+            + "frame-ancestors 'self'; "
             // 글 본문의 바깥 이미지(https)와 에디터 CSS의 data: 아이콘(004 R-01, R-02)
             + "img-src 'self' data: https:; "
             // Toast UI 에디터가 style 속성으로 팝업 위치를 정한다. 스크립트는 그대로 막는다(D-101)
@@ -65,7 +67,7 @@ public class SecurityConfig {
                 .logout(AbstractHttpConfigurer::disable)
                 .requestCache(AbstractHttpConfigurer::disable)
                 .headers(h -> h
-                        .frameOptions(f -> f.deny())
+                        .frameOptions(f -> f.sameOrigin()) // 같은 사이트만 iframe으로 품을 수 있다(D-118, 클릭재킹 방지는 유지)
                         .contentTypeOptions(c -> {})
                         .contentSecurityPolicy(c -> c.policyDirectives(CSP))
                         .httpStrictTransportSecurity(hsts -> hsts.includeSubDomains(true).maxAgeInSeconds(31536000))

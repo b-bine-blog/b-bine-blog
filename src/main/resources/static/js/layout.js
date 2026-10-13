@@ -60,9 +60,13 @@
       right.appendChild(bellButton());
       right.appendChild(profileMenu(me));
     } else {
-      right.appendChild(link('/login.html', '로그인'));
+      // 로그인·회원가입은 지금 화면 위에 뜨는 창으로 연다(D-118). 새 탭·가운데 클릭은 예전처럼 화면으로 간다
+      var login = link('/login.html', '로그인');
+      openInModal(login);
+      right.appendChild(login);
       var signup = link('/signup.html', '회원가입');
       signup.className = 'button-light';
+      openInModal(signup);
       right.appendChild(signup);
     }
     nav.appendChild(right);
@@ -194,6 +198,71 @@
     document.head.appendChild(script);
   }
 
+  // 로그인·회원가입 창 (2026-10-13 사용자 요청, D-118). 같은 사이트의 화면을 창 안에 그대로 띄운다.
+  // 창 안의 화면은 머리 메뉴·아래 링크 없이 보이고(embedded), 로그인이 끝나면 바깥 화면을 새로 고친다(login.js).
+  var embedded = window.top !== window.self;
+  var AUTH_PAGES = /^\/(login|signup|find-email|find-password)\.html$/;
+
+  function openInModal(a) {
+    a.addEventListener('click', function (e) {
+      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) { return; }
+      e.preventDefault();
+      authModal(a.getAttribute('href'));
+    });
+  }
+
+  var modal = null;
+  function authModal(href) {
+    if (!modal) {
+      modal = document.createElement('dialog');
+      modal.className = 'auth-modal';
+      var close = document.createElement('button');
+      close.type = 'button';
+      close.className = 'auth-modal__close';
+      close.textContent = '×';
+      close.setAttribute('aria-label', '닫기');
+      close.addEventListener('click', function () { modal.close(); });
+      var frame = document.createElement('iframe');
+      frame.className = 'auth-modal__frame';
+      frame.title = '로그인·회원가입';
+      // 창 높이를 안의 화면 높이에 맞춘다(같은 사이트라 안을 읽을 수 있다)
+      frame.addEventListener('load', function () {
+        var doc = frame.contentDocument;
+        if (!doc || !doc.body) { return; }
+        var fit = function () { frame.style.height = Math.min(Math.ceil(doc.body.getBoundingClientRect().height), window.innerHeight * 0.85) + 'px'; };
+        fit();
+        if (window.ResizeObserver) { new ResizeObserver(fit).observe(doc.body); }
+      });
+      modal.appendChild(close);
+      modal.appendChild(frame);
+      // 창 바깥(어두운 곳)을 누르면 닫는다
+      modal.addEventListener('click', function (e) { if (e.target === modal) { modal.close(); } });
+      modal.addEventListener('close', function () { frame.src = 'about:blank'; });
+      document.body.appendChild(modal);
+    }
+    var url = new URL(href, location.href);
+    url.searchParams.set('next', location.pathname + location.search);
+    modal.querySelector('iframe').src = url.pathname + url.search;
+    modal.showModal();
+  }
+
+  // 창 안에서는 로그인·회원가입·아이디/비밀번호 찾기 사이만 창 안에서 오가고, 다른 링크는 바깥 화면에서 연다
+  function keepLinksInModal() {
+    // 창 안에 초점이 있어도 Esc로 창을 닫는다
+    document.addEventListener('keydown', function (e) {
+      var dialog = e.key === 'Escape' && window.top.document.querySelector('dialog.auth-modal[open]');
+      if (dialog) { dialog.close(); }
+    });
+    document.addEventListener('click', function (e) {
+      var a = e.target.closest && e.target.closest('a[href]');
+      if (!a || a.target) { return; }
+      var url = new URL(a.href, location.href);
+      if (url.origin === location.origin && AUTH_PAGES.test(url.pathname)) { return; }
+      e.preventDefault();
+      window.top.location.href = a.href;
+    });
+  }
+
   function renderFooter() {
     var footer = document.createElement('footer');
     footer.className = 'site-footer';
@@ -212,6 +281,11 @@
   }
 
   document.addEventListener('DOMContentLoaded', function () {
+    if (embedded) {
+      document.documentElement.classList.add('is-embedded');
+      keepLinksInModal();
+      return;
+    }
     renderFooter();
     if (document.body.hasAttribute('data-no-header')) {
       return;
