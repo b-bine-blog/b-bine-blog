@@ -64,8 +64,14 @@
     [32, -148]  // 다음날 아침 파랑
   ];
 
+  // 로그인·회원가입 창(iframe, D-118) 안에서는 바깥 화면의 주소를 따라 같은 색을 쓴다
+  function search() {
+    try { if (global.top !== global.self) { return global.top.location.search; } } catch (e) { /* 다른 사이트면 자기 주소 */ }
+    return global.location.search;
+  }
+
   function previewHour() {
-    var m = /[?&]hour=([0-9.]+)/.exec(global.location.search);
+    var m = /[?&]hour=([0-9.]+)/.exec(search());
     return m ? parseFloat(m[1]) % 24 : null;
   }
 
