@@ -33,6 +33,8 @@ class OpenApiConformanceTest extends IntegrationTestBase {
     static final Path ADMIN_CONTRACT = Path.of("specs/005-admin-moderation/contracts/admin-api.yaml");
     /** 006 시스템 문의 계약 (ADM-08, D-112). */
     static final Path INQUIRY_CONTRACT = Path.of("specs/006-system-inquiry/contracts/inquiry-api.yaml");
+    /** 운영 규칙 안내 (007, D-114). */
+    static final Path SITE_RULES_CONTRACT = Path.of("specs/007-site-rules/contracts/site-rules-api.yaml");
     static final Set<String> HTTP_METHODS = Set.of("get", "post", "put", "patch", "delete");
     /** 화면이 Turnstile 사이트 키를 읽는 설정 조회. 회원 기능 계약 밖이다(T040). */
     static final Set<String> OUTSIDE_CONTRACT = Set.of("GET /api/public-config");
@@ -123,6 +125,11 @@ class OpenApiConformanceTest extends IntegrationTestBase {
     }
 
     @Test
+    void 운영_규칙_계약의_경로가_매핑돼_있다() throws Exception {
+        assertThat(mappedOperations()).containsAll(contractOperations(SITE_RULES_CONTRACT));
+    }
+
+    @Test
     void 계약에_없는_API가_없다() throws Exception {
         Set<String> extra = new TreeSet<>(mappedOperations());
         extra.removeAll(contractOperations());
@@ -131,6 +138,7 @@ class OpenApiConformanceTest extends IntegrationTestBase {
         extra.removeAll(contractOperations(SOCIAL_CONTRACT));
         extra.removeAll(contractOperations(ADMIN_CONTRACT));
         extra.removeAll(contractOperations(INQUIRY_CONTRACT));
+        extra.removeAll(contractOperations(SITE_RULES_CONTRACT));
         extra.removeAll(OUTSIDE_CONTRACT);
         assertThat(extra).isEmpty();
     }

@@ -197,6 +197,8 @@
     footer.className = 'site-footer';
     footer.appendChild(link('/privacy.html', '개인정보 처리방침'));
     footer.appendChild(document.createTextNode(' · '));
+    footer.appendChild(link('/rules.html', '운영 규칙')); // 삭제 시점·제한 같은 주요 규칙(D-114)
+    footer.appendChild(document.createTextNode(' · '));
     footer.appendChild(link('/inquiry.html', '시스템 문의')); // ADM-08, D-112
     // 이 사이트를 만든 저장소(2026-10-12 사용자 요청)
     var source = link('https://github.com/b-bine-blog/b-bine-blog', 'GitHub');

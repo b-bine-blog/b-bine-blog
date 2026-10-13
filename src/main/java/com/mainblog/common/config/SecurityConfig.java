@@ -78,6 +78,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/members/nickname-availability").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/public-config").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/site-rules").permitAll() // 운영 규칙 화면(D-114)
                         .requestMatchers(HttpMethod.POST, "/api/inquiries").permitAll() // 비회원 시스템 문의(ADM-08, D-112)
                         .requestMatchers("/api/members/me/**").authenticated()
                         // 비회원도 보는 블로그 API(FR-014, FR-015, FR-025, FR-026). 볼 수 있는지는 BlogAccessPolicy가 본다.
