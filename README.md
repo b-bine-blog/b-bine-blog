@@ -11,6 +11,7 @@
 - [기술 스택](#기술-스택)
 - [구조](#구조)
 - [데이터베이스(ERD)](#데이터베이스erd)
+- [파일 업로드](#파일-업로드)
 - [폴더 구조](#폴더-구조)
 - [개발 방식](#개발-방식)
 - [브랜치 전략](#브랜치-전략)
@@ -66,6 +67,34 @@ flowchart LR
 - ERD 원본은 Crowfoot 문서 "메인블로그"(654)이고, 실제 DB도 그 문서에 연결돼 있습니다.
 - 테이블 정의(DDL): [docs/04-design/schema.sql](docs/04-design/schema.sql). 테스트도 이 파일로 DB를 만듭니다.
 - DB 구조를 바꿀 때는 Crowfoot 문서를 먼저 고치고, 변경 계획을 확인한 뒤 DB에 반영합니다.
+
+## 파일 업로드
+
+이미지 파일만 받습니다(요구사항 6.3, BRD-05, SEC-08). 숫자는 모두 `application.yml` 설정값입니다(D-68).
+
+| 어디에 | API | 한도 |
+|---|---|---|
+| 글 이미지 | `POST /api/blogs/{blogId}/images` (공지는 `POST /api/notices/images`) | 장당 3MB, 글 하나에 10장, 한 번에 10MB |
+| 프로필 사진 | `PUT·DELETE /api/members/me/profile-image` | 3MB, 1장 |
+| 블로그 대표 이미지 | `PUT·DELETE /api/blogs/{blogId}/cover-image` | 3MB, 1장 |
+| 블로그 배경 이미지 | `PUT·DELETE /api/blogs/{blogId}/background-image` | 3MB, 1장 (D-121) |
+
+```mermaid
+flowchart LR
+  A[브라우저<br>multipart/form-data] --> B[크기 확인]
+  B --> C[ImageValidator<br>확장자·MIME·파일 시그니처]
+  C --> D[ImageSanitizer<br>EXIF·위치 정보 제거]
+  D --> E[FileStorage<br>UUID 이름으로 저장]
+  E --> F[(images 테이블<br>원래 이름·형식·크기)]
+  E --> G["/files/{UUID}.확장자 로 제공"]
+```
+
+- **형식:** jpg, jpeg, png, gif, webp만 받습니다. svg는 파일 안에 스크립트를 넣을 수 있어 받지 않고, 문서·동영상·압축 파일도 받지 않습니다.
+- **검증:** 확장자, MIME 타입, 파일 앞부분 바이트(시그니처)가 모두 같은 형식이어야 통과합니다. 확장자만 바꾼 실행 파일을 막기 위해서입니다. 가로×세로 픽셀 수도 제한해 압축 폭탄을 막습니다.
+- **개인정보:** 올릴 때 EXIF(GPS 위치 등)를 지웁니다.
+- **저장:** 서버에는 UUID 이름으로 저장하고, 원래 파일 이름은 DB에만 둡니다. 이름 충돌과 경로 조작 공격을 막습니다.
+- **정리:** 글에 쓰이지 않은 이미지는 하루 뒤 매일 04:00 정리 작업에서 지움 표시를 하고, 지움 표시한 이미지와 바꾸거나 지운 이미지는 30일 뒤 파일까지 지웁니다(D-100).
+- **저장소 교체:** 저장은 `FileStorage` 인터페이스 뒤에 있어, 지금의 서버 디스크(`LocalDiskFileStorage`)를 서버 이중화 때 S3 같은 저장소로 바꿀 수 있습니다(D-75, SCL-02).
 
 ## 폴더 구조
 
