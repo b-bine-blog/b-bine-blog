@@ -11,9 +11,8 @@
   <!-- 메인 화면: 위 검색 띠, 블로그 둘러보기(카드 5개), 아래 글 피드 -->
   <section class="hero">
     <div class="hero__inner">
-      <h1>함께 쓰는 블로그</h1>
-      <p>관심 있는 글과 블로그를 찾아보세요.</p>
-      <!-- 최신 공지·인기 블로그·인기 글을 번갈아 보여 준다(D-116) -->
+      <!-- 제목·안내 문구 대신 최신 공지·인기 블로그·인기 글을 번갈아 보여 준다(D-116). 제목은 화면 읽기용으로만 둔다 -->
+      <h1 class="sr-only">함께 쓰는 블로그</h1>
       <div id="hero-spotlight" class="spotlight" aria-live="polite" hidden></div>
       <form id="search-form" class="blog-search" role="search">
         <label for="q" class="sr-only">통합 검색</label>

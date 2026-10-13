@@ -611,8 +611,8 @@ main.home { grid-template-columns: minmax(0, 1fr); }
   font-size: 0.8rem; font-weight: 700; }
 .spotlight__title { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .spotlight__sub { flex-shrink: 0; color: rgba(255,255,255,.8); font-size: 0.85rem; }
-.spotlight__dots { display: flex; gap: 6px; margin-top: 8px; }
-.spotlight__dot { width: 8px; height: 8px; min-width: 0; padding: 0; border-radius: 50%; border: 0; box-shadow: none;
+.spotlight__dots { display: flex; gap: 5px; margin-top: 5px; padding-left: 16px; }
+.spotlight__dot { width: 6px; height: 6px; min-width: 0; margin: 0; padding: 0; border-radius: 50%; border: 0; box-shadow: none;
   background: rgba(255,255,255,.4); cursor: pointer; }
 .spotlight__dot:hover:not(:disabled) { background: rgba(255,255,255,.7); box-shadow: none; }
 .spotlight__dot[aria-current="true"] { background: #fff; }
