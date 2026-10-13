@@ -263,30 +263,31 @@ button.button-quiet { background: transparent; color: var(--muted); border: 1px 
 button.button-quiet:hover:not(:disabled) { background: var(--green-50); color: var(--danger); }
 label.inline { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-weight: 400; font-size: 0.9rem; color: var(--muted); }
 label.inline select { width: auto; padding: 4px 8px; }
-/* 개별 블로그 첫 화면(2026-10-13 정리, D-120): 그림 칸, 이름 칸(이름·소개·블로그 정보·태그·버튼), 글 목록을 위에서 아래로 */
+/* 개별 블로그 첫 화면(2026-10-13 정리, D-120): 크게 보이는 그림 칸, 작게 줄인 이름 칸(이름·소개·블로그 정보·태그·버튼), 글 목록을 위에서 아래로 */
 main.blog-page { max-width: 1120px; }
-.blog-banner { position: relative; height: 180px; margin-bottom: 16px; padding: 0; overflow: hidden;
+.blog-banner { position: relative; height: 280px; margin-bottom: 12px; padding: 0; overflow: hidden;
   background: linear-gradient(135deg, var(--green-800), var(--green-500)); }
 .blog-hero__cover { display: block; width: 100%; height: 100%; object-fit: cover; }
-.blog-hero { margin-bottom: 20px; padding: 22px 24px; }
-.blog-hero h1 { margin: 0 0 4px; font-size: 1.7rem; }
-.blog-hero__desc { margin: 0 0 6px; color: var(--muted); white-space: pre-line; }
+.blog-hero { margin-bottom: 20px; padding: 14px 20px; }
+.blog-hero h1 { margin: 0 0 2px; font-size: 1.35rem; }
+.blog-hero__desc { margin: 0 0 4px; color: var(--muted); font-size: .9rem; white-space: pre-line; }
 .blog-hero__desc:empty { display: none; }
-.blog-hero #actions { margin-top: 16px; }
+.blog-hero #actions { margin-top: 10px; }
+.blog-hero #actions button, .blog-hero #actions a { padding: 6px 14px; font-size: .875rem; }
 .blog-hero #actions button, .blog-hero #actions a { margin-top: 0; }
-.blog-meta { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
-.blog-meta li { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; background: var(--green-50); color: var(--green-900); font-size: .9rem; }
+.blog-meta { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.blog-meta li { display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: var(--green-50); color: var(--green-900); font-size: .8rem; }
 .blog-meta li::before { content: ""; width: 16px; height: 16px; flex: none; background: center / contain no-repeat; }
 .blog-meta .blog-meta__owner::before { background-image: url("/img/icon/crown.svg"); }
 .blog-meta .blog-meta__members::before { background-image: url("/img/icon/users.svg"); }
 .blog-meta .blog-meta__visibility::before { background-image: url("/img/icon/eye.svg"); }
 .blog-meta li:has(> span:empty) { display: none; }
-.blog-hero .chips { margin-top: 10px; }
+.blog-hero .chips { margin-top: 6px; }
 .blog-hero .chips:empty { display: none; }
 #posts .blog-toolbar h2 { margin: 0; }
 @media (max-width: 860px) {
-  .blog-banner { height: 110px; }
-  .blog-hero { padding: 16px; }
+  .blog-banner { height: 160px; }
+  .blog-hero { padding: 12px 16px; }
 }
 #posts .blog-toolbar h2 { margin: 0; }
 .post-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 12px 0; }
