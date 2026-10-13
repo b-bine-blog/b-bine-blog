@@ -169,6 +169,42 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
 
+  /api/blogs/{blogId}/background-image:
+    parameters:
+      - { $ref: '#/components/parameters/BlogId' }
+    put:
+      tags: [blog]
+      summary: 배경 이미지 올리기·바꾸기 (D-121)
+      description: BLOG_INFO 권한. 대표 이미지와 같은 규칙(1장, 3MB, jpg·jpeg·png·gif·webp, 확장자·MIME·파일 앞부분 검사).
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  backgroundImageUrl: { type: string }
+          description: 저장됨
+        '400': { description: FILE_TYPE_NOT_ALLOWED·FILE_TOO_LARGE(001과 같음), content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [blog]
+      summary: 배경 이미지 지우기, 기본 배경으로 (D-121)
+      responses:
+        '204': { description: 지움 }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
   /api/me/blogs:
     get:
       tags: [blog]
@@ -778,6 +814,7 @@ components:
               items: { type: string, enum: [BLOG_INFO, MEMBER_MANAGE, POST_MANAGE, OWNER] }
             subscribed: { type: boolean }
             myPendingJoinRequestId: { type: integer, format: int64, nullable: true }
+            backgroundImageUrl: { type: string, nullable: true, description: '배경 이미지(D-121). 없으면 null(기본 배경)' }
             canDelegate: { type: boolean, description: 블로그장이고 다른 멤버가 있고 폐쇄 예정이 아님(FR-070, FR-071) }
             shareable: { type: boolean, description: 일부 공개 블로그면 true(공유 버튼) }
     MyBlogItem:
