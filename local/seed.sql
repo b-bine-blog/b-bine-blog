@@ -1,0 +1,82 @@
+-- 내 컴퓨터에서 써 보기용 테스트 계정과 블로그. 운영 DB에는 넣지 않는다.
+-- 2026-10-08 Crowfoot DB(cf_u33_d1)에 insert_sample_data로 이미 넣었다(번호 101부터, 기존 샘플과 겹치지 않게).
+-- 새 MySQL에 직접 넣을 때만 이 파일을 쓴다.
+-- 비밀번호는 모두 Passw0rd! (bcrypt, D-81)
+SET NAMES utf8mb4;
+
+INSERT INTO users (id, email, password_hash, name, nickname, phone, role, status, created_at) VALUES
+  (101, 'owner@local.test',  '$2a$10$lRMtjv9txzEl5fCCyr.GruLXMBtCtJ5gze9mC8FzX3GEUXPz89sbu', '김블장', '블로그장',   '01011112222', 'USER', 'ACTIVE', NOW()),
+  (102, 'member@local.test', '$2a$10$lRMtjv9txzEl5fCCyr.GruLXMBtCtJ5gze9mC8FzX3GEUXPz89sbu', '이멤버', '멤버하나',   '01033334444', 'USER', 'ACTIVE', NOW()),
+  (103, 'newbie@local.test', '$2a$10$lRMtjv9txzEl5fCCyr.GruLXMBtCtJ5gze9mC8FzX3GEUXPz89sbu', '박새내', '새로온회원', '01055556666', 'USER', 'ACTIVE', NOW()),
+  (104, 'admin@local.test',  '$2a$10$lRMtjv9txzEl5fCCyr.GruLXMBtCtJ5gze9mC8FzX3GEUXPz89sbu', '최관리', '관리자계정', '01077778888', 'ADMIN', 'ACTIVE', NOW());
+
+-- 블로그장의 공개·승인제 블로그(멤버 1명, 참여 신청 1건)와 멤버의 자유 참여 블로그
+INSERT INTO blogs (id, name, address, description, visibility, join_policy, member_count) VALUES
+  (101, '여행 기록장', 'travel-log', '전국을 다니며 남기는 여행 기록입니다.', 'PUBLIC', 'APPROVAL', 2),
+  (102, '하루 한 줄', 'daily-note', '누구나 들어와 하루를 한 줄로 남기는 블로그', 'PUBLIC', 'FREE', 1);
+
+INSERT INTO blog_members (user_id, blog_id, role, joined_at) VALUES
+  (101, 101, 'OWNER', NOW()),
+  (102, 101, 'MEMBER', NOW()),
+  (102, 102, 'OWNER', NOW());
+
+INSERT INTO blog_join_requests (user_id, blog_id, status, requested_at) VALUES (103, 101, 'PENDING', NOW());
+
+-- 블로그 태그는 Crowfoot DB에 같은 이름의 태그가 이미 있어 넣지 않았다.
+
+-- 004 게시판 예시(카테고리·글·태그·댓글·공지). Crowfoot DB에는 아직 넣지 않았다.
+INSERT INTO categories (id, blog_id, name, sort_order) VALUES
+  (101, 101, '국내 여행', 1),
+  (102, 101, '맛집', 2);
+
+INSERT INTO posts (id, blog_id, author_id, category_id, board_type, title, content, like_count, created_at) VALUES
+  (101, 101, 101, 101, 'BLOG', '제주 3박 4일 코스', '## 첫째 날\n\n공항에서 바로 **협재 해변**으로 갔습니다.\n\n- 협재 해변\n- 한림 공원\n\n> 바람이 많이 불어요.', 3, NOW() - INTERVAL 2 DAY),
+  (102, 101, 102, 102, 'BLOG', '부산 돼지국밥 세 곳 비교', '| 가게 | 국물 | 가격 |\n|---|---|---|\n| A | 진함 | 9,000원 |\n| B | 맑음 | 8,500원 |', 1, NOW() - INTERVAL 1 DAY),
+  (103, 101, 101, NULL, 'BLOG', '여행 준비물 목록', '- [x] 충전기\n- [ ] 우산\n\n~~캐리어~~ 배낭 하나면 충분합니다.', 0, NOW() - INTERVAL 3 HOUR),
+  (104, 102, 102, NULL, 'BLOG', '오늘의 한 줄', '날씨가 맑아서 산책을 했다.', 0, NOW() - INTERVAL 1 HOUR),
+  (105, NULL, 104, NULL, 'NOTICE', '메인블로그를 열었습니다', '함께 쓰는 블로그 **메인블로그**에 오신 것을 환영합니다.', 0, NOW() - INTERVAL 5 DAY);
+
+INSERT INTO tags (name) VALUES ('제주'), ('부산'), ('맛집'), ('준비물')
+  ON DUPLICATE KEY UPDATE name = VALUES(name);
+INSERT INTO post_tags (post_id, tag_id)
+  SELECT 101, id FROM tags WHERE name IN ('제주')
+  UNION ALL SELECT 102, id FROM tags WHERE name IN ('부산', '맛집')
+  UNION ALL SELECT 103, id FROM tags WHERE name IN ('준비물');
+
+INSERT INTO comments (id, parent_id, author_id, post_id, reply_to_user_id, content, created_at) VALUES
+  (101, NULL, 102, 101, NULL, '협재 해변 정말 예쁘죠!', NOW() - INTERVAL 1 DAY),
+  (102, 101, 101, 101, 102, '네, 다음엔 같이 가요.', NOW() - INTERVAL 20 HOUR),
+  (103, NULL, 101, 102, NULL, 'B 가게 가 봐야겠네요.', NOW() - INTERVAL 10 HOUR);
+
+INSERT INTO post_likes (post_id, user_id) VALUES (101, 102), (101, 103), (102, 101);
+
+-- 003 소셜·알림 예시(소개·팔로우·구독·탭마다 알림·알림 설정). Crowfoot DB에는 아직 넣지 않았다.
+UPDATE users SET bio = '전국 여행 기록을 남기는 블로그장입니다.' WHERE id = 101;
+INSERT INTO follows (follower_id, followee_id, created_at) VALUES
+  (102, 101, NOW()), (103, 101, NOW()), (101, 102, NOW());
+INSERT INTO blog_subscriptions (blog_id, user_id) VALUES (101, 103), (102, 101);
+INSERT INTO notifications (recipient_id, notification_type, tab, target_type, target_id, actor_id, content, event_key, is_read, created_at) VALUES
+  (101, 'POST_COMMENT',   'COMMENT',   'POST', 101, 102,  '내 글에 새 댓글이 달렸습니다.',                    'SEED:1', FALSE, NOW()),
+  (101, 'POST_LIKE',      'LIKE',      'POST', 101, 103,  '내 글에 좋아요가 눌렸습니다.',                      'SEED:2', FALSE, NOW()),
+  (101, 'NEW_FOLLOWER',   'FOLLOW',    'USER', 103, 103,  '새로온회원님이 회원님을 팔로우합니다.',             'SEED:3', FALSE, NOW()),
+  (101, 'BLOG_SUBSCRIBED','FOLLOW',    'BLOG', 101, 103,  '''여행 기록장'' 블로그를 새로온회원님이 구독했습니다.', 'SEED:4', TRUE,  NOW()),
+  (101, 'JOIN_REQUESTED', 'BLOG',      'BLOG', 101, 103,  '''여행 기록장'' 블로그에 새로온회원님이 참여를 신청했습니다.', 'SEED:5', FALSE, NOW()),
+  (102, 'NOTICE',         'OPERATION', 'POST', 105, NULL,  '새 공지사항이 올라왔습니다.',                      'SEED:6', FALSE, NOW());
+INSERT INTO notification_settings (user_id, post_like, retention_days) VALUES (102, FALSE, 7);
+
+-- 005 관리자 예시(관리자 신고 3건, 숨긴 글 1개, 블로그장 경고 1건과 활동 기록). Crowfoot DB에는 아직 넣지 않았다.
+-- 관리자 계정(admin@local.test, 104)으로 /admin에 들어가 신고함·글·활동 기록 탭에서 본다.
+INSERT INTO reports (id, blog_id, reporter_id, target_type, target_id, target_snapshot, reason, reason_detail, route, status, created_at) VALUES
+  (101, 101, 103, 'BLOG', 101, '{"name":"여행 기록장","address":"travel-log"}', 'SPAM', NULL, 'ADMIN', 'PENDING', NOW() - INTERVAL 2 HOUR),
+  (102, 101, 103, 'USER', 101, '{"nickname":"블로그장"}', 'ABUSE', NULL, 'ADMIN', 'PENDING', NOW() - INTERVAL 1 HOUR),
+  (103, 101, 102, 'POST', 103, '{"title":"여행 준비물 목록"}', 'OTHER', '광고 링크가 섞여 있어요.', 'ADMIN', 'PENDING', NOW() - INTERVAL 30 MINUTE);
+INSERT INTO posts (id, blog_id, author_id, board_type, title, content, status, hidden_at, created_at) VALUES
+  (106, 101, 102, 'BLOG', '관리자가 숨긴 글', '작성자(member@local.test)에게만 "관리자가 숨긴 글"로 보입니다.', 'HIDDEN', NOW(), NOW() - INTERVAL 4 HOUR);
+INSERT INTO owner_warnings (blog_id, user_id, report_id, admin_id, reason, created_at) VALUES
+  (101, 101, NULL, 104, '광고성 글을 반복해서 올렸습니다.', NOW() - INTERVAL 1 DAY);
+INSERT INTO admin_actions (admin_id, report_id, action_type, target_type, target_id, memo, created_at) VALUES
+  (104, NULL, 'OWNER_WARNING', 'USER', 101, '블로그 101: 광고성 글을 반복해서 올렸습니다.', NOW() - INTERVAL 1 DAY),
+  (104, NULL, 'POST_HIDE', 'POST', 106, NULL, NOW());
+INSERT INTO notifications (recipient_id, notification_type, tab, target_type, target_id, actor_id, content, event_key, is_read, created_at) VALUES
+  (101, 'OWNER_WARNED', 'OPERATION', 'BLOG', 101, NULL, '''여행 기록장'' 블로그장 경고 (3번 중 1번). 사유: 광고성 글을 반복해서 올렸습니다.', 'SEED:7', FALSE, NOW() - INTERVAL 1 DAY),
+  (102, 'POST_HIDDEN',  'OPERATION', 'POST', 106, NULL, '''관리자가 숨긴 글'' 글을 관리자가 숨겼습니다. 이 글은 나에게만 보입니다.', 'SEED:8', FALSE, NOW());

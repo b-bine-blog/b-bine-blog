@@ -1,0 +1,81 @@
+# 릴리스 노트를 운영 사이트 공지사항에 올린다 (D-108).
+# release-notes/<날짜-이름>/notice.md(첫 줄 "# 제목", 30자 이하)와 같은 폴더의 캡처 그림을 서버로 보내,
+# 서버 안에서 deploy/post_notice.py가 관리자 계정으로 로그인해 공지를 만든다.
+# push에 새로 더해진 release-notes/*/notice.md를 올린다. 직접 실행하면 입력한 폴더 하나를 올린다.
+# 노트는 배포가 끝난 뒤 따로 push한다(deploy.yml은 release-notes만 바뀐 push를 무시한다).
+# 필요한 secrets: SSH_*, APP_PORT, NOTICE_ADMIN_EMAIL, NOTICE_ADMIN_PASSWORD
+name: release-note
+
+on:
+  push:
+    branches: [main]   # D-123
+    paths: ['release-notes/**']
+  workflow_dispatch:
+    inputs:
+      note:
+        description: "올릴 노트 폴더 (예: release-notes/2026-10-12-b-bine)"
+        required: true
+
+concurrency:
+  group: release-note
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 올릴 노트 찾기
+        id: notes
+        env:
+          INPUT_NOTE: ${{ inputs.note }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          if [ -n "$INPUT_NOTE" ]; then
+            notes="$INPUT_NOTE"
+          else
+            # 새 노트는 등록하고, 이미 올린 노트(notice-id 있음)를 고친 경우는 그 공지를 수정한다
+            notes=$(git diff --no-renames --diff-filter=AM --name-only "$BEFORE" "$GITHUB_SHA" -- 'release-notes/*/notice.md' \
+              | while read -r f; do d=$(dirname "$f"); if git diff --no-renames --diff-filter=A --quiet "$BEFORE" "$GITHUB_SHA" -- "$f" && [ ! -f "$d/notice-id" ]; then continue; fi; echo "$d"; done | tr '\n' ' ')
+          fi
+          for n in $notes; do
+            [[ "$n" =~ ^release-notes/[A-Za-z0-9._-]+$ ]] || { echo "폴더 이름이 올바르지 않습니다: $n"; exit 1; }
+            test -f "$n/notice.md" || { echo "$n/notice.md가 없습니다"; exit 1; }
+          done
+          echo "올릴 노트: ${notes:-없음}"
+          echo "list=$notes" >> "$GITHUB_OUTPUT"
+
+      - name: 서버로 복사
+        if: steps.notes.outputs.list != ''
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_ADDRESS }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_ID }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          source: "deploy/post_notice.py,release-notes"
+          target: "~/blogproject/notice-upload"
+          overwrite: true
+
+      - name: 공지 올리기
+        if: steps.notes.outputs.list != ''
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          NOTES: ${{ steps.notes.outputs.list }}
+          APP_PORT: ${{ secrets.APP_PORT }}
+          NOTICE_ADMIN_EMAIL: ${{ secrets.NOTICE_ADMIN_EMAIL }}
+          NOTICE_ADMIN_PASSWORD: ${{ secrets.NOTICE_ADMIN_PASSWORD }}
+        with:
+          host: ${{ secrets.SSH_ADDRESS }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_ID }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          envs: NOTES,APP_PORT,NOTICE_ADMIN_EMAIL,NOTICE_ADMIN_PASSWORD
+          script: |
+            cd ~/blogproject/notice-upload || exit 1
+            status=0
+            for n in $NOTES; do python3 deploy/post_notice.py "$n" || status=1; done
+            cd ~ && rm -rf ~/blogproject/notice-upload
+            exit $status

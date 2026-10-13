@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>블로그 - b-bine blog</title>
+  <link rel="stylesheet" href="/css/base.css">
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <!-- 블로그장이 고른 배경 이미지(D-121). 없으면 숨기고 기본 배경 -->
+  <img id="backdrop" class="blog-backdrop" alt="" aria-hidden="true" hidden>
+  <main class="wide blog-page">
+    <section id="blog" hidden>
+      <!-- 블로그 머리(2026-10-13 정리, D-120): 그림 칸과 이름 칸을 나눈다. 블로그 정보(블로그장·멤버 수·공개 범위·태그)는 이름 칸에 합친다 -->
+      <!-- 대표 이미지가 없거나 열리지 않으면 그림 칸을 통째로 뺀다(D-120) -->
+      <div class="panel blog-banner" id="banner" hidden>
+        <img id="cover" class="blog-hero__cover" alt="대표 이미지">
+      </div>
+      <div class="panel blog-hero">
+        <h1 id="name"></h1>
+        <p id="description" class="blog-hero__desc"></p>
+        <ul class="blog-meta" aria-label="블로그 정보">
+          <li class="blog-meta__owner"><span id="owner"></span></li>
+          <li class="blog-meta__members"><span>멤버 <span id="member-count"></span>명</span></li>
+          <li class="blog-meta__visibility"><span id="visibility"></span></li>
+        </ul>
+        <ul class="chips" id="tags"></ul>
+        <div class="notice" id="closing" hidden></div>
+        <div class="row" id="actions">
+          <button type="button" id="join" hidden>참여 신청</button>
+          <button type="button" id="cancel-join" hidden>신청 취소</button>
+          <button type="button" id="subscribe" hidden>구독하기</button>
+          <button type="button" id="unsubscribe" hidden>구독 취소</button>
+          <button type="button" id="share" hidden>공유 링크 복사</button>
+          <a id="manage" class="button button-outline" hidden>운영</a>
+          <button type="button" id="leave" hidden class="button-quiet">블로그 탈퇴</button>
+          <button type="button" id="report" hidden class="button-quiet">블로그 신고</button>
+        </div>
+        <p class="message" id="action-message"></p>
+      </div>
+
+      <!-- 받은 블로그장 위임 요청. 받은 사람에게만 보인다(BLG-14, FR-040) -->
+      <div class="notice" id="delegation" hidden>
+        <p id="delegation-text"></p>
+        <div class="row">
+          <button type="button" id="delegation-accept">수락</button>
+          <button type="button" id="delegation-reject">거절</button>
+        </div>
+      </div>
+
+      <!-- 블랙리스트로 막힌 사람에게만 보인다(BLG-11, BLG-12) -->
+      <form class="notice" id="appeal-form" hidden>
+        <p>이 블로그에는 참여 신청을 할 수 없습니다. 본인이 아니라고 생각되면 문의를 남겨 주세요.</p>
+        <label for="appeal-content">문의 내용 (선택)</label>
+        <textarea id="appeal-content" maxlength="1000" rows="3"></textarea>
+        <button type="submit">문의하기</button>
+      </form>
+
+      <div class="blog-layout">
+        <!-- 글 목록·카테고리 (004 T027, FR-017~FR-021) -->
+        <section id="posts" class="panel">
+          <div class="blog-toolbar">
+            <h2>글</h2>
+            <div class="row">
+              <a id="write" class="button" hidden>글쓰기</a>
+              <label class="inline">보기
+                <select id="post-size">
+                  <option value="10">10개</option>
+                  <option value="20">20개</option>
+                  <option value="30">30개</option>
+                </select>
+              </label>
+            </div>
+          </div>
+          <div class="tabs" id="categories" role="tablist"></div>
+          <ul class="post-list" id="post-list"></ul>
+          <nav class="pagination" id="post-pages" aria-label="글 페이지"></nav>
+        </section>
+      </div>
+    </section>
+    <!-- 정지된 회원 안내(FR-050) -->
+    <section class="notice" id="suspended" hidden></section>
+    <p class="message message--error" id="message"></p>
+  </main>
+  <script src="/js/api.js"></script>
+  <script src="/js/session.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/board-common.js"></script>
+  <script src="/js/report.js"></script>
+  <script src="/js/blog-home.js"></script>
+</body>
+</html>

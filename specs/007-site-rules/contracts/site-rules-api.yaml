@@ -1,0 +1,82 @@
+openapi: 3.0.3
+info:
+  title: 메인블로그 운영 규칙 API (007-site-rules)
+  version: 0.1.0
+  description: |
+    운영 규칙 화면이 보여 줄 설정값. 근거는 specs/007-site-rules/spec.md와 D-114, D-68.
+    로그인 없이 부를 수 있다. 기간은 일·분·시간 단위 정수다.
+servers:
+  - url: /
+paths:
+  /api/site-rules:
+    get:
+      summary: 운영 규칙 숫자 (로그인 없이 가능)
+      responses:
+        '200':
+          description: 지금 설정값
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiteRules'
+components:
+  schemas:
+    SiteRules:
+      type: object
+      required: [account, blog, board, report, notification, admin, inquiry]
+      properties:
+        account:
+          type: object
+          properties:
+            idleMinutes: { type: integer, description: 로그인 유지를 안 했을 때 무활동 로그아웃(분) }
+            rememberDays: { type: integer, description: 로그인 유지 기간(일) }
+            captchaAfter: { type: integer, description: 사람 확인이 나오는 로그인 실패 횟수 }
+            lockAfter: { type: integer, description: 로그인이 잠기는 실패 횟수 }
+            lockMinutes: { type: integer }
+            signupCodeMinutes: { type: integer }
+            resetCodeMinutes: { type: integer }
+            codeMaxFail: { type: integer }
+            withdrawalDays: { type: integer, description: 탈퇴 뒤 개인정보 삭제까지(일) }
+        blog:
+          type: object
+          properties:
+            publicLimit: { type: integer }
+            privateLimit: { type: integer }
+            closingGraceDays: { type: integer }
+            closingHour: { type: integer }
+            closingNoticeDays: { type: array, items: { type: integer } }
+            closedPurgeDays: { type: integer }
+            joinReapplyDays: { type: integer }
+            delegationExpireDays: { type: integer }
+            sanctionKickCount: { type: integer }
+            sanctionWindowDays: { type: integer }
+        board:
+          type: object
+          properties:
+            titleMaxLength: { type: integer }
+            contentMaxLength: { type: integer }
+            commentMaxLength: { type: integer }
+            tagMaxCount: { type: integer }
+            imageMaxMegabytes: { type: integer }
+            imageMaxPerPost: { type: integer }
+            deletedPurgeDays: { type: integer }
+        report:
+          type: object
+          properties:
+            repeatAfterDays: { type: integer }
+        notification:
+          type: object
+          properties:
+            defaultDays: { type: integer }
+            shortDays: { type: integer }
+        admin:
+          type: object
+          properties:
+            warningRevokeThreshold: { type: integer }
+            warningWindowDays: { type: integer }
+            recordsRetentionDays: { type: integer }
+        inquiry:
+          type: object
+          properties:
+            rateLimit: { type: integer }
+            rateWindowHours: { type: integer }
+            retentionDays: { type: integer }

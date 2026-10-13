@@ -1,0 +1,752 @@
+openapi: 3.0.3
+info:
+  title: 메인블로그 관리자 API (005-admin-moderation)
+  version: 0.1.0
+  description: |
+    회원 조회·"전체 보기", 블로그 조회·숨김·강제 폐쇄, 블로그장 경고·강퇴, 블로그·블로그장 신고 처리,
+    글·댓글 숨김·삭제·복구, 관리자 활동 기록, 통계 API. 근거는 specs/005-admin-moderation/spec.md의 FR 번호와 D-103.
+
+    공통 규칙 (001·002·004 계약과 같음)
+    - 모든 경로는 메인 관리자(users.role = ADMIN)만 쓴다. 요청마다 서버가 DB에서 role을 확인한다(FR-001~FR-003, SEC-09, SEC-11, D-90, D-103 #1).
+      로그인하지 않았으면 401 `UNAUTHENTICATED`, 관리자가 아니면 403 `ADMIN_ONLY`. 거부 응답에는 회원 정보나 가입 여부가 없다(D-28).
+    - 상태를 바꾸는 요청은 `X-XSRF-TOKEN` 헤더가 있어야 한다(SEC-10).
+    - 이메일·전화번호는 서버가 가려서 준다(`ab***@gmail.com`, `010-****-5678`). 원문은 "전체 보기"(privacy-view) 응답에만 있고, 부를 때마다 활동 기록이 남는다(FR-006~FR-008, 4.4, D-22, D-103 #5). 비밀번호는 어느 응답에도 없다(FR-009).
+    - 이름은 가리지 않는다(D-103 #4). 닉네임 외의 회원 정보는 회원 조회 API에만 있다.
+    - 모든 조치는 같은 트랜잭션에서 관리자 활동 기록(admin_actions)에 남는다(FR-039, ADM-06).
+    - 화면은 모든 문자열을 textContent로 넣는다(D-64).
+    - 한 페이지 개수는 10·20·50만 받는다(기본 20). 다른 값은 400 `VALIDATION_FAILED`.
+    - 날짜·시각은 한국 시간이다.
+servers:
+  - url: /
+tags:
+  - name: member
+  - name: blog
+  - name: owner
+  - name: report
+  - name: content
+  - name: action-log
+  - name: stats
+
+paths:
+  /api/admin/members:
+    get:
+      tags: [member]
+      summary: 회원 검색 (FR-005, ADM-01, D-103 #2·#3)
+      description: |
+        type=NICKNAME은 닉네임 일부 일치(1~12자), type=EMAIL은 이메일 전체 일치(대소문자 무시).
+        탈퇴한 회원과 관리자 계정은 나오지 않는다. 최근 가입 순. 목록에는 전화번호와 "전체 보기"가 없다.
+      parameters:
+        - { name: type, in: query, required: true, schema: { type: string, enum: [NICKNAME, EMAIL] } }
+        - { name: q, in: query, required: true, schema: { type: string } }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200': { description: 목록, content: { application/json: { schema: { $ref: '#/components/schemas/MemberPage' } } } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AdminOnly' }
+
+  /api/admin/members/{userId}:
+    parameters: [ { $ref: '#/components/parameters/UserId' } ]
+    get:
+      tags: [member]
+      summary: 회원 상세 (FR-005~FR-007, FR-009, 4.4, D-22, D-103 #2·#4)
+      description: 이메일·전화번호는 가린 값만. 운영·참여 블로그(공개 범위와 관계없이)와 블로그장 경고 이력(블로그별)을 함께 준다. 탈퇴한 회원은 404.
+      responses:
+        '200': { description: 상세, content: { application/json: { schema: { $ref: '#/components/schemas/MemberDetail' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AdminOnly' }
+        '404': { description: NOT_FOUND, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+
+  /api/admin/members/{userId}/privacy-view:
+    parameters: [ { $ref: '#/components/parameters/UserId' } ]
+    post:
+      tags: [member]
+      summary: 개인정보 "전체 보기" (FR-008, ADM-06, 4.4, D-103 #5)
+      description: |
+        원래 이메일과 전화번호를 준다. 사유는 받지 않는다. 같은 트랜잭션에서 PRIVACY_VIEW(대상 회원)를 기록하고, 기록이 안 되면 값도 주지 않는다.
+        응답은 Cache-Control no-store. 화면은 그 상세 화면에서 그 한 번만 보여 주고 다시 열면 다시 가린다.
+        관리자 한 명당 1분에 30번(admin.privacy-view.rate-limit)을 넘으면 429.
+      responses:
+        '200': { description: 원문, content: { application/json: { schema: { $ref: '#/components/schemas/PrivacyView' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AdminOnly' }
+        '404': { description: NOT_FOUND, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /api/admin/blogs:
+    get:
+      tags: [blog]
+      summary: 블로그 검색 (FR-011, ADM-02, D-103 #6)
+      description: |
+        q는 이름·주소·블로그장 닉네임 일부 일치(비우면 전체). 공개 범위와 관계없이 운영 중·폐쇄 예정·폐쇄됨(30일 정리 전)·숨김을 모두 상태와 함께 보여 준다.
+        status로 거른다(HIDDEN은 숨긴 블로그만). 최근 생성 순.
+      parameters:
+        - { name: q, in: query, schema: { type: string } }
+        - { name: status, in: query, schema: { type: string, enum: [ACTIVE, CLOSING, CLOSED, HIDDEN] } }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200': { description: 목록, content: { application/json: { schema: { $ref: '#/components/schemas/AdminBlogPage' } } } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AdminOnly' }
+
+  /api/admin/blogs/{blogId}:
+    parameters: [ { $ref: '#/components/parameters/BlogId' } ]
+    get:
+      tags: [blog]
+      summary: 블로그 상세 (FR-011, ADM-02)
+      description: 블로그장·멤버 수·글 수에 더해 지금 블로그장의 1년 안 경고 수, 부블로그장 목록, 대기 중 위임 요청 여부.
+      responses:
+        '200': { description: 상세, content: { application/json: { schema: { $ref: '#/components/schemas/AdminBlogDetail' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AdminOnly' }
+        '404': { description: BLOG_NOT_FOUND, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+
+  /api/admin/blogs/{blogId}/hidden:
+    parameters: [ { $ref: '#/components/parameters/BlogId' } ]
+    put:
+      tags: [blog]
+      summary: 블로그 숨김 (FR-012, ADM-02, 6.1, D-103 #7)
+      description: |
+        목록·검색·피드에서 빠지고, 멤버가 아닌 사람(비회원·구독자·공유 링크 포함)은 들어갈 수 없다. 블로그장·멤버는 평소처럼 보고 쓴다.
+        블로그장에게 끌 수 없는 BLOG_HIDDEN 알림(멤버에게는 없음). BLOG_HIDE 기록.
+      responses:
+        '204': { description: 숨김 }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AdminOnly' }
+        '404': { description: BLOG_NOT_FOUND, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '409': { description: "ALREADY_HIDDEN, BLOG_ALREADY_CLOSED", content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+    delete:
+      tags: [blog]
+      summary: 블로그 숨김 해제 (FR-012, D-103 #7)
+      description: BLOG_UNHIDE 기록. 알림은 보내지 않는다(research 가정 4).
+      responses:
+        '204': { description: 해제 }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AdminOnly' }
+        '404': { description: BLOG_NOT_FOUND, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '409': { description: "NOT_HIDDEN, BLOG_ALREADY_CLOSED", content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+
+  /api/admin/blogs/{blogId}/force-close:
+    parameters: [ { $ref: '#/components/parameters/BlogId' } ]
+    post:
+      tags: [blog]
+      summary: 블로그 강제 폐쇄 (FR-013, FR-014, ADM-02, D-94, D-103 #8)
+      description: |
+        운영 중이면 누른 날짜 + 7일 04:00 폐쇄를 예약하고 블로그장을 뺀 멤버·구독자에게 즉시·3일 전·1일 전 알림.
+        이미 폐쇄 예정이면 시각과 알림은 그대로 두고 폐쇄 사유만 관리자 폐쇄로 바꾼다(keptExisting = true).
+        관리자가 폐쇄한 블로그(close_reason = ADMIN)는 블로그장이 철회할 수 없고(002 API가 403 ADMIN_CLOSE_LOCKED),
+        관리자만 아래 DELETE로 철회한다(D-104). BLOG_FORCE_CLOSE 기록.
+      responses:
+        '200': { description: 예약됨, content: { application/json: { schema: { $ref: '#/components/schemas/CloseResult' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AdminOnly' }
+        '404': { description: BLOG_NOT_FOUND, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '409': { description: BLOG_ALREADY_CLOSED, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+    delete:
+      tags: [blog]
+      summary: 강제 폐쇄 철회 (FR-013, ADM-02, BLG-09, D-104)
+      description: |
+        관리자가 폐쇄한(close_reason = ADMIN) 폐쇄 예정 블로그만 철회한다. 운영 중으로 돌리고 예약을 지우며,
+        블로그장 철회와 같이 블로그장을 뺀 멤버·구독자에게 철회 알림(BLOG_CLOSING_WITHDRAWN)을 보낸다.
+        폐쇄 예정이 아니면 409 BLOG_NOT_CLOSING, 블로그장 폐쇄(OWNER)·권한 박탈 폐쇄(OWNER_REVOKED)면 409 NOT_ADMIN_CLOSE.
+        활동 기록은 RESTORE·BLOG, memo "강제 폐쇄 철회"(action_type 값을 늘리지 않음).
+      responses:
+        '204': { description: 철회됨 }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AdminOnly' }
+        '404': { description: BLOG_NOT_FOUND, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '409': { description: "BLOG_NOT_CLOSING, NOT_ADMIN_CLOSE, BLOG_ALREADY_CLOSED", content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+
+  /api/admin/blogs/{blogId}/owner-warnings:
+    parameters: [ { $ref: '#/components/parameters/BlogId' } ]
+    get:
+      tags: [owner]
+      summary: 블로그장 경고 이력 (FR-021, D-95)
+      description: 이 블로그의 경고 기록(1년 보관 중인 것). 경고받은 사람별로 1년 안 경고 수를 함께 준다.
+      responses:
+        '200': { description: 목록, content: { application/json: { schema: { $ref: '#/components/schemas/WarningList' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AdminOnly' }
+        '404': { description: BLOG_NOT_FOUND, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+    post:
+      tags: [owner]
+      summary: 블로그장 경고 (FR-020, FR-021, FR-028, ADM-07, D-30, D-95, D-103 #12·#13)
+      description: |
+        ownerId가 지금 블로그장이 아니면 409 OWNER_CHANGED(동시 경고로 새 블로그장이 대신 받지 않게).
+        사유 1~500자 필수. 블로그장에게 끌 수 없는 OWNER_WARNED 알림(사유, "3번 중 n번", 신고자 없음).
+        그 블로그·그 사람의 1년 안 경고가 3번이 되면 같은 처리 안에서 권한을 박탈한다(revocation에 결과).
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/WarningRequest' } } }
+      responses:
+        '201': { description: 경고됨, content: { application/json: { schema: { $ref: '#/components/schemas/WarningResult' } } } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AdminOnly' }
+        '404': { description: BLOG_NOT_FOUND, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '409': { description: "OWNER_CHANGED, BLOG_ALREADY_CLOSED", content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+
+  /api/admin/blogs/{blogId}/owner-revocation:
+    parameters: [ { $ref: '#/components/parameters/BlogId' } ]
+    post:
+      tags: [owner]
+      summary: 블로그장 바로 강퇴(권한 박탈) (FR-022~FR-029, ADM-07, D-17, D-54, D-94, D-103 #14~#17)
+      description: |
+        경고 수와 관계없이 박탈한다. 대기 중 위임 요청은 자동 취소하고 받는 멤버에게 끌 수 없는 알림(D-103 #15).
+        부블로그장이 있으면 가장 먼저 된 사람이 수락 없이 블로그장이 된다(개수 제한 없음, D-103 #16). 없으면 + 7일 04:00 폐쇄 예약,
+        알림 문구 "블로그장 권한 박탈로 인한 폐쇄 조치"(D-103 #17). 이미 폐쇄 예정이면 기존 시각 유지(D-103 #14).
+        박탈된 사람은 일반 멤버로 남고 끌 수 없는 OWNER_REVOKED 알림을 받는다.
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/RevocationRequest' } } }
+      responses:
+        '201': { description: 박탈됨, content: { application/json: { schema: { $ref: '#/components/schemas/Revocation' } } } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AdminOnly' }
+        '404': { description: BLOG_NOT_FOUND, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '409': { description: "OWNER_CHANGED, BLOG_ALREADY_CLOSED", content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+
+  /api/admin/reports:
+    get:
+      tags: [report]
+      summary: 관리자 신고함 (FR-030, ADM-04, D-93)
+      description: |
+        route = ADMIN인 신고만(블로그·블로그장·블로그장이 쓴 글·댓글·메인 프로필 회원). 블로그 안의 그 밖의 신고는 없다.
+        PENDING은 오래된 순, DONE은 최근 처리 순.
+      parameters:
+        - { name: status, in: query, schema: { type: string, enum: [PENDING, DONE], default: PENDING } }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200': { description: 목록, content: { application/json: { schema: { $ref: '#/components/schemas/ReportPage' } } } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AdminOnly' }
+
+  /api/admin/reports/{reportId}:
+    parameters: [ { $ref: '#/components/parameters/ReportId' } ]
+    get:
+      tags: [report]
+      summary: 신고 상세 (FR-030, FR-038, D-85, D-102 #15·#16)
+      description: 신고 당시 내용, 사유, 처리 대상 블로그장, 신고자 닉네임(관리자만, 탈퇴는 "탈퇴한 회원").
+      responses:
+        '200': { description: 상세, content: { application/json: { schema: { $ref: '#/components/schemas/ReportDetail' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AdminOnly' }
+        '404': { description: NOT_FOUND, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+
+  /api/admin/reports/{reportId}/resolution:
+    parameters: [ { $ref: '#/components/parameters/ReportId' } ]
+    post:
+      tags: [report]
+      summary: 신고 처리 (FR-031~FR-034, ADM-04, D-103 #18)
+      description: |
+        NONE·OWNER_WARNING(사유 필수)·OWNER_KICK·BLOG_CLOSE 중 하나. 효과는 경고·강퇴·강제 폐쇄 API와 같다.
+        처리 대상 블로그장(블로그 신고는 지금 블로그장, 회원 신고는 그 회원, 글·댓글 신고는 작성자)이 지금 블로그장이 아니면 409 OWNER_CHANGED.
+        블로그가 없는 신고(메인 프로필 회원 신고)는 NONE만. 한 신고에 결과 하나, 바꿀 수 없다.
+        신고자에게 REPORT_RESOLVED 알림(신고자가 "신고 처리 결과"를 껐으면 없음). REPORT_HANDLE 기록.
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/ResolutionRequest' } } }
+      responses:
+        '200': { description: 처리됨, content: { application/json: { schema: { $ref: '#/components/schemas/ReportDetail' } } } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AdminOnly' }
+        '404': { description: NOT_FOUND, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '409': { description: "REPORT_ALREADY_HANDLED, OWNER_CHANGED, BLOG_ALREADY_CLOSED", content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+
+  /api/admin/posts:
+    get:
+      tags: [content]
+      summary: 관리자 글 목록 (FR-015, FR-019, ADM-03)
+      description: 공개 범위·블로그 숨김과 관계없이. 삭제 글은 30일 안의 것만. 블로그 글만(공지는 004 화면).
+      parameters:
+        - { name: blogId, in: query, schema: { type: integer, format: int64 } }
+        - { name: q, in: query, schema: { type: string }, description: 제목 일부 }
+        - { name: status, in: query, schema: { type: string, enum: [VISIBLE, HIDDEN, DELETED] } }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200': { description: 목록, content: { application/json: { schema: { $ref: '#/components/schemas/AdminPostPage' } } } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AdminOnly' }
+
+  /api/admin/posts/{postId}:
+    parameters: [ { $ref: '#/components/parameters/PostId' } ]
+    get:
+      tags: [content]
+      summary: 관리자 글 보기 (FR-015, ADM-03)
+      description: 상태와 관계없이 본문 원문(화면은 글자로만 표시), 누가 지웠는지(AUTHOR·BLOG_MANAGER·ADMIN), 복구 가능 여부.
+      responses:
+        '200': { description: 상세, content: { application/json: { schema: { $ref: '#/components/schemas/AdminPostDetail' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AdminOnly' }
+        '404': { description: POST_NOT_FOUND, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+    delete:
+      tags: [content]
+      summary: 글 삭제 (FR-015, FR-017, ADM-03, D-58)
+      description: VISIBLE·HIDDEN → DELETED(30일 보관). 작성자에게 끌 수 없는 POST_DELETED 알림. POST_DELETE 기록. 004의 DELETE /api/posts/{postId}를 관리자가 불러도 같은 처리.
+      responses:
+        '204': { description: 삭제됨 }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AdminOnly' }
+        '404': { description: POST_NOT_FOUND(이미 삭제된 글 포함), content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+
+  /api/admin/posts/{postId}/hidden:
+    parameters: [ { $ref: '#/components/parameters/PostId' } ]
+    put:
+      tags: [content]
+      summary: 글 숨김 (FR-015, FR-017, FR-018, ADM-03, D-103 #9·#10)
+      description: |
+        VISIBLE → HIDDEN. 목록·검색·피드에서 빠지고 작성자 본인에게만 "관리자가 숨긴 글"로 보인다(블로그장 포함 다른 사람은 404).
+        기간 없이 유지(30일 정리 대상 아님). 작성자에게 끌 수 없는 POST_HIDDEN 알림. POST_HIDE 기록.
+      responses:
+        '204': { description: 숨김 }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AdminOnly' }
+        '404': { description: POST_NOT_FOUND, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '409': { description: ALREADY_HIDDEN(숨김·삭제 상태), content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+    delete:
+      tags: [content]
+      summary: 글 숨김 해제 (FR-018, D-103 #10)
+      description: HIDDEN → VISIBLE. 알림 없음. POST_UNHIDE 기록.
+      responses:
+        '204': { description: 해제 }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AdminOnly' }
+        '404': { description: POST_NOT_FOUND, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '409': { description: NOT_HIDDEN, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+
+  /api/admin/posts/{postId}/restore:
+    parameters: [ { $ref: '#/components/parameters/PostId' } ]
+    post:
+      tags: [content]
+      summary: 글 복구 (FR-019, 4.5, D-103 #11)
+      description: |
+        30일 안에 관리자·블로그장이 지운 글만. 작성자가 스스로 지운 글, 지운 상태가 아닌 글은 409 NOT_RESTORABLE. 블로그가 폐쇄됐으면 409 BLOG_ALREADY_CLOSED.
+        숨긴 채 지운 글은 숨김으로, 아니면 보임으로 돌아간다. 사진도 함께 보인다. 작성자에게 POST_RESTORED 알림. RESTORE 기록.
+      responses:
+        '204': { description: 복구됨 }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AdminOnly' }
+        '404': { description: POST_NOT_FOUND(30일이 지나 지워짐), content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '409': { description: "NOT_RESTORABLE, BLOG_ALREADY_CLOSED", content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+
+  /api/admin/comments:
+    get:
+      tags: [content]
+      summary: 관리자 댓글 목록 (FR-015, FR-019, ADM-03)
+      description: 글 번호로 그 글의 댓글을 상태와 관계없이(삭제는 30일 안). postId 없이 status만 주면 전체에서 최근 순.
+      parameters:
+        - { name: postId, in: query, schema: { type: integer, format: int64 } }
+        - { name: status, in: query, schema: { type: string, enum: [VISIBLE, HIDDEN, DELETED] } }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200': { description: 목록, content: { application/json: { schema: { $ref: '#/components/schemas/AdminCommentPage' } } } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AdminOnly' }
+
+  /api/admin/comments/{commentId}:
+    parameters: [ { $ref: '#/components/parameters/CommentId' } ]
+    delete:
+      tags: [content]
+      summary: 댓글 삭제 (FR-015, ADM-03, D-103 #9)
+      description: VISIBLE·HIDDEN → DELETED(30일 보관). 작성자에게 알리지 않는다. COMMENT_DELETE 기록.
+      responses:
+        '204': { description: 삭제됨 }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AdminOnly' }
+        '404': { description: COMMENT_NOT_FOUND(이미 삭제된 댓글 포함), content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+
+  /api/admin/comments/{commentId}/hidden:
+    parameters: [ { $ref: '#/components/parameters/CommentId' } ]
+    put:
+      tags: [content]
+      summary: 댓글 숨김 (FR-015, ADM-03, D-103 #9)
+      description: VISIBLE → HIDDEN. 작성자에게 알리지 않는다. 답글이 남은 최상위 댓글은 "관리자가 숨긴 댓글입니다" 자리로 보인다. COMMENT_HIDE 기록.
+      responses:
+        '204': { description: 숨김 }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AdminOnly' }
+        '404': { description: COMMENT_NOT_FOUND, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '409': { description: ALREADY_HIDDEN(숨김·삭제 상태), content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+    delete:
+      tags: [content]
+      summary: 댓글 숨김 해제 (FR-015)
+      description: HIDDEN → VISIBLE. COMMENT_UNHIDE 기록.
+      responses:
+        '204': { description: 해제 }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AdminOnly' }
+        '404': { description: COMMENT_NOT_FOUND, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '409': { description: NOT_HIDDEN, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+
+  /api/admin/comments/{commentId}/restore:
+    parameters: [ { $ref: '#/components/parameters/CommentId' } ]
+    post:
+      tags: [content]
+      summary: 댓글 복구 (FR-019, 4.5, D-103 #11)
+      description: |
+        30일 안에 관리자·블로그장이 지운 댓글만 보임으로 돌린다(comments.deleted_by 추가 전에는 관리자가 지운 것만). 알림 없음. RESTORE 기록.
+      responses:
+        '204': { description: 복구됨 }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AdminOnly' }
+        '404': { description: COMMENT_NOT_FOUND(30일이 지나 지워짐), content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '409': { description: "NOT_RESTORABLE, BLOG_ALREADY_CLOSED", content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+
+  /api/admin/actions:
+    get:
+      tags: [action-log]
+      summary: 관리자 활동 기록 (FR-039, ADM-06, SEC-09, D-103 #20)
+      description: 모든 관리자가 본다. 최신순. 고치거나 지우는 API는 없고, 1년 지난 기록만 04:00 정리가 지운다.
+      parameters:
+        - { name: actionType, in: query, schema: { $ref: '#/components/schemas/ActionType' } }
+        - { name: adminId, in: query, schema: { type: integer, format: int64 } }
+        - { name: targetType, in: query, schema: { type: string, enum: [USER, BLOG, POST, COMMENT, REPORT] } }
+        - { name: targetId, in: query, schema: { type: integer, format: int64 } }
+        - { name: from, in: query, schema: { type: string, format: date } }
+        - { name: to, in: query, schema: { type: string, format: date } }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200': { description: 목록, content: { application/json: { schema: { $ref: '#/components/schemas/ActionPage' } } } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AdminOnly' }
+
+  /api/admin/stats:
+    get:
+      tags: [stats]
+      summary: 운영 통계 (FR-040, ADM-05, D-103 #21)
+      description: |
+        회원 수(탈퇴·관리자 제외), 블로그 수(운영 중·폐쇄 예정, 숨김 포함). 일별 가입·글 수는 최근 30일(admin.stats.daily-days),
+        그날 생긴 수를 그대로 센다(나중에 탈퇴·삭제돼도). 빈 날은 0.
+      responses:
+        '200': { description: 통계, content: { application/json: { schema: { $ref: '#/components/schemas/Stats' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AdminOnly' }
+
+components:
+  parameters:
+    UserId: { name: userId, in: path, required: true, schema: { type: integer, format: int64 } }
+    BlogId: { name: blogId, in: path, required: true, schema: { type: integer, format: int64 } }
+    ReportId: { name: reportId, in: path, required: true, schema: { type: integer, format: int64 } }
+    PostId: { name: postId, in: path, required: true, schema: { type: integer, format: int64 } }
+    CommentId: { name: commentId, in: path, required: true, schema: { type: integer, format: int64 } }
+    Page: { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+    Size: { name: size, in: query, schema: { type: integer, enum: [10, 20, 50], default: 20 } }
+  responses:
+    ValidationError:
+      description: VALIDATION_FAILED(fieldErrors 포함)
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    Unauthorized:
+      description: UNAUTHENTICATED
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    AdminOnly:
+      description: ADMIN_ONLY(관리자가 아님. 블로그장·부블로그장 포함). 회원 정보는 담지 않는다
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    RateLimited:
+      description: RATE_LIMITED
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+  schemas:
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: string }
+        message: { type: string }
+        fieldErrors:
+          type: array
+          items:
+            type: object
+            properties:
+              field: { type: string }
+              code: { type: string }
+    UserRef:
+      type: object
+      nullable: true
+      description: 닉네임만. 탈퇴한 회원은 nickname "탈퇴한 회원", withdrawn true(D-103 #3·#19)
+      properties:
+        id: { type: integer, format: int64 }
+        nickname: { type: string }
+        withdrawn: { type: boolean }
+    MemberSummary:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        nickname: { type: string }
+        name: { type: string, description: "가리지 않음(D-103 #4)" }
+        maskedEmail: { type: string, example: ab***@gmail.com }
+        joinedAt: { type: string, format: date-time }
+    MemberPage:
+      type: object
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/MemberSummary' } }
+        page: { type: integer }
+        size: { type: integer }
+        totalElements: { type: integer, format: int64 }
+        totalPages: { type: integer }
+    MemberBlog:
+      type: object
+      properties:
+        blogId: { type: integer, format: int64 }
+        name: { type: string }
+        address: { type: string, nullable: true }
+        visibility: { type: string, enum: [PUBLIC, LINK, PRIVATE] }
+        status: { type: string, enum: [ACTIVE, CLOSING, CLOSED] }
+        hidden: { type: boolean }
+        role: { type: string, enum: [OWNER, MANAGER, MEMBER] }
+    OwnerWarningSummary:
+      type: object
+      description: 블로그별 블로그장 경고 이력(D-103 #2, D-95)
+      properties:
+        blogId: { type: integer, format: int64 }
+        blogName: { type: string }
+        activeCount: { type: integer, description: 1년 안 경고 수 }
+        warnings: { type: array, items: { $ref: '#/components/schemas/OwnerWarning' } }
+    MemberDetail:
+      type: object
+      description: 비밀번호 칸 없음(FR-009). 이메일·전화번호 원문 없음(FR-007)
+      properties:
+        id: { type: integer, format: int64 }
+        nickname: { type: string }
+        name: { type: string }
+        maskedEmail: { type: string, example: ab***@gmail.com }
+        maskedPhone: { type: string, nullable: true, example: 010-****-5678 }
+        joinedAt: { type: string, format: date-time }
+        status: { type: string, enum: [ACTIVE] }
+        blogs: { type: array, items: { $ref: '#/components/schemas/MemberBlog' } }
+        ownerWarnings: { type: array, items: { $ref: '#/components/schemas/OwnerWarningSummary' } }
+    PrivacyView:
+      type: object
+      properties:
+        email: { type: string, example: abcdef@gmail.com }
+        phone: { type: string, nullable: true, example: 010-1234-5678 }
+        viewedAt: { type: string, format: date-time }
+    AdminBlogSummary:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        name: { type: string }
+        address: { type: string, nullable: true }
+        visibility: { type: string, enum: [PUBLIC, LINK, PRIVATE] }
+        status: { type: string, enum: [ACTIVE, CLOSING, CLOSED] }
+        hidden: { type: boolean }
+        closeScheduledAt: { type: string, format: date-time, nullable: true }
+        closeReason: { type: string, enum: [OWNER, OWNER_REVOKED, ADMIN], nullable: true }
+        owner: { $ref: '#/components/schemas/UserRef' }
+        memberCount: { type: integer }
+        postCount: { type: integer, description: 삭제되지 않은 블로그 글 수(보임 + 숨김) }
+        createdAt: { type: string, format: date-time }
+    AdminBlogPage:
+      type: object
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/AdminBlogSummary' } }
+        page: { type: integer }
+        size: { type: integer }
+        totalElements: { type: integer, format: int64 }
+        totalPages: { type: integer }
+    AdminBlogDetail:
+      allOf:
+        - $ref: '#/components/schemas/AdminBlogSummary'
+        - type: object
+          properties:
+            ownerActiveWarningCount: { type: integer, description: 지금 블로그장의 1년 안 경고 수 }
+            managers:
+              type: array
+              items:
+                type: object
+                properties:
+                  user: { $ref: '#/components/schemas/UserRef' }
+                  managerSince: { type: string, format: date-time }
+            pendingDelegation: { type: boolean }
+            hiddenAt: { type: string, format: date-time, nullable: true }
+    CloseResult:
+      type: object
+      properties:
+        closeScheduledAt: { type: string, format: date-time }
+        keptExisting: { type: boolean, description: "이미 폐쇄 예정이라 시각을 그대로 두었으면 true(D-103 #8)" }
+    WarningRequest:
+      type: object
+      required: [ownerId, reason]
+      properties:
+        ownerId: { type: integer, format: int64, description: 경고할 블로그장. 지금 블로그장이 아니면 409 OWNER_CHANGED }
+        reason: { type: string, description: 앞뒤 공백 제거 후 1~500자 }
+    OwnerWarning:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        owner: { $ref: '#/components/schemas/UserRef' }
+        reason: { type: string, nullable: true, description: owner_warnings.reason 칸이 생기기 전 기록은 null }
+        admin: { $ref: '#/components/schemas/UserRef' }
+        reportId: { type: integer, format: int64, nullable: true }
+        createdAt: { type: string, format: date-time }
+        counted: { type: boolean, description: 1년 안이라 경고 수에 들어가면 true }
+    WarningList:
+      type: object
+      properties:
+        warnings: { type: array, items: { $ref: '#/components/schemas/OwnerWarning' } }
+    WarningResult:
+      type: object
+      properties:
+        warning: { $ref: '#/components/schemas/OwnerWarning' }
+        activeCount: { type: integer, description: 이 경고를 넣은 뒤 1년 안 경고 수 }
+        threshold: { type: integer, example: 3 }
+        revocation: { allOf: [ { $ref: '#/components/schemas/Revocation' } ], nullable: true, description: 3번이 되어 박탈했으면 결과 }
+    RevocationRequest:
+      type: object
+      required: [ownerId]
+      properties:
+        ownerId: { type: integer, format: int64 }
+        reason: { type: string, nullable: true, description: 선택, 0~500자 }
+    Revocation:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        cause: { type: string, enum: [WARNING_3, DIRECT_KICK] }
+        revokedUser: { $ref: '#/components/schemas/UserRef' }
+        newOwner: { $ref: '#/components/schemas/UserRef' }
+        closeScheduledAt: { type: string, format: date-time, nullable: true }
+        canceledDelegations: { type: integer, description: 자동 취소한 위임 요청 수 }
+    ReportSummary:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        targetType: { type: string, enum: [USER, BLOG, POST, COMMENT] }
+        targetId: { type: integer, format: int64 }
+        blog:
+          type: object
+          nullable: true
+          description: 메인 프로필 회원 신고면 null
+          properties:
+            id: { type: integer, format: int64 }
+            name: { type: string }
+            status: { type: string, enum: [ACTIVE, CLOSING, CLOSED] }
+        reason: { type: string }
+        status: { type: string, enum: [PENDING, DONE] }
+        result: { type: string, enum: [NONE, OWNER_WARNING, OWNER_KICK, BLOG_CLOSE], nullable: true }
+        createdAt: { type: string, format: date-time }
+        handledAt: { type: string, format: date-time, nullable: true }
+    ReportPage:
+      type: object
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/ReportSummary' } }
+        page: { type: integer }
+        size: { type: integer }
+        totalElements: { type: integer, format: int64 }
+        totalPages: { type: integer }
+    ReportDetail:
+      allOf:
+        - $ref: '#/components/schemas/ReportSummary'
+        - type: object
+          properties:
+            targetSnapshot: { type: string, description: 신고 당시 대상 내용(D-85). 화면은 글자 그대로 }
+            reasonDetail: { type: string, nullable: true }
+            reporter: { $ref: '#/components/schemas/UserRef' }
+            targetOwner: { $ref: '#/components/schemas/UserRef' }
+            targetOwnerIsCurrentOwner: { type: boolean, description: 처리 대상이 지금 블로그장이면 true. false면 경고·강퇴는 409 }
+            handledBy: { $ref: '#/components/schemas/UserRef' }
+    ResolutionRequest:
+      type: object
+      required: [result]
+      properties:
+        result: { type: string, enum: [NONE, OWNER_WARNING, OWNER_KICK, BLOG_CLOSE] }
+        reason: { type: string, nullable: true, description: OWNER_WARNING이면 1~500자 필수, OWNER_KICK이면 선택 }
+    AdminPostSummary:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        blog:
+          type: object
+          properties:
+            id: { type: integer, format: int64 }
+            name: { type: string }
+            status: { type: string, enum: [ACTIVE, CLOSING, CLOSED] }
+        title: { type: string }
+        author: { $ref: '#/components/schemas/UserRef' }
+        status: { type: string, enum: [VISIBLE, HIDDEN, DELETED] }
+        deletedBy: { type: string, enum: [AUTHOR, BLOG_MANAGER, ADMIN], nullable: true }
+        deletedAt: { type: string, format: date-time, nullable: true }
+        restorable: { type: boolean }
+        createdAt: { type: string, format: date-time }
+    AdminPostPage:
+      type: object
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/AdminPostSummary' } }
+        page: { type: integer }
+        size: { type: integer }
+        totalElements: { type: integer, format: int64 }
+        totalPages: { type: integer }
+    AdminPostDetail:
+      allOf:
+        - $ref: '#/components/schemas/AdminPostSummary'
+        - type: object
+          properties:
+            content: { type: string, description: 마크다운 원문. 관리자 화면은 글자로만 표시 }
+            hiddenAt: { type: string, format: date-time, nullable: true }
+    AdminComment:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        postId: { type: integer, format: int64 }
+        parentId: { type: integer, format: int64, nullable: true }
+        author: { $ref: '#/components/schemas/UserRef' }
+        content: { type: string }
+        status: { type: string, enum: [VISIBLE, HIDDEN, DELETED] }
+        deletedBy: { type: string, enum: [AUTHOR, BLOG_MANAGER, ADMIN], nullable: true, description: deleted_by 칸 추가 전에는 관리자 기록으로만 ADMIN }
+        deletedAt: { type: string, format: date-time, nullable: true }
+        restorable: { type: boolean }
+        createdAt: { type: string, format: date-time }
+    AdminCommentPage:
+      type: object
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/AdminComment' } }
+        page: { type: integer }
+        size: { type: integer }
+        totalElements: { type: integer, format: int64 }
+        totalPages: { type: integer }
+    ActionType:
+      type: string
+      enum: [OWNER_WARNING, OWNER_KICK, AUTO_DELEGATE, CLOSE_SCHEDULE, BLOG_HIDE, BLOG_UNHIDE, BLOG_FORCE_CLOSE,
+             POST_HIDE, POST_UNHIDE, POST_DELETE, COMMENT_HIDE, COMMENT_UNHIDE, COMMENT_DELETE, RESTORE, REPORT_HANDLE, PRIVACY_VIEW]
+    AdminAction:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        admin: { $ref: '#/components/schemas/UserRef' }
+        actionType: { $ref: '#/components/schemas/ActionType' }
+        targetType: { type: string, enum: [USER, BLOG, POST, COMMENT, REPORT] }
+        targetId: { type: integer, format: int64 }
+        targetLabel: { type: string, description: 회원 닉네임·블로그 이름·글 제목·신고 번호. 탈퇴는 "탈퇴한 회원", 지워진 대상은 "삭제된 대상" }
+        reportId: { type: integer, format: int64, nullable: true }
+        memo: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+    ActionPage:
+      type: object
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/AdminAction' } }
+        page: { type: integer }
+        size: { type: integer }
+        totalElements: { type: integer, format: int64 }
+        totalPages: { type: integer }
+    DailyCount:
+      type: object
+      properties:
+        date: { type: string, format: date }
+        count: { type: integer }
+    Stats:
+      type: object
+      properties:
+        memberCount: { type: integer, format: int64 }
+        blogCount: { type: integer, format: int64 }
+        dailySignups: { type: array, items: { $ref: '#/components/schemas/DailyCount' }, description: 오래된 날부터 daily-days개 }
+        dailyPosts: { type: array, items: { $ref: '#/components/schemas/DailyCount' } }

@@ -1,0 +1,951 @@
+openapi: 3.0.3
+info:
+  title: 메인블로그 블로그 관리 API (002-blog-management)
+  version: 0.1.0
+  description: |
+    블로그 생성·참여·운영 API. 근거는 specs/002-blog-management/spec.md의 FR 번호.
+
+    공통 규칙 (001 계약과 같음)
+    - 상태를 바꾸는 요청은 `X-XSRF-TOKEN` 헤더가 있어야 한다(SEC-10).
+    - 로그인은 HttpOnly 쿠키 `AT`·`RT`. 토큰에는 회원 번호만 있고, 블로그별 역할은 요청마다 DB에서 확인한다(FR-034, research R-01).
+    - 오류 응답은 모두 `Error` 형식이다.
+    - 관리 API는 블로그 번호(`blogId`)를 쓴다. 화면은 `GET /api/blogs/address/{address}`로 번호를 먼저 얻는다(research R-03).
+    - 폐쇄된 블로그와 열람할 수 없는 블로그는 404 `BLOG_NOT_FOUND`(있는지 드러내지 않음).
+    - 그 블로그에서 정지 중인 회원은 403 `BLOG_SUSPENDED`(`suspendedUntil`, `reason` 포함, FR-050).
+    - 역할·권한이 없으면 403 `BLOG_FORBIDDEN`.
+    - 다른 회원의 이메일·전화번호 원문은 어느 응답에도 없다(FR-047, SC-005).
+servers:
+  - url: /
+tags:
+  - name: blog
+  - name: discovery
+  - name: join
+  - name: share
+  - name: members
+  - name: sanctions
+  - name: blacklist
+  - name: delegation
+  - name: closing
+  - name: subscription
+
+paths:
+  /api/blogs:
+    post:
+      tags: [blog]
+      summary: 블로그 만들기 (FR-001~FR-006, FR-010~FR-012)
+      description: 만든 회원이 블로그장이 된다. 회원 행을 잠가 개수 확인과 생성을 한 번에 처리한다. 메인 관리자는 403.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/BlogCreateRequest' }
+      responses:
+        '201':
+          description: 생성됨
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BlogDetail' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: ADMIN_NOT_ALLOWED, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '409':
+          description: BLOG_ADDRESS_TAKEN(주소 중복·폐쇄 30일 안), BLOG_LIMIT_EXCEEDED(공개 3·비공개 5)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+    get:
+      tags: [discovery]
+      summary: 메인 블로그 목록 (FR-014)
+      description: 공개(PUBLIC)이고 숨기지 않은 운영 중·폐쇄 예정 블로그만. 비회원도 볼 수 있다.
+      security: []
+      parameters:
+        - { name: sort, in: query, schema: { type: string, enum: [latest, popular], default: latest } }
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/Size' }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BlogPage' }
+          description: 목록
+        '400': { $ref: '#/components/responses/ValidationError' }
+
+  /api/blogs/search:
+    get:
+      tags: [discovery]
+      summary: 블로그 검색 (FR-015)
+      description: 이름·소개(전문 검색)와 블로그 태그로 찾는다. 공개 블로그만. 검색어 2~20자, 한글·영문·숫자 1자 이상.
+      security: []
+      parameters:
+        - { name: q, in: query, required: true, schema: { type: string } }
+        - { name: sort, in: query, schema: { type: string, enum: [latest, popular], default: latest } }
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/Size' }
+      responses:
+        '200':
+          description: 결과(없으면 빈 목록, 화면이 "검색 결과가 없습니다")
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BlogPage' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+
+  /api/blogs/address/{address}:
+    get:
+      tags: [blog]
+      summary: 주소로 블로그 보기 (FR-005, FR-025~FR-030, FR-050)
+      description: 열람 권한은 공개 범위·멤버·구독·공유 링크 쿠키로 판단한다(research R-06). 응답의 myRole·permissions로 화면이 메뉴를 고른다.
+      security: []
+      parameters:
+        - { name: address, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BlogDetail' }
+          description: 블로그
+        '403': { $ref: '#/components/responses/Suspended' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/blogs/{blogId}:
+    parameters:
+      - { $ref: '#/components/parameters/BlogId' }
+    patch:
+      tags: [blog]
+      summary: 블로그 정보 수정 (FR-009, FR-013)
+      description: |
+        name·description·tags는 BLOG_INFO 권한(블로그장, 정보 수정 부블로그장).
+        visibility·joinPolicy는 블로그장만. visibility를 바꿀 때도 개수 제한을 적용한다.
+        LINK로 바꾸면 새 공유 링크, LINK에서 벗어나면 링크 무효, PRIVATE로 바꾸면 구독자에게 알림(FR-031, FR-032).
+        address는 받지 않는다(바꿀 수 없음). 알 수 없는 필드는 400.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/BlogUpdateRequest' }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BlogDetail' }
+          description: 수정됨
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { description: BLOG_LIMIT_EXCEEDED, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+
+  /api/blogs/{blogId}/cover-image:
+    parameters:
+      - { $ref: '#/components/parameters/BlogId' }
+    put:
+      tags: [blog]
+      summary: 대표 이미지 올리기·바꾸기 (FR-007)
+      description: BLOG_INFO 권한. 1장, 3MB, jpg·jpeg·png·gif·webp, 확장자·MIME·파일 앞부분 검사.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  coverImageUrl: { type: string }
+          description: 저장됨
+        '400': { description: FILE_TYPE_NOT_ALLOWED·FILE_TOO_LARGE(001과 같음), content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [blog]
+      summary: 대표 이미지 지우기 (FR-007)
+      responses:
+        '204': { description: 지움 }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/blogs/{blogId}/background-image:
+    parameters:
+      - { $ref: '#/components/parameters/BlogId' }
+    put:
+      tags: [blog]
+      summary: 배경 이미지 올리기·바꾸기 (D-121)
+      description: BLOG_INFO 권한. 대표 이미지와 같은 규칙(1장, 3MB, jpg·jpeg·png·gif·webp, 확장자·MIME·파일 앞부분 검사).
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  backgroundImageUrl: { type: string }
+          description: 저장됨
+        '400': { description: FILE_TYPE_NOT_ALLOWED·FILE_TOO_LARGE(001과 같음), content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [blog]
+      summary: 배경 이미지 지우기, 기본 배경으로 (D-121)
+      responses:
+        '204': { description: 지움 }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/me/blogs:
+    get:
+      tags: [blog]
+      summary: 내 블로그 목록 (FR-016)
+      description: 운영하는 블로그(지금 블로그장)와 참여한 블로그(부블로그장·멤버)를 나눠 준다. 폐쇄된 블로그는 빼고, 폐쇄 예정은 상태와 함께 보인다.
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  owned: { type: array, items: { $ref: '#/components/schemas/MyBlogItem' } }
+                  joined: { type: array, items: { $ref: '#/components/schemas/MyBlogItem' } }
+          description: 목록
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /api/blogs/{blogId}/join-requests:
+    parameters:
+      - { $ref: '#/components/parameters/BlogId' }
+    post:
+      tags: [join]
+      summary: 참여 신청 (FR-017~FR-024)
+      description: |
+        자유 참여면 바로 멤버(status APPROVED), 승인제면 PENDING.
+        블로그장이 차단한 회원은 REJECTED로 응답(내부 AUTO_REJECTED, 일반 거절과 같게 보임).
+        비공개 블로그, 볼 수 없는 일부 공개 블로그는 404.
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        '201':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/JoinRequest' }
+          description: 신청 결과
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: ADMIN_NOT_ALLOWED, BLOG_BLACKLISTED(appealAllowed 포함), BLOG_SUSPENDED
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BlacklistedError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: ALREADY_MEMBER, ALREADY_OWNER, JOIN_PENDING_EXISTS, JOIN_REAPPLY_TOO_SOON(reapplyAt 포함)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+    get:
+      tags: [join]
+      summary: 대기 중인 참여 신청 목록 (FR-022)
+      description: MEMBER_MANAGE 권한. PENDING만, 신청 순.
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/Size' }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/JoinRequestForManager' } }
+                  page: { type: integer }
+                  size: { type: integer }
+                  totalCount: { type: integer }
+          description: 목록
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/blogs/{blogId}/join-requests/{requestId}/approval:
+    parameters:
+      - { $ref: '#/components/parameters/BlogId' }
+      - { name: requestId, in: path, required: true, schema: { type: integer, format: int64 } }
+    post:
+      tags: [join]
+      summary: 참여 승인 (FR-022)
+      responses:
+        '200': { description: 승인됨, content: { application/json: { schema: { $ref: '#/components/schemas/JoinRequest' } } } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { description: JOIN_NOT_PENDING, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+
+  /api/blogs/{blogId}/join-requests/{requestId}/rejection:
+    parameters:
+      - { $ref: '#/components/parameters/BlogId' }
+      - { name: requestId, in: path, required: true, schema: { type: integer, format: int64 } }
+    post:
+      tags: [join]
+      summary: 참여 거절 (FR-022)
+      responses:
+        '200': { description: 거절됨, content: { application/json: { schema: { $ref: '#/components/schemas/JoinRequest' } } } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { description: JOIN_NOT_PENDING, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+
+  /api/me/join-requests/{requestId}:
+    parameters:
+      - { name: requestId, in: path, required: true, schema: { type: integer, format: int64 } }
+    delete:
+      tags: [join]
+      summary: 내 대기 신청 취소 (FR-020)
+      responses:
+        '204': { description: 취소됨 }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { description: JOIN_NOT_PENDING, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+
+  /api/blogs/{blogId}/share-link:
+    parameters:
+      - { $ref: '#/components/parameters/BlogId' }
+    get:
+      tags: [share]
+      summary: 공유 링크 보기 (FR-026)
+      description: 일부 공개 블로그를 볼 수 있는 사람(링크로 들어온 사람 포함). 공개·비공개 블로그는 404.
+      security: []
+      responses:
+        '200': { description: 링크, content: { application/json: { schema: { $ref: '#/components/schemas/ShareLink' } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      tags: [share]
+      summary: 공유 링크 다시 만들기 (FR-028)
+      description: 블로그장만. 이전 링크는 바로 막힌다.
+      responses:
+        '201': { description: 새 링크, content: { application/json: { schema: { $ref: '#/components/schemas/ShareLink' } } } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/blogs/share-access:
+    post:
+      tags: [share]
+      summary: 공유 링크로 들어오기 (FR-026, FR-027)
+      description: 유효한 링크 값이면 `BLOG_SHARE_{blogId}` HttpOnly 세션 쿠키를 굽고 블로그 주소를 준다. 비회원도 된다. 자동 구독하지 않는다(FR-029).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token: { type: string }
+      responses:
+        '200':
+          description: 들어갈 수 있음
+          headers:
+            Set-Cookie: { schema: { type: string } }
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  blogId: { type: integer, format: int64 }
+                  address: { type: string }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/blogs/{blogId}/subscription:
+    parameters:
+      - { $ref: '#/components/parameters/BlogId' }
+    post:
+      tags: [subscription]
+      summary: 구독하기 (FR-029, 002 최소 범위)
+      description: 로그인한 회원이 볼 수 있는 블로그만. 이미 구독 중이어도 204.
+      responses:
+        '204': { description: 구독됨 }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [subscription]
+      summary: 구독 취소
+      responses:
+        '204': { description: 취소됨 }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /api/me/subscriptions:
+    get:
+      tags: [subscription]
+      summary: 내 구독 목록 (FR-029)
+      description: 폐쇄되지 않은 구독 블로그. 일부 공개 블로그도 링크 없이 들어갈 수 있다.
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/BlogSummary' } }
+          description: 목록
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /api/blogs/{blogId}/members:
+    parameters:
+      - { $ref: '#/components/parameters/BlogId' }
+    get:
+      tags: [members]
+      summary: 멤버 정보 목록 (FR-044~FR-047, FR-053)
+      description: MEMBER_MANAGE 권한. 이메일·전화번호는 서버가 가린 값만.
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/Size' }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/MemberForManager' } }
+                  page: { type: integer }
+                  size: { type: integer }
+                  totalCount: { type: integer }
+          description: 목록
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/blogs/{blogId}/members/me:
+    parameters:
+      - { $ref: '#/components/parameters/BlogId' }
+    delete:
+      tags: [members]
+      summary: 블로그 탈퇴 (FR-064, FR-065)
+      description: 블로그장은 409 OWNER_CANNOT_LEAVE. 내 글은 "탈퇴한 계정"으로 표시된다.
+      responses:
+        '204': { description: 나감 }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { description: OWNER_CANNOT_LEAVE, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+
+  /api/blogs/{blogId}/managers/{userId}:
+    parameters:
+      - { $ref: '#/components/parameters/BlogId' }
+      - { $ref: '#/components/parameters/UserId' }
+    put:
+      tags: [members]
+      summary: 부블로그장 지정·권한 설정 (FR-039~FR-043)
+      description: 블로그장만. 대상은 그 블로그의 MEMBER 또는 MANAGER. 처음 지정할 때 manager_since를 기록하고, 권한만 바꿀 때는 그대로 둔다.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ManagerPermissions' }
+      responses:
+        '200': { description: 지정됨, content: { application/json: { schema: { $ref: '#/components/schemas/MemberForManager' } } } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [members]
+      summary: 부블로그장 해제 (FR-039)
+      responses:
+        '204': { description: 일반 멤버로 바뀜 }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/blogs/{blogId}/members/{userId}/sanctions:
+    parameters:
+      - { $ref: '#/components/parameters/BlogId' }
+      - { $ref: '#/components/parameters/UserId' }
+    post:
+      tags: [sanctions]
+      summary: 경고·정지·정지 해제·강제 퇴장 (FR-048~FR-051, FR-054, FR-056)
+      description: |
+        MEMBER_MANAGE 권한. 대상이 부블로그장이면 블로그장만, 블로그장은 대상이 될 수 없다.
+        KICK이면 멤버에서 빼고 글 작성자를 "탈퇴한 계정"으로 바꾸고 블랙리스트에 해시로 올린다.
+        대상이 받은 위임 요청이 있으면 자동 취소한다.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SanctionRequest' }
+      responses:
+        '201': { description: 처리됨, content: { application/json: { schema: { $ref: '#/components/schemas/Sanction' } } } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { description: NOT_SUSPENDED(해제할 정지 없음), ALREADY_SUSPENDED, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+    get:
+      tags: [sanctions]
+      summary: 멤버 제재 기록 (FR-053, FR-055)
+      description: MEMBER_MANAGE 권한. 그 블로그의 기록만, 최신순.
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  suspendCountInWindow: { type: integer }
+                  kickSuggested: { type: boolean }
+                  items: { type: array, items: { $ref: '#/components/schemas/Sanction' } }
+          description: 기록
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/blogs/{blogId}/reports:
+    parameters:
+      - { $ref: '#/components/parameters/BlogId' }
+    get:
+      tags: [sanctions]
+      summary: 블로그 안 신고 목록 (FR-052)
+      description: MEMBER_MANAGE 권한. route=BLOG인 신고만(블로그장 대상 신고는 관리자에게 감, D-93).
+      parameters:
+        - { name: status, in: query, schema: { type: string, enum: [PENDING, DONE], default: PENDING } }
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/Size' }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/BlogReport' } }
+                  page: { type: integer }
+                  size: { type: integer }
+                  totalCount: { type: integer }
+          description: 목록
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/blogs/{blogId}/reports/{reportId}/resolution:
+    parameters:
+      - { $ref: '#/components/parameters/BlogId' }
+      - { name: reportId, in: path, required: true, schema: { type: integer, format: int64 } }
+    post:
+      tags: [sanctions]
+      summary: 신고 처리 (FR-052)
+      description: 문제 없음·경고·정지·강제 퇴장 중 하나. 신고자에게 결과 알림.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ReportResolutionRequest' }
+      responses:
+        '200': { description: 처리됨, content: { application/json: { schema: { $ref: '#/components/schemas/BlogReport' } } } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { description: REPORT_ALREADY_HANDLED, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+
+  /api/blogs/{blogId}/blacklist:
+    parameters:
+      - { $ref: '#/components/parameters/BlogId' }
+    get:
+      tags: [blacklist]
+      summary: 블랙리스트 열람 (FR-059)
+      description: MEMBER_MANAGE 권한. 등록 날짜·강퇴 사유·강퇴한 사람(닉네임)·해제 여부·날짜만. 해시·원문 없음. 고치거나 지우는 API는 없다.
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/Size' }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/BlacklistEntry' } }
+                  page: { type: integer }
+                  size: { type: integer }
+                  totalCount: { type: integer }
+          description: 목록
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/blogs/{blogId}/blacklist-appeals:
+    parameters:
+      - { $ref: '#/components/parameters/BlogId' }
+    post:
+      tags: [blacklist]
+      summary: 블랙리스트 해제 문의 남기기 (FR-061, FR-062)
+      description: 로그인 회원 중 그 블로그 블랙리스트에 걸린 사람만. 대기 중 하나, 거절 뒤 7일.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content: { type: string, maxLength: 1000 }
+      responses:
+        '201': { description: 접수됨, content: { application/json: { schema: { $ref: '#/components/schemas/AppealForApplicant' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { description: NOT_BLACKLISTED, APPEAL_PENDING_EXISTS, APPEAL_RETRY_TOO_SOON(retryAt 포함), content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+    get:
+      tags: [blacklist]
+      summary: 해제 문의 목록 (FR-062)
+      description: MEMBER_MANAGE 권한. 서버가 비교한 이름·전화번호 일치 여부만, 원문 없음.
+      parameters:
+        - { name: status, in: query, schema: { type: string, enum: [PENDING, RELEASED, REJECTED], default: PENDING } }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/AppealForManager' } }
+          description: 목록
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/blogs/{blogId}/blacklist-appeals/{appealId}/release:
+    parameters:
+      - { $ref: '#/components/parameters/BlogId' }
+      - { name: appealId, in: path, required: true, schema: { type: integer, format: int64 } }
+    post:
+      tags: [blacklist]
+      summary: 해제 (FR-063)
+      responses:
+        '200': { description: 해제됨, content: { application/json: { schema: { $ref: '#/components/schemas/AppealForManager' } } } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { description: APPEAL_NOT_PENDING, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+
+  /api/blogs/{blogId}/blacklist-appeals/{appealId}/rejection:
+    parameters:
+      - { $ref: '#/components/parameters/BlogId' }
+      - { name: appealId, in: path, required: true, schema: { type: integer, format: int64 } }
+    post:
+      tags: [blacklist]
+      summary: 거절 (FR-063)
+      responses:
+        '200': { description: 거절됨, content: { application/json: { schema: { $ref: '#/components/schemas/AppealForManager' } } } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { description: APPEAL_NOT_PENDING, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+
+  /api/blogs/{blogId}/delegation:
+    parameters:
+      - { $ref: '#/components/parameters/BlogId' }
+    post:
+      tags: [delegation]
+      summary: 위임 요청 (FR-066, FR-070, FR-071)
+      description: 블로그장만. 대상은 그 블로그의 멤버·부블로그장 한 명. 대기 중 요청이 있거나 폐쇄 예정이면 409.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [toUserId]
+              properties:
+                toUserId: { type: integer, format: int64 }
+      responses:
+        '201': { description: 요청됨, content: { application/json: { schema: { $ref: '#/components/schemas/Delegation' } } } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { description: DELEGATION_PENDING_EXISTS, BLOG_CLOSING, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+    get:
+      tags: [delegation]
+      summary: 대기 중 위임 요청 보기
+      description: 블로그장 또는 받는 사람. 없으면 204.
+      responses:
+        '200': { description: 요청, content: { application/json: { schema: { $ref: '#/components/schemas/Delegation' } } } }
+        '204': { description: 없음 }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /api/blogs/{blogId}/delegation/acceptance:
+    parameters:
+      - { $ref: '#/components/parameters/BlogId' }
+    post:
+      tags: [delegation]
+      summary: 위임 수락 (FR-066)
+      description: 받는 사람만. 만료(요청 + 7일)됐으면 409.
+      responses:
+        '200': { description: 블로그장이 됨, content: { application/json: { schema: { $ref: '#/components/schemas/Delegation' } } } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { description: DELEGATION_NOT_PENDING, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+
+  /api/blogs/{blogId}/delegation/rejection:
+    parameters:
+      - { $ref: '#/components/parameters/BlogId' }
+    post:
+      tags: [delegation]
+      summary: 위임 거절 (FR-067)
+      responses:
+        '200': { description: 거절됨, content: { application/json: { schema: { $ref: '#/components/schemas/Delegation' } } } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { description: DELEGATION_NOT_PENDING, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+
+  /api/blogs/{blogId}/closing:
+    parameters:
+      - { $ref: '#/components/parameters/BlogId' }
+    post:
+      tags: [closing]
+      summary: 폐쇄 (FR-072, FR-073, FR-076)
+      description: 블로그장만. 누른 날짜 + 7일 04:00(한국 시간)을 예약하고, 대기 중 위임 요청을 취소하고, 즉시 알림을 보낸다.
+      responses:
+        '200': { description: 폐쇄 예정, content: { application/json: { schema: { $ref: '#/components/schemas/BlogDetail' } } } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { description: BLOG_ALREADY_CLOSING, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+    delete:
+      tags: [closing]
+      summary: 폐쇄 철회 (FR-078)
+      description: |
+        블로그장만. 철회 알림을 보낸다. 관리자가 강제 폐쇄한 블로그(closeReason = ADMIN)는 403 ADMIN_CLOSE_LOCKED로 막고,
+        관리자만 005 API(DELETE /api/admin/blogs/{blogId}/force-close)로 철회한다(D-104).
+      responses:
+        '200': { description: 운영 중, content: { application/json: { schema: { $ref: '#/components/schemas/BlogDetail' } } } }
+        '403': { description: "BLOG_FORBIDDEN, BLOG_SUSPENDED, ADMIN_NOT_ALLOWED, ADMIN_CLOSE_LOCKED(D-104)", content: { application/json: { schema: { $ref: '#/components/schemas/SuspendedError' } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { description: BLOG_NOT_CLOSING, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+
+components:
+  parameters:
+    BlogId: { name: blogId, in: path, required: true, schema: { type: integer, format: int64 } }
+    UserId: { name: userId, in: path, required: true, schema: { type: integer, format: int64 } }
+    Page: { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+    Size: { name: size, in: query, schema: { type: integer, enum: [10, 20, 30], default: 10 } }
+  responses:
+    ValidationError:
+      description: VALIDATION_FAILED(fieldErrors 포함)
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    Unauthorized:
+      description: UNAUTHENTICATED
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    Forbidden:
+      description: BLOG_FORBIDDEN, BLOG_SUSPENDED, ADMIN_NOT_ALLOWED
+      content: { application/json: { schema: { $ref: '#/components/schemas/SuspendedError' } } }
+    Suspended:
+      description: BLOG_SUSPENDED
+      content: { application/json: { schema: { $ref: '#/components/schemas/SuspendedError' } } }
+    NotFound:
+      description: BLOG_NOT_FOUND 등
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+  schemas:
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: string }
+        message: { type: string }
+        fieldErrors:
+          type: array
+          items:
+            type: object
+            properties:
+              field: { type: string }
+              code: { type: string }
+    SuspendedError:
+      allOf:
+        - $ref: '#/components/schemas/Error'
+        - type: object
+          properties:
+            suspendedUntil: { type: string, format: date-time, nullable: true, description: 영구 정지는 null }
+            reason: { type: string, nullable: true }
+    BlacklistedError:
+      allOf:
+        - $ref: '#/components/schemas/Error'
+        - type: object
+          properties:
+            appealAllowed: { type: boolean }
+    BlogCreateRequest:
+      type: object
+      required: [name, address, visibility, joinPolicy]
+      properties:
+        name: { type: string, description: 앞뒤 공백 제거 후 1~30자 }
+        address: { type: string, pattern: '^[a-z0-9-]{3,30}$' }
+        description: { type: string, maxLength: 500, nullable: true }
+        tags: { type: array, maxItems: 10, items: { type: string } }
+        visibility: { type: string, enum: [PUBLIC, LINK, PRIVATE] }
+        joinPolicy: { type: string, enum: [FREE, APPROVAL] }
+    BlogUpdateRequest:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      properties:
+        name: { type: string }
+        description: { type: string, nullable: true }
+        tags: { type: array, maxItems: 10, items: { type: string } }
+        visibility: { type: string, enum: [PUBLIC, LINK, PRIVATE] }
+        joinPolicy: { type: string, enum: [FREE, APPROVAL] }
+    BlogSummary:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        name: { type: string }
+        address: { type: string }
+        description: { type: string, nullable: true }
+        coverImageUrl: { type: string, nullable: true }
+        tags: { type: array, items: { type: string } }
+        memberCount: { type: integer }
+        createdAt: { type: string, format: date-time }
+    BlogPage:
+      type: object
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/BlogSummary' } }
+        page: { type: integer }
+        size: { type: integer }
+        totalCount: { type: integer }
+    BlogDetail:
+      allOf:
+        - $ref: '#/components/schemas/BlogSummary'
+        - type: object
+          properties:
+            visibility: { type: string, enum: [PUBLIC, LINK, PRIVATE] }
+            joinPolicy: { type: string, enum: [FREE, APPROVAL] }
+            status: { type: string, enum: [ACTIVE, CLOSING] }
+            closeScheduledAt: { type: string, format: date-time, nullable: true }
+            closeReason: { type: string, enum: [OWNER, OWNER_REVOKED, ADMIN], nullable: true }
+            ownerNickname: { type: string, nullable: true }
+            myRole: { type: string, enum: [OWNER, MANAGER, MEMBER], nullable: true }
+            myPermissions:
+              type: array
+              items: { type: string, enum: [BLOG_INFO, MEMBER_MANAGE, POST_MANAGE, OWNER] }
+            subscribed: { type: boolean }
+            myPendingJoinRequestId: { type: integer, format: int64, nullable: true }
+            backgroundImageUrl: { type: string, nullable: true, description: '배경 이미지(D-121). 없으면 null(기본 배경)' }
+            canDelegate: { type: boolean, description: 블로그장이고 다른 멤버가 있고 폐쇄 예정이 아님(FR-070, FR-071) }
+            shareable: { type: boolean, description: 일부 공개 블로그면 true(공유 버튼) }
+    MyBlogItem:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        name: { type: string }
+        address: { type: string }
+        role: { type: string, enum: [OWNER, MANAGER, MEMBER] }
+        status: { type: string, enum: [ACTIVE, CLOSING] }
+        closeScheduledAt: { type: string, format: date-time, nullable: true }
+    JoinRequest:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        blogId: { type: integer, format: int64 }
+        status: { type: string, enum: [PENDING, APPROVED, REJECTED, CANCELED], description: AUTO_REJECTED는 REJECTED로 보인다 }
+        requestedAt: { type: string, format: date-time }
+        processedAt: { type: string, format: date-time, nullable: true }
+    JoinRequestForManager:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        userId: { type: integer, format: int64 }
+        nickname: { type: string }
+        requestedAt: { type: string, format: date-time }
+    ShareLink:
+      type: object
+      properties:
+        url: { type: string, example: '/blog/travel-log?share=abc...' }
+        token: { type: string, description: 링크 값(32바이트 base64url 43자). 복사·확인용 }
+        createdAt: { type: string, format: date-time }
+    MemberForManager:
+      type: object
+      description: 이메일·전화번호는 가린 값(FR-046)
+      properties:
+        userId: { type: integer, format: int64 }
+        nickname: { type: string }
+        name: { type: string }
+        maskedEmail: { type: string, example: 'ab***@gmail.com' }
+        maskedPhone: { type: string, example: '010-****-5678' }
+        role: { type: string, enum: [OWNER, MANAGER, MEMBER] }
+        joinedAt: { type: string, format: date-time }
+        managerSince: { type: string, format: date-time, nullable: true }
+        permissions: { $ref: '#/components/schemas/ManagerPermissions' }
+        suspendedUntil: { type: string, format: date-time, nullable: true }
+        suspended: { type: boolean }
+        suspendCountInWindow: { type: integer }
+        kickSuggested: { type: boolean }
+    ManagerPermissions:
+      type: object
+      required: [blogInfo, memberManage, postManage]
+      properties:
+        blogInfo: { type: boolean }
+        memberManage: { type: boolean }
+        postManage: { type: boolean }
+    SanctionRequest:
+      type: object
+      required: [type]
+      properties:
+        type: { type: string, enum: [WARNING, SUSPEND, UNSUSPEND, KICK] }
+        period: { type: string, enum: [DAYS_3, DAYS_14, DAYS_30, PERMANENT], description: SUSPEND일 때만 필수 }
+        reason: { type: string, maxLength: 500 }
+    Sanction:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        type: { type: string, enum: [WARNING, SUSPEND, UNSUSPEND, KICK] }
+        period: { type: string, nullable: true }
+        reason: { type: string, nullable: true }
+        startsAt: { type: string, format: date-time }
+        endsAt: { type: string, format: date-time, nullable: true }
+        handledByNickname: { type: string }
+        reportId: { type: integer, format: int64, nullable: true }
+    BlogReport:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        targetType: { type: string, enum: [USER, POST, COMMENT] }
+        targetId: { type: integer, format: int64 }
+        targetUserId: { type: integer, format: int64 }
+        targetUserNickname: { type: string }
+        targetSnapshot: { type: string }
+        reason: { type: string }
+        reasonDetail: { type: string, nullable: true }
+        status: { type: string, enum: [PENDING, DONE] }
+        result: { type: string, enum: [NONE, WARNING, SUSPEND, KICK], nullable: true }
+        createdAt: { type: string, format: date-time }
+        handledAt: { type: string, format: date-time, nullable: true }
+    ReportResolutionRequest:
+      type: object
+      required: [result]
+      properties:
+        result: { type: string, enum: [NONE, WARNING, SUSPEND, KICK] }
+        period: { type: string, enum: [DAYS_3, DAYS_14, DAYS_30, PERMANENT] }
+        reason: { type: string, maxLength: 500 }
+    BlacklistEntry:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        registeredAt: { type: string, format: date-time }
+        kickReason: { type: string, nullable: true }
+        kickedByNickname: { type: string }
+        released: { type: boolean }
+        releasedAt: { type: string, format: date-time, nullable: true }
+    AppealForApplicant:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        status: { type: string, enum: [PENDING, RELEASED, REJECTED] }
+        createdAt: { type: string, format: date-time }
+    AppealForManager:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        applicantNickname: { type: string }
+        content: { type: string, nullable: true }
+        nameMatched: { type: boolean }
+        phoneMatched: { type: boolean }
+        status: { type: string, enum: [PENDING, RELEASED, REJECTED] }
+        createdAt: { type: string, format: date-time }
+        processedAt: { type: string, format: date-time, nullable: true }
+    Delegation:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        blogId: { type: integer, format: int64 }
+        fromNickname: { type: string }
+        toUserId: { type: integer, format: int64 }
+        toNickname: { type: string }
+        status: { type: string, enum: [PENDING, ACCEPTED, REJECTED, AUTO_CANCELED] }
+        requestedAt: { type: string, format: date-time }
+        expiresAt: { type: string, format: date-time }
+        respondedAt: { type: string, format: date-time, nullable: true }

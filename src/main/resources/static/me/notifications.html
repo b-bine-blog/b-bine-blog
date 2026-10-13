@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>알림 설정 - b-bine blog</title>
+  <link rel="stylesheet" href="/css/base.css">
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <main>
+    <p class="hint"><a href="/me/index.html">내 정보</a></p>
+    <h1>알림 설정</h1>
+    <!-- 끌 수 있는 알림 9가지와 보관 기간 (003 SOC-04, FR-054~FR-058, D-102 #26·#27) -->
+    <form id="settings" class="panel" hidden novalidate>
+      <h2>받을 알림</h2>
+      <ul class="settings-list">
+        <li><label class="inline"><input type="checkbox" name="postComment"> 내 글에 댓글</label></li>
+        <li><label class="inline"><input type="checkbox" name="commentReply"> 내 댓글에 대댓글</label></li>
+        <li><label class="inline"><input type="checkbox" name="postLike"> 내 글 좋아요</label></li>
+        <li><label class="inline"><input type="checkbox" name="newFollower"> 새 팔로워</label></li>
+        <li><label class="inline"><input type="checkbox" name="blogSubscribed"> 내 블로그 구독</label></li>
+        <li><label class="inline"><input type="checkbox" name="joinRequest"> 참여 신청(블로그장·멤버 관리 부블로그장)</label></li>
+        <li><label class="inline"><input type="checkbox" name="joinResult"> 참여 승인·거절</label></li>
+        <li><label class="inline"><input type="checkbox" name="reportResult"> 신고 처리 결과</label></li>
+        <li><label class="inline"><input type="checkbox" name="notice"> 공지사항</label></li>
+      </ul>
+      <p class="hint">블로그 폐쇄 예정·철회, 위임 요청·결과, 비공개 전환, 내 글 삭제, 경고·정지·강제 퇴장, 블랙리스트 해제 문의 결과는
+        블로그 운영에 꼭 필요한 알림이라 끌 수 없습니다. 끈 알림은 그 뒤부터 오지 않고, 이미 받은 알림은 그대로 남습니다.</p>
+
+      <h2>보관 기간</h2>
+      <div class="row">
+        <label class="inline"><input type="radio" name="retentionDays" value="30"> 30일</label>
+        <label class="inline"><input type="radio" name="retentionDays" value="7"> 7일</label>
+      </div>
+      <p class="hint">받은 날부터 이 기간이 지난 알림은 매일 새벽 4시에 지워집니다.</p>
+      <button type="submit" id="save">저장</button>
+      <p class="message" id="save-message" role="status"></p>
+    </form>
+
+    <section class="panel" id="bulk" hidden>
+      <h2>알림 일괄 삭제</h2>
+      <p class="hint">받은 알림을 모두 바로 지웁니다. 되돌릴 수 없습니다.</p>
+      <button type="button" id="delete-all" class="button-quiet">알림 모두 지우기</button>
+      <p class="message" id="bulk-message" role="status"></p>
+    </section>
+    <p class="message message--error" id="message" role="alert"></p>
+  </main>
+  <script src="/js/api.js"></script>
+  <script src="/js/session.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/me-notifications.js"></script>
+</body>
+</html>

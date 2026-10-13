@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>차단 목록 - b-bine blog</title>
+  <link rel="stylesheet" href="/css/base.css">
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <main>
+    <p class="hint"><a href="/me/index.html">내 정보</a></p>
+    <h1>차단 목록</h1>
+    <!-- 내가 차단한 회원 (003 T044, SOC-05, FR-016, D-102 #10). 최근 차단 순 20명씩 -->
+    <p class="hint">차단한 회원의 글과 댓글은 보이지 않고, 서로 팔로우할 수 없습니다. 차단을 풀어도 끊긴 팔로우는 다시 생기지 않습니다.</p>
+    <section class="panel" id="blocks" hidden>
+      <ul class="user-list" id="block-list"></ul>
+      <nav class="pagination" id="block-pages" aria-label="목록 페이지"></nav>
+    </section>
+    <p class="message" id="message" role="alert"></p>
+  </main>
+  <script src="/js/api.js"></script>
+  <script src="/js/session.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/board-common.js"></script>
+  <script src="/js/me-blocks.js"></script>
+</body>
+</html>

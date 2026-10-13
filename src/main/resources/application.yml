@@ -1,0 +1,247 @@
+# 메인블로그 설정 (T004)
+# 숫자 규칙은 모두 설정값으로 두고 환경변수로 바꿀 수 있게 한다(D-68). 값의 근거는 specs/001-member-auth/data-model.md "설정값".
+# 비밀 값(DB 비밀번호, JWT_SECRET 등)은 기본값을 두지 않는다. 없으면 시작에 실패한다.
+
+spring:
+  application:
+    name: mainblog
+  config:
+    # 로컬 실행 때 저장소 루트의 .env를 읽는다(.env.example 참고). 운영은 환경변수로 넣는다.
+    import: optional:file:.env[.properties]
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    open-in-view: false
+    hibernate:
+      # 스키마 원천은 Crowfoot 문서 654(R-02). 엔티티가 DB와 다르면 시작에 실패한다.
+      ddl-auto: validate
+    # 시각은 Clock(Asia/Seoul)으로 만든 LocalDateTime을 그대로 저장한다(REQ-001).
+    # hibernate.jdbc.time_zone을 주면 JVM 시간대와 달라 값이 밀리므로 두지 않는다.
+  jackson:
+    time-zone: Asia/Seoul
+  mail:
+    # Gmail SMTP 587 STARTTLS (D-10, D-69)
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${MAIL_SMTP_AUTH:true}          # 내 컴퓨터의 테스트 메일함(Mailpit)만 false
+          starttls:
+            enable: ${MAIL_STARTTLS:true}
+            required: ${MAIL_STARTTLS:true}
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+  servlet:
+    multipart:
+      # 프로필 사진 장당 3MB (6.3, FR-043)
+      max-file-size: ${MEMBER_PROFILE_IMAGE_MAX_SIZE:3MB}
+      # 요청 전체: 글 이미지 한 번에 10MB(004 FR-031) + multipart 경계 여유. 프로필·대표 이미지는 서비스가 3MB로 따로 막는다
+      max-request-size: ${BOARD_MULTIPART_MAX_REQUEST_SIZE:11MB}
+
+auth:
+  jwt-secret: ${JWT_SECRET}
+  code-hash-secret: ${CODE_HASH_SECRET}
+  access-token-ttl: ${AUTH_ACCESS_TOKEN_TTL:15m}        # D-97
+  remember-me-ttl: ${AUTH_REMEMBER_ME_TTL:14d}          # D-61, 로그인 시각부터 고정(D-97)
+  idle-timeout: ${AUTH_IDLE_TIMEOUT:30m}                # D-61
+  extend-interval: ${AUTH_EXTEND_INTERVAL:5m}           # D-97, 글쓰기 화면 연장 주기
+  cookie-secure: ${AUTH_COOKIE_SECURE:true}             # 운영은 true. 내 컴퓨터 http://localhost에서 Safari로 볼 때만 false(local/start.sh)
+  login:
+    captcha-after: ${AUTH_LOGIN_CAPTCHA_AFTER:3}        # SEC-13, D-97
+    lock-after: ${AUTH_LOGIN_LOCK_AFTER:5}              # SEC-03
+    lock-duration: ${AUTH_LOGIN_LOCK_DURATION:5m}       # SEC-03
+    failure-retention: ${AUTH_LOGIN_FAILURE_RETENTION:1d}  # 마지막 실패가 1일 지난 기록은 04:00 배치가 지움(data-model)
+  rate-limit:
+    login:
+      limit: ${AUTH_RATE_LIMIT_LOGIN:20}                # D-97, IP당
+      window: ${AUTH_RATE_LIMIT_LOGIN_WINDOW:10m}
+    find-email:
+      limit: ${AUTH_RATE_LIMIT_FIND_EMAIL:5}            # USR-08, IP당
+      window: ${AUTH_RATE_LIMIT_FIND_EMAIL_WINDOW:10m}
+  signup:
+    code-ttl: ${AUTH_SIGNUP_CODE_TTL:10m}               # USR-02
+    verified-ttl: ${AUTH_SIGNUP_VERIFIED_TTL:30m}       # D-97
+  code:
+    resend-interval: ${AUTH_CODE_RESEND_INTERVAL:1m}    # USR-02, D-97
+    max-fail: ${AUTH_CODE_MAX_FAIL:5}                   # USR-02, SEC-05
+  reset:
+    code-ttl: ${AUTH_RESET_CODE_TTL:30m}                # SEC-05
+  find-email:
+    token-ttl: ${AUTH_FIND_EMAIL_TOKEN_TTL:10m}         # USR-08
+  turnstile:
+    site-key: ${TURNSTILE_SITE_KEY:}
+    secret-key: ${TURNSTILE_SECRET_KEY:}
+    verify-url: https://challenges.cloudflare.com/turnstile/v0/siteverify
+
+member:
+  withdrawal:
+    retention: ${MEMBER_WITHDRAWAL_RETENTION:30d}       # 4.5, 탈퇴 닉네임 30일(D-97)
+  profile-image:
+    max-size: ${MEMBER_PROFILE_IMAGE_MAX_SIZE:3MB}      # 6.3
+    max-pixels: ${MEMBER_PROFILE_IMAGE_MAX_PIXELS:25000000}   # 가로×세로 한도(압축 폭탄 방지)
+    purge-after: ${MEMBER_PROFILE_IMAGE_PURGE_AFTER:30d}  # 바꾸거나 지운 사진 파일은 30일 뒤 완전 삭제(images 테이블 설명)
+  nickname:
+    reserved: ${MEMBER_NICKNAME_RESERVED:관리자,admin,운영자,탈퇴한 회원}   # FR-011, D-97
+
+blog:
+  # 002 블로그 관리 설정값 (specs/002-blog-management/data-model.md "설정값", D-68)
+  limit:
+    public: ${BLOG_LIMIT_PUBLIC:3}                      # BLG-10, 일부 공개 포함, 1~5(D-52)
+    private: ${BLOG_LIMIT_PRIVATE:5}                    # BLG-10
+  address:
+    reserved: ${BLOG_ADDRESS_RESERVED:main,admin,api,login,signup,search}   # 6.5, D-98 #1
+  name:
+    max-length: ${BLOG_NAME_MAX_LENGTH:30}              # D-98 #2
+  description:
+    max-length: ${BLOG_DESCRIPTION_MAX_LENGTH:500}      # D-98 #2
+  tag:
+    max-count: ${BLOG_TAG_MAX_COUNT:10}                 # D-88
+    max-length: ${BLOG_TAG_MAX_LENGTH:20}               # 6.4
+  cover-image:
+    max-size: ${BLOG_COVER_IMAGE_MAX_SIZE:3MB}          # 6.3
+    max-pixels: ${BLOG_COVER_IMAGE_MAX_PIXELS:25000000}
+    purge-after: ${BLOG_COVER_IMAGE_PURGE_AFTER:30d}
+  list:
+    page-sizes: ${BLOG_LIST_PAGE_SIZES:10,20,30}        # BRD-02, 6.6, 첫 값이 기본
+  search:
+    min-length: ${BLOG_SEARCH_MIN_LENGTH:2}             # 6.1
+    max-length: ${BLOG_SEARCH_MAX_LENGTH:20}            # 6.1
+  join:
+    reapply-after: ${BLOG_JOIN_REAPPLY_AFTER:7d}        # 6.5
+  appeal:
+    retry-after: ${BLOG_APPEAL_RETRY_AFTER:7d}          # D-98 #25
+  delegation:
+    expire-after: ${BLOG_DELEGATION_EXPIRE_AFTER:7d}    # BLG-08, D-31
+  closing:
+    grace-days: ${BLOG_CLOSING_GRACE_DAYS:7}            # BLG-09, D-12
+    hour: ${BLOG_CLOSING_HOUR:4}                        # D-12
+    notice-days: ${BLOG_CLOSING_NOTICE_DAYS:3,1}        # D-13, D-14
+    purge-after: ${BLOG_CLOSING_PURGE_AFTER:30d}        # D-35, D-86
+  sanction:
+    count-window: ${BLOG_SANCTION_COUNT_WINDOW:365d}    # D-95
+    kick-suggest-count: ${BLOG_SANCTION_KICK_SUGGEST_COUNT:3}   # BLG-13, D-46
+
+board:
+  # 004 게시판 설정값 (specs/004-board/data-model.md "설정값", D-68)
+  post:
+    title-max-length: ${BOARD_POST_TITLE_MAX_LENGTH:30}          # FR-003
+    content-max-length: ${BOARD_POST_CONTENT_MAX_LENGTH:5000}    # FR-003, D-92(마크다운 원문 글자 수)
+  list:
+    page-sizes: ${BOARD_LIST_PAGE_SIZES:10,20,30}                # FR-017, 첫 값이 기본
+  category:
+    max-count: ${BOARD_CATEGORY_MAX_COUNT:30}                    # D-100 #8
+    name-max-length: ${BOARD_CATEGORY_NAME_MAX_LENGTH:30}        # D-100 #8
+  tag:
+    max-count: ${BOARD_TAG_MAX_COUNT:10}                         # FR-024
+  image:
+    max-size: ${BOARD_IMAGE_MAX_SIZE:3MB}                        # FR-031 장당
+    max-request-size: ${BOARD_IMAGE_MAX_REQUEST_SIZE:10MB}       # FR-031 한 번에
+    max-per-post: ${BOARD_IMAGE_MAX_PER_POST:10}                 # FR-031
+    max-pixels: ${BOARD_IMAGE_MAX_PIXELS:25000000}
+    orphan-after: ${BOARD_IMAGE_ORPHAN_AFTER:1d}                 # D-100 #4
+    purge-after: ${BOARD_IMAGE_PURGE_AFTER:30d}                  # D-100 #4, 4.5
+  purge-after: ${BOARD_PURGE_AFTER:30d}                          # FR-013 삭제 글·댓글 보관
+  comment:
+    max-length: ${BOARD_COMMENT_MAX_LENGTH:500}                  # FR-037
+    page-size: ${BOARD_COMMENT_PAGE_SIZE:20}                     # research R-08
+  like:
+    rate-limit: ${BOARD_LIKE_RATE_LIMIT:30}                      # D-100 #12, 회원당
+    rate-window: ${BOARD_LIKE_RATE_WINDOW:1m}
+  view:
+    guest-cookie-max-age: ${BOARD_VIEW_GUEST_COOKIE_MAX_AGE:365d}   # D-100 #20
+    ip-limit: ${BOARD_VIEW_IP_LIMIT:60}                          # D-100 #21
+    ip-window: ${BOARD_VIEW_IP_WINDOW:1m}
+    bot-user-agents: ${BOARD_VIEW_BOT_USER_AGENTS:bot,crawler,spider,slurp,preview}   # D-100 #21
+    retention: ${BOARD_VIEW_RETENTION:7d}                        # research R-10(가정)
+  search:
+    min-length: ${BOARD_SEARCH_MIN_LENGTH:2}                     # FR-054
+    max-length: ${BOARD_SEARCH_MAX_LENGTH:20}                    # FR-054
+    recent-max: ${BOARD_SEARCH_RECENT_MAX:10}                    # FR-059
+    blog-preview-size: ${BOARD_SEARCH_BLOG_PREVIEW_SIZE:5}       # research R-13(가정)
+  feed:
+    recent-days: ${BOARD_FEED_RECENT_DAYS:30}                    # D-100 #18
+    page-size: ${BOARD_FEED_PAGE_SIZE:20}                        # D-100 #18
+    pinned-notices: ${BOARD_FEED_PINNED_NOTICES:3}               # D-109, 최신 1페이지 위에 고정하는 메인 공지 수(0이면 안 보임)
+  og:
+    summary-length: ${BOARD_OG_SUMMARY_LENGTH:100}               # D-100 #14
+    card-max-age: ${BOARD_OG_CARD_MAX_AGE:1h}                    # D-110, 미리보기 그림을 메신저·브라우저가 담아 두는 시간
+
+social:
+  # 003 소셜 설정값 (specs/003-social-notification/data-model.md "설정값", D-68)
+  follow:
+    rate-limit: ${SOCIAL_FOLLOW_RATE_LIMIT:30}                  # D-102 #4, 회원당
+    rate-window: ${SOCIAL_FOLLOW_RATE_WINDOW:1m}
+  subscribe:
+    rate-limit: ${SOCIAL_SUBSCRIBE_RATE_LIMIT:30}               # D-102 #4, 회원당(구독·취소 합쳐 셈)
+    rate-window: ${SOCIAL_SUBSCRIBE_RATE_WINDOW:1m}
+  list:
+    page-size: ${SOCIAL_LIST_PAGE_SIZE:20}                      # D-102 #9, 팔로워·팔로잉·차단 목록
+  bio:
+    max-length: ${SOCIAL_BIO_MAX_LENGTH:500}                    # D-102 #7, users.bio VARCHAR(500) 이하
+  report:
+    reasons: ${SOCIAL_REPORT_REASONS:SPAM=스팸·광고,ABUSE=욕설·비방,SEXUAL=음란·불쾌한 내용,PRIVACY=개인정보 노출,COPYRIGHT=저작권 침해,OTHER=기타}   # D-102 #14, 코드=이름
+    detail-required: ${SOCIAL_REPORT_DETAIL_REQUIRED:OTHER}     # D-102 #14, 설명이 꼭 있어야 하는 사유
+    detail-max-length: ${SOCIAL_REPORT_DETAIL_MAX_LENGTH:500}   # D-102 #14, reports.reason_detail VARCHAR(500) 이하
+    repeat-after: ${SOCIAL_REPORT_REPEAT_AFTER:14d}             # FR-025, 6.5
+
+notification:
+  # 003 알림 설정값 (D-68)
+  page-size: ${NOTIFICATION_PAGE_SIZE:20}                       # D-102 #17
+  poll-interval: ${NOTIFICATION_POLL_INTERVAL:30s}              # D-72
+  badge-max: ${NOTIFICATION_BADGE_MAX:99}                       # D-102 #20, 화면은 넘으면 "99+"
+  retention:
+    # DB CHECK retention_days IN (7, 30)과 같아야 한다. 바꾸려면 Crowfoot에서 CHECK도 바꾼다
+    default-days: ${NOTIFICATION_RETENTION_DEFAULT_DAYS:30}     # 4.5, FR-056
+    short-days: ${NOTIFICATION_RETENTION_SHORT_DAYS:7}          # 6.7, FR-057
+
+admin:
+  # 005 관리자·제재 설정값 (specs/005-admin-moderation/data-model.md "설정값", D-68)
+  list:
+    page-sizes: ${ADMIN_LIST_PAGE_SIZES:10,20,50}                # research 가정 13
+    default-size: ${ADMIN_LIST_DEFAULT_SIZE:20}
+  member:
+    nickname-search-max-length: ${ADMIN_MEMBER_NICKNAME_SEARCH_MAX_LENGTH:12}   # 닉네임 2~12자(D-97)
+  privacy-view:
+    rate-limit: ${ADMIN_PRIVACY_VIEW_RATE_LIMIT:30}              # research R-04(가정), 관리자당
+    rate-window: ${ADMIN_PRIVACY_VIEW_RATE_WINDOW:1m}
+  warning:
+    revoke-threshold: ${ADMIN_WARNING_REVOKE_THRESHOLD:3}        # ADM-07, D-30
+    window: ${ADMIN_WARNING_WINDOW:365d}                         # D-95
+    reason-max-length: ${ADMIN_WARNING_REASON_MAX_LENGTH:500}    # D-103 #12, owner_warnings.reason VARCHAR(500) 이하
+  revocation:
+    reason-max-length: ${ADMIN_REVOCATION_REASON_MAX_LENGTH:500} # research R-09(가정)
+  records:
+    retention: ${ADMIN_RECORDS_RETENTION:365d}                   # 4.5, D-60, D-103 #19
+  stats:
+    daily-days: ${ADMIN_STATS_DAILY_DAYS:30}                     # D-103 #21. 30(board.purge-after)보다 크면 지운 글이 빠진다
+
+inquiry:
+  # 시스템 문의 설정값 (ADM-08, D-112, D-68). 글자 수는 system_inquiries 칸 길이 이하
+  title-max-length: ${INQUIRY_TITLE_MAX_LENGTH:30}
+  content-max-length: ${INQUIRY_CONTENT_MAX_LENGTH:2000}
+  answer-max-length: ${INQUIRY_ANSWER_MAX_LENGTH:2000}
+  rate-limit: ${INQUIRY_RATE_LIMIT:5}                           # 같은 IP 하루 5건
+  rate-window: ${INQUIRY_RATE_WINDOW:1d}
+  retention: ${INQUIRY_RETENTION:365d}                          # 1년 뒤 04:00 배치가 삭제
+
+app:
+  base-url: ${APP_BASE_URL:http://localhost:8080}                # og 절대 주소(004 research R-12)
+
+blacklist:
+  # 블랙리스트 HMAC 키(research R-09). 기본값 없음. 한 번 정하면 바꾸지 않는다.
+  hash-secret: ${BLACKLIST_HASH_SECRET}
+
+file-storage:
+  root: ${FILE_STORAGE_ROOT:./uploads}                  # D-75
+
+logging:
+  level:
+    # UNIQUE 위반 메시지("Duplicate entry 'a@b.com' ...")에 이메일·닉네임 원문이 들어가므로 끈다(헌장 III, 4.6).
+    # 위반은 서비스가 받아 NICKNAME_DUPLICATE 등으로 바꾸고, 그 밖의 DB 오류는 예외로 그대로 올라간다.
+    org.hibernate.engine.jdbc.spi.SqlExceptionHelper: OFF

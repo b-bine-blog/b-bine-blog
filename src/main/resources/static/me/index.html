@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>내 정보 - b-bine blog</title>
+  <link rel="stylesheet" href="/css/base.css">
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <!-- 내 정보 (2026-10-13 정리, D-117): 세로로 길던 화면을 카드로 나눠 넓은 화면에서는 두 칸으로 보여 준다 -->
+  <main class="me-page">
+    <h1>내 정보</h1>
+    <!-- 본인에게는 가리지 않고 보여준다. 비밀번호 칸은 없다(FR-040) -->
+    <section id="info" class="me-grid" hidden>
+      <section class="panel me-card me-card--wide me-profile">
+        <div class="me-profile__photo">
+          <img id="profile-image" alt="프로필 사진" width="96" height="96" hidden>
+          <p id="no-profile-image" class="me-profile__empty">사진 없음</p>
+        </div>
+        <div class="me-profile__body">
+          <dl class="me-facts">
+            <dt>이메일</dt><dd id="email"></dd>
+            <dt>이름</dt><dd id="name"></dd>
+            <dt>가입일</dt><dd id="joined-on"></dd>
+          </dl>
+          <p class="hint">이메일과 이름은 바꿀 수 없습니다.</p>
+          <div class="me-profile__actions">
+            <input type="file" id="profile-file" class="sr-only" accept=".jpg,.jpeg,.png,.gif,.webp,image/jpeg,image/png,image/gif,image/webp">
+            <label for="profile-file" class="button-file">사진 바꾸기</label>
+            <button type="button" id="delete-image" class="button-quiet button-small" hidden>사진 지우기</button>
+            <span class="hint">3MB 이하 jpg·jpeg·png·gif·webp</span>
+          </div>
+          <p class="message" id="image-message"></p>
+        </div>
+      </section>
+
+      <section class="panel me-card">
+        <h2>기본 정보</h2>
+        <form id="edit-form" novalidate>
+          <label for="nickname">닉네임</label>
+          <div class="me-inline">
+            <input type="text" id="nickname" maxlength="12">
+            <button type="button" id="check-nickname" class="button-light button-small">중복 확인</button>
+          </div>
+          <p class="hint">2~12자 한글·영문·숫자</p>
+          <label for="phone">전화번호</label>
+          <input type="tel" id="phone" maxlength="13" inputmode="numeric">
+          <button type="submit" id="save">저장</button>
+          <p class="message" id="edit-message"></p>
+        </form>
+      </section>
+
+      <!-- 소개 (003 SOC-03, D-102 #7): 0~500자, 줄바꿈 가능. 프로필에 그대로 보인다 -->
+      <section class="panel me-card">
+        <h2>소개</h2>
+        <form id="bio-form" novalidate>
+          <label for="bio" class="sr-only">소개</label>
+          <textarea id="bio" rows="5" maxlength="500"></textarea>
+          <div class="counter"><span id="bio-length">0</span>/500</div>
+          <button type="submit" id="save-bio">소개 저장</button>
+          <p class="message" id="bio-message"></p>
+        </form>
+      </section>
+
+      <section class="panel me-card me-card--wide">
+        <h2>계정</h2>
+        <nav class="me-links" aria-label="계정 메뉴">
+          <a id="my-profile" href="#">내 프로필</a>
+          <a href="/me/notifications.html">알림 설정</a>
+          <a href="/me/blocks.html">차단 목록</a>
+          <a href="/me/password.html">비밀번호 바꾸기</a>
+          <a href="/me/withdraw.html" class="me-links__danger">회원탈퇴</a>
+        </nav>
+      </section>
+    </section>
+    <!-- 내 블로그 (BLG-06, D-117): 운영·참여하는 블로그와 블로그 만들기를 내 정보에 함께 둔다. 메인 관리자에게는 보이지 않는다(D-90) -->
+    <section id="blogs" class="panel me-card me-blogs" hidden>
+      <div class="panel__head">
+        <h2>내 블로그</h2>
+        <a href="/blogs/new.html" class="button-light">+ 블로그 만들기</a>
+      </div>
+      <p id="blogs-message" class="message" role="alert"></p>
+      <!-- 운영·참여한 블로그 모두 5개씩 넘겨 본다(2026-10-13 사용자 요청) -->
+      <div class="me-blogs__cols">
+        <div>
+          <div class="me-blogs__head">
+            <h3>운영하는 블로그</h3>
+            <div class="me-pager" id="owned-pager" hidden>
+              <button type="button" id="owned-prev" class="button-light button-small" aria-label="이전 운영 블로그">‹</button>
+              <span id="owned-page" aria-live="polite"></span>
+              <button type="button" id="owned-next" class="button-light button-small" aria-label="다음 운영 블로그">›</button>
+            </div>
+          </div>
+          <ul id="owned" class="blog-list"></ul>
+        </div>
+        <div>
+          <div class="me-blogs__head">
+            <h3>참여한 블로그</h3>
+            <div class="me-pager" id="joined-pager" hidden>
+              <button type="button" id="joined-prev" class="button-light button-small" aria-label="이전 참여 블로그">‹</button>
+              <span id="joined-page" aria-live="polite"></span>
+              <button type="button" id="joined-next" class="button-light button-small" aria-label="다음 참여 블로그">›</button>
+            </div>
+          </div>
+          <ul id="joined" class="blog-list"></ul>
+        </div>
+      </div>
+    </section>
+    <p class="message message--error" id="message"></p>
+  </main>
+  <script src="/js/api.js"></script>
+  <script src="/js/session.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/me.js"></script>
+  <script src="/js/me-blogs.js"></script>
+</body>
+</html>

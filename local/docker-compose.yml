@@ -1,0 +1,10 @@
+# 내 컴퓨터에서 써 보기용 가짜 메일함(README "내 컴퓨터에서 바로 써 보기").
+# DB는 도커로 띄우지 않고 Crowfoot이 내어 준 MySQL을 쓴다(local/start.sh가 접속 정보를 묻는다).
+services:
+  # 앱이 보낸 메일(가입 인증번호 등)을 실제로 보내지 않고 http://localhost:8025 에서 보여 준다
+  mail:
+    image: axllent/mailpit:v1.21.8
+    container_name: mainblog-local-mail
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # 메일함 화면
