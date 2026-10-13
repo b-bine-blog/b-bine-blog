@@ -10,27 +10,31 @@
 <body>
   <main class="wide blog-page">
     <section id="blog" hidden>
-      <!-- 블로그 머리(2026-10-08 꾸밈): 위 띠(대표 이미지가 없으면 나뭇잎 그림), 이름·소개, 참여·구독 버튼 -->
+      <!-- 블로그 머리(2026-10-13 정리, D-120): 그림 칸과 이름 칸을 나눈다. 블로그 정보(블로그장·멤버 수·공개 범위·태그)는 이름 칸에 합친다 -->
+      <div class="panel blog-banner">
+        <img id="cover" class="blog-hero__cover" alt="대표 이미지" hidden>
+      </div>
       <div class="panel blog-hero">
-        <div class="blog-hero__banner">
-          <img id="cover" class="blog-hero__cover" alt="대표 이미지" hidden>
+        <h1 id="name"></h1>
+        <p id="description" class="blog-hero__desc"></p>
+        <ul class="blog-meta" aria-label="블로그 정보">
+          <li class="blog-meta__owner"><span id="owner"></span></li>
+          <li class="blog-meta__members"><span>멤버 <span id="member-count"></span>명</span></li>
+          <li class="blog-meta__visibility"><span id="visibility"></span></li>
+        </ul>
+        <ul class="chips" id="tags"></ul>
+        <div class="notice" id="closing" hidden></div>
+        <div class="row" id="actions">
+          <button type="button" id="join" hidden>참여 신청</button>
+          <button type="button" id="cancel-join" hidden>신청 취소</button>
+          <button type="button" id="subscribe" hidden>구독하기</button>
+          <button type="button" id="unsubscribe" hidden>구독 취소</button>
+          <button type="button" id="share" hidden>공유 링크 복사</button>
+          <a id="manage" class="button button-outline" hidden>운영</a>
+          <button type="button" id="leave" hidden class="button-quiet">블로그 탈퇴</button>
+          <button type="button" id="report" hidden class="button-quiet">블로그 신고</button>
         </div>
-        <div class="blog-hero__body">
-          <h1 id="name"></h1>
-          <p id="description" class="blog-hero__desc"></p>
-          <div class="notice" id="closing" hidden></div>
-          <div class="row" id="actions">
-            <button type="button" id="join" hidden>참여 신청</button>
-            <button type="button" id="cancel-join" hidden>신청 취소</button>
-            <button type="button" id="subscribe" hidden>구독하기</button>
-            <button type="button" id="unsubscribe" hidden>구독 취소</button>
-            <button type="button" id="share" hidden>공유 링크 복사</button>
-            <a id="manage" class="button button-outline" hidden>운영</a>
-            <button type="button" id="leave" hidden class="button-quiet">블로그 탈퇴</button>
-            <button type="button" id="report" hidden class="button-quiet">블로그 신고</button>
-          </div>
-          <p class="message" id="action-message"></p>
-        </div>
+        <p class="message" id="action-message"></p>
       </div>
 
       <!-- 받은 블로그장 위임 요청. 받은 사람에게만 보인다(BLG-14, FR-040) -->
@@ -70,16 +74,6 @@
           <ul class="post-list" id="post-list"></ul>
           <nav class="pagination" id="post-pages" aria-label="글 페이지"></nav>
         </section>
-        <!-- 블로그 정보(블로그장·멤버 수·공개 범위·태그) -->
-        <aside class="panel blog-about">
-          <h2>블로그 정보</h2>
-          <ul class="blog-meta">
-            <li class="blog-meta__owner"><span id="owner"></span></li>
-            <li class="blog-meta__members"><span>멤버 <span id="member-count"></span>명</span></li>
-            <li class="blog-meta__visibility"><span id="visibility"></span></li>
-          </ul>
-          <ul class="chips" id="tags"></ul>
-        </aside>
       </div>
     </section>
     <!-- 정지된 회원 안내(FR-050) -->

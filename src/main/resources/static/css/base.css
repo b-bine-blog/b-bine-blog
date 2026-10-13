@@ -263,36 +263,30 @@ button.button-quiet { background: transparent; color: var(--muted); border: 1px 
 button.button-quiet:hover:not(:disabled) { background: var(--green-50); color: var(--danger); }
 label.inline { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-weight: 400; font-size: 0.9rem; color: var(--muted); }
 label.inline select { width: auto; padding: 4px 8px; }
-/* 개별 블로그 첫 화면(2026-10-08 꾸밈): 위 띠 + 이름·소개·버튼, 아래는 글 목록과 블로그 정보 두 칸 */
+/* 개별 블로그 첫 화면(2026-10-13 정리, D-120): 그림 칸, 이름 칸(이름·소개·블로그 정보·태그·버튼), 글 목록을 위에서 아래로 */
 main.blog-page { max-width: 1120px; }
-.blog-hero { margin-bottom: 20px; padding: 0; overflow: hidden; }
-.blog-hero__banner { position: relative; height: 150px;
+.blog-banner { position: relative; height: 180px; margin-bottom: 16px; padding: 0; overflow: hidden;
   background: linear-gradient(135deg, var(--green-800), var(--green-500)); }
 .blog-hero__cover { display: block; width: 100%; height: 100%; object-fit: cover; }
-.blog-hero__body { position: relative; padding: 14px 24px 20px; }
-.blog-hero h1 { margin: 10px 0 4px; font-size: 1.7rem; }
+.blog-hero { margin-bottom: 20px; padding: 22px 24px; }
+.blog-hero h1 { margin: 0 0 4px; font-size: 1.7rem; }
 .blog-hero__desc { margin: 0 0 6px; color: var(--muted); white-space: pre-line; }
 .blog-hero__desc:empty { display: none; }
-.blog-hero #actions { margin-top: 14px; }
+.blog-hero #actions { margin-top: 16px; }
 .blog-hero #actions button, .blog-hero #actions a { margin-top: 0; }
-.blog-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 24px; align-items: start; }
-.blog-layout > .blog-about { position: sticky; top: 76px; }
-.blog-about h2 { margin-top: 0; }
-.blog-meta { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-.blog-meta li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; background: var(--green-50); color: var(--green-900); }
-.blog-meta li::before { content: ""; width: 18px; height: 18px; flex: none; background: center / contain no-repeat; }
+.blog-meta { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.blog-meta li { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; background: var(--green-50); color: var(--green-900); font-size: .9rem; }
+.blog-meta li::before { content: ""; width: 16px; height: 16px; flex: none; background: center / contain no-repeat; }
 .blog-meta .blog-meta__owner::before { background-image: url("/img/icon/crown.svg"); }
 .blog-meta .blog-meta__members::before { background-image: url("/img/icon/users.svg"); }
 .blog-meta .blog-meta__visibility::before { background-image: url("/img/icon/eye.svg"); }
 .blog-meta li:has(> span:empty) { display: none; }
-.blog-about .chips { margin-top: 14px; }
-.blog-about .chips:empty { display: none; }
+.blog-hero .chips { margin-top: 10px; }
+.blog-hero .chips:empty { display: none; }
 #posts .blog-toolbar h2 { margin: 0; }
 @media (max-width: 860px) {
-  .blog-layout { grid-template-columns: minmax(0, 1fr); }
-  .blog-layout > .blog-about { position: static; order: -1; }
-  .blog-hero__banner { height: 110px; }
-  .blog-hero__body { padding: 0 16px 16px; }
+  .blog-banner { height: 110px; }
+  .blog-hero { padding: 16px; }
 }
 #posts .blog-toolbar h2 { margin: 0; }
 .post-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 12px 0; }
@@ -481,7 +475,7 @@ button.button-outline:hover:not(:disabled) { background: var(--green-50); color:
 .hero .blog-search input { box-shadow: 0 1px 4px rgba(0,0,0,.15); }
 .hero__actions a { background: rgba(255,255,255,.16); color: #fff; }
 .hero__actions a:hover { background: rgba(255,255,255,.28); }
-.blog-hero__banner { background: linear-gradient(120deg, var(--green-800), var(--green-600) 55%, var(--green-500)); }
+.blog-banner { background: linear-gradient(120deg, var(--green-800), var(--green-600) 55%, var(--green-500)); }
 .post-card__head::before { background: linear-gradient(90deg, var(--green-500), var(--sky-500)); }
 
 /* 하늘색은 태그·배지·답글·알림처럼 "곁들이는" 곳에 쓴다 */
