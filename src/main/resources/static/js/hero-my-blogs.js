@@ -83,7 +83,8 @@
         var picker = el('div', 'hero-mine__picker');
         picker.setAttribute('role', 'listbox');
         picker.setAttribute('aria-label', '넣을 블로그 고르기');
-        var choices = blogs.filter(function (b) { return pinned.indexOf(b.id) < 0; });
+        // 고르는 목록은 최신순(나중에 만든 블로그가 위, 2026-10-13 사용자 요청)
+        var choices = blogs.filter(function (b) { return pinned.indexOf(b.id) < 0; }).reverse();
         if (!choices.length) { picker.appendChild(el('p', 'hero-mine__empty', '더 넣을 블로그가 없어요.')); }
         choices.forEach(function (b) {
           var opt = button('hero-mine__choice', null, null, function () {
