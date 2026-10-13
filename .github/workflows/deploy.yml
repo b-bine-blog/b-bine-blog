@@ -1,4 +1,4 @@
-# jar를 만들어 서버에 배포한다 (D-106, 도커 없이).
+# jar를 만들어 서버로 보내고, 서버에서 도커 이미지로 만들어 컨테이너로 실행한다 (D-127, 무중단 D-126).
 # main에 push되면 실행된다(Git Flow, D-123: release/*·hotfix/* 브랜치를 main에 합치면 배포). "Run workflow" 버튼은 이 파일이 main에 들어간 뒤에 보인다.
 name: deploy
 
@@ -31,14 +31,14 @@ jobs:
           ./gradlew --no-daemon bootJar -x test
           cp build/libs/*-SNAPSHOT.jar app.jar.new
 
-      - name: 서버로 jar와 스크립트, 테스트 블로그 표지 보내기
+      - name: 서버로 jar, Dockerfile, 스크립트, 테스트 블로그 표지 보내기
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_ADDRESS }}
           username: ${{ secrets.SSH_ID }}
           password: ${{ secrets.SSH_PASSWORD }}
           port: ${{ secrets.SSH_PORT }}
-          source: app.jar.new,deploy/deploy.sh,deploy/seed-covers
+          source: app.jar.new,Dockerfile,deploy/deploy.sh,deploy/seed-covers
           target: ~/blogproject
           overwrite: true
 
