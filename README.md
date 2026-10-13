@@ -139,6 +139,7 @@ Git Flow를 씁니다. 자세한 순서는 [CONTRIBUTING.md](CONTRIBUTING.md)에
 
 | 버전 | 날짜 | 바뀐 점 |
 |---|---|---|
+| [v1.12](release-notes/2026-10-13-social-restart/notice.md) | 2026-10-13 | 소셜 가입 도중 새로 고치거나 다시 들어오면 처음부터 |
 | [v1.11](release-notes/2026-10-13-social-login/notice.md) | 2026-10-13 | 구글·카카오·네이버로 가입·로그인, 같은 이메일 회원은 비밀번호 확인 뒤 연결, 내 정보에서 소셜 연결 관리 |
 | [v1.10](release-notes/2026-10-13-blog-page/notice.md) | 2026-10-13 | 블로그 첫 화면 정리(그림 칸·이름 칸), 블로그 배경 이미지, 관리 블로그 삭제 버튼은 + 를 눌렀을 때만 |
 | [v1.09](release-notes/2026-10-13-auth-modal/notice.md) | 2026-10-13 | 로그인·회원가입을 지금 화면 위 창으로 띄움(창도 시간대 색) |
