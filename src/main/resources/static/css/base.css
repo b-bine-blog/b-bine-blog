@@ -636,7 +636,10 @@ main.home { grid-template-columns: minmax(0, 1fr); }
 .hero-mine__delete { flex-shrink: 0; margin: 0; padding: 2px 8px; border-radius: 999px; background: transparent; box-shadow: none;
   font-size: 0.75rem; font-weight: 400; color: rgba(255,255,255,.75); }
 .hero-mine__delete:hover:not(:disabled) { background: rgba(255,255,255,.18); color: #fff; }
-.hero-mine__picker { display: grid; gap: 2px; padding: 6px; border-radius: 10px; background: var(--surface); box-shadow: var(--shadow); }
+/* 고르는 목록은 5개(한 줄 36px + 사이 2px)까지 보이고 그 뒤는 스크롤로 본다(2026-10-13 사용자 요청) */
+.hero-mine__picker { display: grid; gap: 2px; padding: 6px; border-radius: 10px; background: var(--surface); box-shadow: var(--shadow);
+  max-height: calc(5 * 36px + 4 * 2px + 12px); overflow-y: auto; overscroll-behavior: contain; }
+.hero-mine__choice { flex-shrink: 0; min-height: 36px; }
 .hero-mine__choice { display: flex; align-items: center; gap: 8px; width: 100%; margin: 0; padding: 6px 8px; border-radius: 8px;
   background: transparent; color: var(--text); box-shadow: none; text-align: left; font-weight: 400; }
 .hero-mine__choice:hover:not(:disabled) { background: var(--green-50); color: var(--text); }
