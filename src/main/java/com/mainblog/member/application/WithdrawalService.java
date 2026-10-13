@@ -1,6 +1,7 @@
 package com.mainblog.member.application;
 
 import com.mainblog.auth.domain.RefreshTokenRepository;
+import com.mainblog.auth.oauth.SocialAccountStore;
 import com.mainblog.common.error.BusinessException;
 import com.mainblog.common.error.ErrorCode;
 import com.mainblog.member.domain.OwnedBlogQuery;
@@ -28,16 +29,18 @@ public class WithdrawalService {
     private final OwnedBlogQuery ownedBlogQuery;
     private final PasswordEncoder passwordEncoder;
     private final SocialCleanup socialCleanup;
+    private final SocialAccountStore socialAccounts;
     private final Clock clock;
 
     public WithdrawalService(UserRepository userRepository, RefreshTokenRepository refreshTokenRepository,
                              OwnedBlogQuery ownedBlogQuery, PasswordEncoder passwordEncoder,
-                             SocialCleanup socialCleanup, Clock clock) {
+                             SocialCleanup socialCleanup, SocialAccountStore socialAccounts, Clock clock) {
         this.userRepository = userRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.ownedBlogQuery = ownedBlogQuery;
         this.passwordEncoder = passwordEncoder;
         this.socialCleanup = socialCleanup;
+        this.socialAccounts = socialAccounts;
         this.clock = clock;
     }
 
@@ -46,11 +49,13 @@ public class WithdrawalService {
         return ownedBlogQuery.findByOwner(userId);
     }
 
+    /** 소셜로만 가입해 비밀번호가 없는 회원은 로그인한 상태만으로 탈퇴한다(008 FR-009, D-125). */
     @Transactional
     public void withdraw(Long userId, String password) {
         User user = userRepository.findById(userId).filter(User::isActive)
                 .orElseThrow(() -> new BusinessException(ErrorCode.UNAUTHENTICATED));
-        if (password == null || !passwordEncoder.matches(password, user.getPasswordHash())) {
+        if (user.getPasswordHash() != null
+                && (password == null || !passwordEncoder.matches(password, user.getPasswordHash()))) {
             throw new BusinessException(ErrorCode.PASSWORD_MISMATCH);
         }
         if (!ownedBlogQuery.findByOwner(userId).isEmpty()) {
@@ -59,5 +64,6 @@ public class WithdrawalService {
         user.withdraw(LocalDateTime.now(clock));
         refreshTokenRepository.revokeAllByUserId(userId);
         socialCleanup.onWithdraw(userId); // 팔로우·구독·차단은 바로 지우고 신고는 남긴다(003 T045, D-102 #16)
+        socialAccounts.deleteAllByUser(userId); // 소셜 연결은 바로 끊어 같은 소셜로 새로 가입할 수 있게 한다(008 FR-011)
     }
 }

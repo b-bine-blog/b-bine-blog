@@ -63,13 +63,20 @@
         </form>
       </section>
 
+      <!-- 소셜 로그인 연결 (008 FR-010, D-125). 키가 있는 서비스가 없으면 숨긴다 -->
+      <section class="panel me-card me-card--wide" id="social-card" hidden>
+        <h2>소셜 로그인</h2>
+        <ul class="social-connections" id="social-list"></ul>
+        <p class="message" id="social-message"></p>
+      </section>
+
       <section class="panel me-card me-card--wide">
         <h2>계정</h2>
         <nav class="me-links" aria-label="계정 메뉴">
           <a id="my-profile" href="#">내 프로필</a>
           <a href="/me/notifications.html">알림 설정</a>
           <a href="/me/blocks.html">차단 목록</a>
-          <a href="/me/password.html">비밀번호 바꾸기</a>
+          <a href="/me/password.html" id="password-link">비밀번호 바꾸기</a>
           <a href="/me/withdraw.html" class="me-links__danger">회원탈퇴</a>
         </nav>
       </section>
@@ -114,5 +121,7 @@
   <script src="/js/layout.js"></script>
   <script src="/js/me.js"></script>
   <script src="/js/me-blogs.js"></script>
+  <script src="/js/social-buttons.js"></script>
+  <script src="/js/me-social.js"></script>
 </body>
 </html>

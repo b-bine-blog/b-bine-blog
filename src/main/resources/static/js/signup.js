@@ -145,6 +145,7 @@
   }
 
   document.addEventListener('DOMContentLoaded', function () {
+    socialLogin.render($('social-buttons'), { label: '가입' });
     $('send-code').addEventListener('click', sendCode);
     $('resend-code').addEventListener('click', function () {
       api.post('/api/auth/signup/email-code', { email: state.email }, { activity: true }).then(function () {

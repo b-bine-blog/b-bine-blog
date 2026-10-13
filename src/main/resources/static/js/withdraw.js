@@ -41,13 +41,19 @@
     });
   }
 
+  var hasPassword = true;
+
   document.addEventListener('DOMContentLoaded', function () {
     load();
+    api.get('/api/members/me/social', { activity: true }).then(function (res) {
+      hasPassword = res.hasPassword;
+      $('password-box').hidden = !hasPassword;
+    }, function () { /* 실패하면 비밀번호 칸을 그대로 둔다 */ });
     $('withdraw').addEventListener('click', function () {
       if (!window.confirm('정말 탈퇴할까요?')) {
         return;
       }
-      api.post('/api/members/me/withdrawal', { password: $('password').value }, { activity: true })
+      api.post('/api/members/me/withdrawal', { password: hasPassword ? $('password').value : null }, { activity: true })
         .then(function () {
           location.href = '/';
         }, function (err) {

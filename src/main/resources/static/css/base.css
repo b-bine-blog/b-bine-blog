@@ -752,3 +752,16 @@ label.inline > select { -webkit-appearance: none; appearance: none; margin: 0; p
 label.inline > select:focus-visible { outline: 2px solid var(--green-500); outline-offset: 1px; }
 [data-theme="dark"] label.inline > select { background-color: transparent; }
 [data-theme="dark"] label.inline > select option { background: var(--surface); }
+
+/* 소셜 로그인 버튼 (008, D-125). 각 서비스 안내서의 색을 따른다 */
+.social-buttons { display: grid; gap: 8px; margin: 20px 0 8px; }
+.social-buttons button { margin-top: 0; width: 100%; box-shadow: none; }
+button.social-button--google { background: #fff; color: #1f1f1f; border: 1px solid #747775; }
+button.social-button--google:hover:not(:disabled) { background: #f2f2f2; color: #1f1f1f; }
+button.social-button--kakao { background: #FEE500; color: rgba(0,0,0,.85); }
+button.social-button--kakao:hover:not(:disabled) { background: #f0d800; color: rgba(0,0,0,.85); }
+button.social-button--naver { background: #03C75A; color: #fff; }
+button.social-button--naver:hover:not(:disabled) { background: #02b351; color: #fff; }
+.social-connections { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.social-connections li { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; background: var(--surface); }
