@@ -79,6 +79,21 @@ auth:
     secret-key: ${TURNSTILE_SECRET_KEY:}
     verify-url: https://challenges.cloudflare.com/turnstile/v0/siteverify
 
+oauth:
+  # 소셜 로그인 앱 키 (008, D-125). 키가 비어 있는 서비스는 버튼을 숨기고 로그인도 받지 않는다(FR-014)
+  google:
+    client-id: ${OAUTH_GOOGLE_CLIENT_ID:}
+    client-secret: ${OAUTH_GOOGLE_CLIENT_SECRET:}
+  kakao:
+    client-id: ${OAUTH_KAKAO_CLIENT_ID:}
+    client-secret: ${OAUTH_KAKAO_CLIENT_SECRET:}
+  naver:
+    client-id: ${OAUTH_NAVER_CLIENT_ID:}
+    client-secret: ${OAUTH_NAVER_CLIENT_SECRET:}
+  request-ttl: ${OAUTH_REQUEST_TTL:10m}                 # 소셜 로그인 화면에 다녀오는 시간
+  signup-ttl: ${OAUTH_SIGNUP_TTL:30m}                   # 소셜 가입 마무리 대기(FR-005)
+  link-ttl: ${OAUTH_LINK_TTL:10m}                       # 같은 이메일 연결 대기(FR-007)
+
 member:
   withdrawal:
     retention: ${MEMBER_WITHDRAWAL_RETENTION:30d}       # 4.5, 탈퇴 닉네임 30일(D-97)

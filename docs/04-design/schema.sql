@@ -9,7 +9,7 @@ CREATE TABLE users (
     id BIGINT NOT NULL AUTO_INCREMENT COMMENT '회원 번호',
     email VARCHAR(255) COMMENT '이메일(로그인 아이디)-----소문자로 저장. 탈퇴 즉시 NULL로 비워 같은 이메일로 재가입 가능',
     withdrawn_email VARCHAR(255) COMMENT '탈퇴 전 이메일-----탈퇴 후 30일 보관용. 30일 뒤 삭제',
-    password_hash VARCHAR(100) NOT NULL COMMENT '비밀번호 해시-----bcrypt',
+    password_hash VARCHAR(100) COMMENT '비밀번호 해시-----bcrypt. 소셜로만 가입한 회원은 NULL이고 이메일 로그인 불가, 비밀번호 찾기로 만들 수 있음(D-125)',
     name VARCHAR(50) COMMENT '이름-----앞뒤 공백 제거 후 2~20자 한글·영문·공백(D-97). 가입 뒤 변경 불가. 탈퇴 30일 뒤 삭제',
     nickname VARCHAR(30) COMMENT '닉네임-----2~12자, 대소문자 무시 중복 불가, 예약어 포함 불가(D-97). 탈퇴 30일 동안 유지 후 삭제',
     phone VARCHAR(20) COMMENT '전화번호-----010으로 시작하는 11자리 숫자(D-97). 1차는 중복 허용',
@@ -489,6 +489,35 @@ CREATE TABLE system_inquiries (
     CONSTRAINT ck_system_inquiries_status CHECK (status IN ('PENDING', 'ANSWERED')),
     CONSTRAINT ck_system_inquiries_sender CHECK (user_id IS NOT NULL OR email IS NOT NULL)
 ) COMMENT='시스템 문의-----회원·비회원이 메인 관리자에게 보내는 문의(ADM-08). 1년 보관 뒤 04:00 배치가 삭제';
+CREATE TABLE social_accounts (
+    id BIGINT NOT NULL AUTO_INCREMENT COMMENT '번호',
+    user_id BIGINT NOT NULL COMMENT '회원 번호',
+    provider VARCHAR(10) NOT NULL COMMENT '서비스-----GOOGLE·KAKAO·NAVER',
+    provider_user_id VARCHAR(100) NOT NULL COMMENT '서비스 회원 고유 번호-----구글 sub, 카카오 회원번호, 네이버 id',
+    email VARCHAR(255) COMMENT '연결할 때의 이메일-----참고용. 회원 찾기에는 쓰지 않음',
+    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) COMMENT '연결 일시',
+    updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6) COMMENT '수정 일시',
+    PRIMARY KEY (id),
+    CONSTRAINT uk_social_accounts_provider_user UNIQUE (provider, provider_user_id),
+    CONSTRAINT uk_social_accounts_user_provider UNIQUE (user_id, provider),
+    CONSTRAINT ck_social_accounts_provider CHECK (provider IN ('GOOGLE', 'KAKAO', 'NAVER'))
+) COMMENT='소셜 연결-----회원과 구글·카카오·네이버 계정의 연결(D-125). 접근 토큰은 저장하지 않음. 탈퇴하면 바로 삭제';
+CREATE TABLE social_pendings (
+    id BIGINT NOT NULL AUTO_INCREMENT COMMENT '번호',
+    token_hash VARCHAR(100) NOT NULL COMMENT '대기 토큰 해시-----브라우저에 준 무작위 토큰의 해시',
+    provider VARCHAR(10) NOT NULL COMMENT '서비스-----GOOGLE·KAKAO·NAVER',
+    provider_user_id VARCHAR(100) NOT NULL COMMENT '서비스 회원 고유 번호',
+    email VARCHAR(255) COMMENT '확인된 이메일-----소셜이 확인한 이메일. 없으면 인증번호로 확인한 뒤 채움',
+    purpose VARCHAR(10) NOT NULL COMMENT '목적-----SIGNUP(가입 ③단계) · LINK(비밀번호 확인 뒤 연결)',
+    remember_me TINYINT(1) NOT NULL DEFAULT 0 COMMENT '로그인 유지',
+    expires_at DATETIME NOT NULL COMMENT '만료 시각-----SIGNUP 30분, LINK 10분(설정값)',
+    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) COMMENT '생성 일시',
+    updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6) COMMENT '수정 일시',
+    PRIMARY KEY (id),
+    CONSTRAINT uk_social_pendings_token_hash UNIQUE (token_hash),
+    CONSTRAINT ck_social_pendings_provider CHECK (provider IN ('GOOGLE', 'KAKAO', 'NAVER')),
+    CONSTRAINT ck_social_pendings_purpose CHECK (purpose IN ('SIGNUP', 'LINK'))
+) COMMENT='소셜 가입·연결 대기-----소셜에서 돌아왔지만 가입 ③단계나 비밀번호 확인을 끝내지 않은 상태(D-125). 끝나거나 만료되면 삭제, 남은 것은 04:00 정리 작업이 삭제';
 
 ALTER TABLE user_agreements ADD CONSTRAINT fk_user_agreements_users FOREIGN KEY (user_id) REFERENCES users (id);
 ALTER TABLE refresh_tokens ADD CONSTRAINT fk_refresh_tokens_users FOREIGN KEY (user_id) REFERENCES users (id);
@@ -541,6 +570,7 @@ ALTER TABLE owner_warnings ADD CONSTRAINT fk_owner_warnings_users FOREIGN KEY (u
 ALTER TABLE owner_warnings ADD CONSTRAINT fk_owner_warnings_reports FOREIGN KEY (report_id) REFERENCES reports (id);
 ALTER TABLE owner_revocations ADD CONSTRAINT fk_owner_revocations_blogs FOREIGN KEY (blog_id) REFERENCES blogs (id);
 ALTER TABLE owner_revocations ADD CONSTRAINT fk_owner_revocations_users FOREIGN KEY (user_id) REFERENCES users (id);
+ALTER TABLE social_accounts ADD CONSTRAINT fk_social_accounts_users FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE;
 
 CREATE INDEX idx_users_name_phone ON users (name ASC, phone ASC);
 CREATE INDEX idx_refresh_tokens_expires_at ON refresh_tokens (expires_at ASC);
@@ -573,3 +603,4 @@ CREATE INDEX idx_owner_warnings_blog_id_created_at ON owner_warnings (blog_id AS
 CREATE INDEX idx_login_failures_last_failed_at ON login_failures (last_failed_at ASC);
 CREATE INDEX idx_system_inquiries_status_created_at ON system_inquiries (status ASC, created_at ASC);
 CREATE INDEX idx_system_inquiries_user_id ON system_inquiries (user_id ASC);
+CREATE INDEX idx_social_pendings_expires_at ON social_pendings (expires_at ASC);

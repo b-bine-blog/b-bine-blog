@@ -107,12 +107,14 @@ public class MemberService {
     /**
      * 비밀번호 변경(FR-044, D-97). 현재 비밀번호 확인 → 규칙·두 값 일치 → 저장 →
      * 다른 기기 RT 모두 폐기, 이 기기에는 새 AT·RT를 준다(호출한 쪽이 쿠키로 내려준다).
+     * 소셜로만 가입해 비밀번호가 없으면 현재 비밀번호 확인 없이 새로 만든다(008 FR-009, D-125).
      */
     @Transactional
     public IssuedTokens changePassword(Long memberId, String currentPassword, String newPassword,
                                        String newPasswordConfirm, String rawRefreshToken) {
         User user = activeMember(memberId);
-        if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
+        if (user.getPasswordHash() != null
+                && (currentPassword == null || !passwordEncoder.matches(currentPassword, user.getPasswordHash()))) {
             throw new BusinessException(ErrorCode.CURRENT_PASSWORD_MISMATCH);
         }
         if (!passwordPolicy.isValid(newPassword)) {

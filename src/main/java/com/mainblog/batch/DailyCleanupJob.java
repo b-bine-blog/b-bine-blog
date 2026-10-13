@@ -146,6 +146,7 @@ public class DailyCleanupJob {
                 + "AND (verified_at IS NULL OR verified_at <= ?)", now, verifiedCutoff);
         count += jdbc.update("DELETE FROM password_reset_codes WHERE expires_at <= ?", now);
         count += jdbc.update("DELETE FROM password_reset_tokens WHERE expires_at <= ?", now);
+        count += jdbc.update("DELETE FROM social_pendings WHERE expires_at <= ?", now); // 008 소셜 가입·연결 대기
         return count;
     }
 
