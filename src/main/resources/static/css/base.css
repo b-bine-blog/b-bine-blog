@@ -705,6 +705,11 @@ label.button-file:hover { background: var(--green-100); }
 .me-blogs .panel__head a { font-size: 0.9rem; padding: 5px 12px; border-radius: 8px; text-decoration: none; background: var(--green-50); color: var(--green-800); border: 1px solid var(--line); }
 .me-blogs__cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .me-blogs__cols h3 { margin: 8px 0 4px; font-size: 1rem; }
+.me-blogs__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.me-pager { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--muted); }
+.me-pager[hidden] { display: none; }
+.me-pager button { margin-top: 0; min-width: 30px; padding: 3px 8px; }
+.me-pager button:hover:not(:disabled) { background: var(--green-100); color: var(--green-800); }
 @media (max-width: 720px) {
   .me-grid, .me-blogs__cols { grid-template-columns: minmax(0, 1fr); }
   .me-profile { flex-direction: column; align-items: center; text-align: center; }
