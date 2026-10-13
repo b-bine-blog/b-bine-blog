@@ -31,10 +31,13 @@
     api.setText($('owner'), blog.ownerNickname ? '블로그장 ' + blog.ownerNickname : '');
     api.setText($('member-count'), blog.memberCount);
     api.setText($('visibility'), VISIBILITY[blog.visibility]);
+    // 대표 이미지가 있을 때만 그림 칸을 보여 준다. 파일이 없어 열리지 않으면 칸째 숨긴다(D-120)
     if (blog.coverImageUrl) {
-      $('cover').onerror = function () { show('cover', false); }; // 파일이 없는 표지는 숨긴다
+      $('cover').onerror = function () { show('banner', false); };
       $('cover').src = blog.coverImageUrl;
-      show('cover', true);
+      show('banner', true);
+    } else {
+      show('banner', false);
     }
     var tags = $('tags');
     while (tags.firstChild) { tags.removeChild(tags.firstChild); }

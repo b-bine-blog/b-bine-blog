@@ -11,8 +11,9 @@
   <main class="wide blog-page">
     <section id="blog" hidden>
       <!-- 블로그 머리(2026-10-13 정리, D-120): 그림 칸과 이름 칸을 나눈다. 블로그 정보(블로그장·멤버 수·공개 범위·태그)는 이름 칸에 합친다 -->
-      <div class="panel blog-banner">
-        <img id="cover" class="blog-hero__cover" alt="대표 이미지" hidden>
+      <!-- 대표 이미지가 없거나 열리지 않으면 그림 칸을 통째로 뺀다(D-120) -->
+      <div class="panel blog-banner" id="banner" hidden>
+        <img id="cover" class="blog-hero__cover" alt="대표 이미지">
       </div>
       <div class="panel blog-hero">
         <h1 id="name"></h1>
