@@ -6,6 +6,9 @@
 (function () {
   'use strict';
 
+  // 지금 배포된 버전. 새 버전을 낼 때 README 업데이트 표·release-notes와 같이 올린다(D-108)
+  var SITE_VERSION = 'v1.05';
+
   function link(href, text) {
     var a = document.createElement('a');
     a.href = href;
@@ -200,8 +203,8 @@
     footer.appendChild(link('/rules.html', '운영 규칙')); // 삭제 시점·제한 같은 주요 규칙(D-114)
     footer.appendChild(document.createTextNode(' · '));
     footer.appendChild(link('/inquiry.html', '시스템 문의')); // ADM-08, D-112
-    // 이 사이트를 만든 저장소(2026-10-12 사용자 요청)
-    var source = link('https://github.com/b-bine-blog/b-bine-blog', 'GitHub');
+    // 변경사항: 저장소 README의 업데이트 표로 간다. 지금 버전을 옆에 적는다(2026-10-13 사용자 요청, D-108)
+    var source = link('https://github.com/b-bine-blog/b-bine-blog#업데이트', '변경사항 ' + SITE_VERSION);
     source.target = '_blank';
     source.rel = 'noopener noreferrer';
     footer.appendChild(document.createTextNode(' · '));
