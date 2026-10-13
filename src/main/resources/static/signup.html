@@ -11,9 +11,6 @@
   <main>
     <h1>회원가입</h1>
 
-    <!-- 소셜로 가입 (008, D-125). 키가 있는 서비스만 보인다 -->
-    <div class="social-buttons" id="social-buttons" hidden></div>
-
     <!-- ① 이메일 인증 (FR-003~FR-007) -->
     <section id="step-email">
       <h2>1. 이메일 인증</h2>
@@ -27,6 +24,8 @@
         <button type="button" id="resend-code">다시 보내기</button>
       </div>
       <p class="message" id="email-message"></p>
+      <!-- 소셜로 가입 (008, D-125). 인증번호 받기 아래에 둔다(2026-10-13 사용자 요청). 키가 있는 서비스만 보인다 -->
+      <div class="social-buttons" id="social-buttons" hidden></div>
     </section>
 
     <!-- ② 비밀번호 (FR-008) -->
