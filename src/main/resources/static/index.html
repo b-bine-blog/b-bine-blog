@@ -10,7 +10,8 @@
 <body>
   <!-- 메인 화면: 위 검색 띠, 블로그 둘러보기(카드 5개), 아래 글 피드 -->
   <section class="hero">
-    <div class="hero__inner">
+    <div class="hero__inner hero__inner--split">
+      <div class="hero__main">
       <!-- 제목·안내 문구 대신 최신 공지·인기 블로그·인기 글을 번갈아 보여 준다(D-116). 제목은 화면 읽기용으로만 둔다 -->
       <h1 class="sr-only">함께 쓰는 블로그</h1>
       <div id="hero-spotlight" class="spotlight" aria-live="polite" hidden></div>
@@ -19,6 +20,9 @@
         <input id="q" name="q" type="search" maxlength="20" placeholder="블로그·글 제목·태그·닉네임 검색">
         <button type="submit">검색</button>
       </form>
+      </div>
+      <!-- 오른쪽 빈 곳: 로그인했고 운영·참여하는 블로그가 있으면 보여 준다. 없으면 비워 둔다(2026-10-13 사용자 요청) -->
+      <aside id="hero-my-blogs" class="hero-mine" aria-label="내 블로그" hidden></aside>
     </div>
   </section>
   <main class="home">
@@ -68,5 +72,6 @@
   <script src="/js/board-common.js"></script>
   <script src="/js/board-feed.js"></script>
   <script src="/js/hero-spotlight.js"></script>
+  <script src="/js/hero-my-blogs.js"></script>
 </body>
 </html>

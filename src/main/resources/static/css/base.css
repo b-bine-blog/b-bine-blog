@@ -618,3 +618,21 @@ main.home { grid-template-columns: minmax(0, 1fr); }
 .spotlight__dot[aria-current="true"] { background: #fff; }
 @media (max-width: 640px) { .spotlight__sub { display: none; } }
 @media (prefers-reduced-motion: reduce) { .spotlight__item { transition: none; } }
+
+/* 메인 위쪽 띠 오른쪽의 내 블로그 (2026-10-13). 로그인해서 블로그가 있을 때만 보인다 */
+.hero__inner--split { display: grid; grid-template-columns: minmax(0, 640px) minmax(0, 300px); justify-content: space-between; gap: 24px; align-items: start; }
+.hero__main { min-width: 0; }
+.hero-mine { display: grid; gap: 2px; padding: 10px 12px; border-radius: 14px; background: rgba(255,255,255,.12); }
+.hero-mine[hidden] { display: none; }
+.hero-mine__head { display: flex; justify-content: space-between; align-items: center; padding: 0 4px 2px; font-size: 0.85rem; }
+.hero-mine__title { font-weight: 700; color: #fff; }
+.hero-mine__all { color: rgba(255,255,255,.85); text-decoration: none; }
+.hero-mine__all:hover { color: #fff; text-decoration: underline; }
+.hero-mine__item { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 4px 6px; border-radius: 10px; color: #fff; text-decoration: none; }
+.hero-mine__item:hover { background: rgba(255,255,255,.14); color: #fff; }
+.hero-mine__initial { flex-shrink: 0; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; font-size: 0.8rem;
+  background: #fff; color: var(--green-800); font-weight: 700; }
+.hero-mine__text { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+.hero-mine__name { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hero-mine__role { flex-shrink: 0; font-size: 0.75rem; color: rgba(255,255,255,.8); }
+@media (max-width: 860px) { .hero__inner--split { grid-template-columns: minmax(0, 1fr); } .hero-mine { display: none !important; } }
