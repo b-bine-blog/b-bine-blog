@@ -58,11 +58,24 @@
         <a href="/me/withdraw.html">회원탈퇴</a>
       </p>
     </section>
+    <!-- 내 블로그 (BLG-06, D-117): 운영·참여하는 블로그와 블로그 만들기를 내 정보에 함께 둔다. 메인 관리자에게는 보이지 않는다(D-90) -->
+    <section id="blogs" class="me-blogs" hidden>
+      <div class="panel__head">
+        <h2>내 블로그</h2>
+        <a href="/blogs/new.html">블로그 만들기</a>
+      </div>
+      <p id="blogs-message" class="message" role="alert"></p>
+      <h3>운영하는 블로그</h3>
+      <ul id="owned" class="blog-list"></ul>
+      <h3>참여한 블로그</h3>
+      <ul id="joined" class="blog-list"></ul>
+    </section>
     <p class="message message--error" id="message"></p>
   </main>
   <script src="/js/api.js"></script>
   <script src="/js/session.js"></script>
   <script src="/js/layout.js"></script>
   <script src="/js/me.js"></script>
+  <script src="/js/me-blogs.js"></script>
 </body>
 </html>

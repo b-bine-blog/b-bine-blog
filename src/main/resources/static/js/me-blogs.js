@@ -1,4 +1,5 @@
 // 내 블로그 (T037, BLG-06, FR-016). 운영하는 블로그와 참여한 블로그를 나눠 보여 준다. 글자는 textContent로만 넣는다(D-64).
+// 내 정보 화면 안에 함께 있다(D-117). 메인 관리자는 블로그 활동을 하지 않으므로 보여 주지 않는다(D-90).
 (function () {
   'use strict';
 
@@ -46,14 +47,17 @@
     items.forEach(function (b) { list.appendChild(renderItem(b)); });
   }
 
-  api.get('/api/me/blogs').then(function (res) {
-    fill('owned', res.owned, '운영하는 블로그가 없습니다');
-    fill('joined', res.joined, '참여한 블로그가 없습니다');
-  }, function (err) {
-    if (err.status === 401) {
-      location.href = '/login.html?next=' + encodeURIComponent('/me/blogs.html');
-      return;
-    }
-    api.setText($('message'), err.message);
+  api.get('/api/auth/session').then(function (me) {
+    if (me.admin) { return; }
+    return api.get('/api/me/blogs').then(function (res) {
+      fill('owned', res.owned, '운영하는 블로그가 없습니다');
+      fill('joined', res.joined, '참여한 블로그가 없습니다');
+      $('blogs').hidden = false;
+      if (location.hash === '#blogs') { $('blogs').scrollIntoView(); }
+    });
+  }).catch(function (err) {
+    if (err.status === 401) { return; } // 로그인 안내는 내 정보(me.js)가 한다
+    $('blogs').hidden = false;
+    api.setText($('blogs-message'), err.message);
   });
 })();

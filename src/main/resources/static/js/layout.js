@@ -2,7 +2,7 @@
 // 메뉴 글자는 textContent로만 넣는다(D-64).
 // 로그인하면 오른쪽 내 메뉴에 종 아이콘을 넣고 알림 사이드바(notifications.js)를 시작한다(003 T012, FR-028).
 // 메인과 모든 개별 블로그 화면이 이 파일을 같이 써서 어디서나 같은 종 아이콘이 보인다(4.2).
-// 메인 관리자는 "관리자" 링크가 보이고 "내 블로그·블로그 만들기"는 보이지 않는다(005 T010, D-90).
+// 메인 관리자는 "관리자" 링크가 보이고 "블로그 만들기"는 보이지 않는다(005 T010, D-90). 내 블로그는 내 정보 화면에 있다(D-117).
 (function () {
   'use strict';
 
@@ -17,13 +17,6 @@
   }
 
   // 왼쪽 로고·공지, 가운데 검색, 오른쪽 내 메뉴(2026-10-08 배치 변경). "회원가입"은 버튼처럼 보이고, "블로그 만들기"는 닉네임 메뉴 안에 있다.
-  // 내 블로그 목록은 머리 메뉴의 두 곳에서 쓰므로 한 번만 불러온다
-  var myBlogsRequest = null;
-  function myBlogs() {
-    if (!myBlogsRequest) { myBlogsRequest = api.get('/api/me/blogs'); }
-    return myBlogsRequest;
-  }
-
   function renderHeader(me) {
     var header = document.createElement('header');
     header.className = 'site-header';
@@ -64,12 +57,6 @@
       right.appendChild(bellButton());
       right.appendChild(profileMenu(me));
     } else if (me) {
-      // "내 블로그"는 내가 처음 만든 블로그로 바로 간다. 만든 블로그가 없으면 내 블로그 목록 화면(2026-10-13 사용자 요청)
-      var mine = link('/me/blogs.html', '내 블로그');
-      right.appendChild(mine);
-      myBlogs().then(function (res) {
-        if (res.owned.length) { mine.href = '/blog/' + encodeURIComponent(res.owned[0].address); }
-      }, function () { /* 목록 화면으로 둔다 */ });
       right.appendChild(bellButton());
       right.appendChild(profileMenu(me));
     } else {
@@ -99,15 +86,13 @@
     list.hidden = true;
     toggle.setAttribute('aria-controls', list.id);
     list.appendChild(link('/me/index.html', '내 정보'));
-    // 머리 메뉴의 "내 블로그"가 내 블로그로 바로 가므로, 목록(블로그 만들기 링크 포함)은 여기서 연다(D-117)
-    if (!me.admin) { list.appendChild(link('/me/blogs.html', '내 블로그 목록')); }
     if (!me.admin) { list.appendChild(link('/inquiry.html#mine', '내 문의')); } // ADM-08, D-112
     if (!me.admin) {
-      // 운영하는 블로그가 이미 있으면 메뉴에서는 뺀다. 더 만들 때는 내 블로그 화면의 링크를 쓴다(2026-10-12 사용자 결정, D-109)
+      // 운영하는 블로그가 이미 있으면 메뉴에서는 뺀다. 더 만들 때는 내 정보의 내 블로그에 있는 링크를 쓴다(D-109, D-117)
       var create = link('/blogs/new.html', '블로그 만들기');
       create.hidden = true;
       list.appendChild(create);
-      myBlogs().then(function (res) {
+      api.get('/api/me/blogs').then(function (res) {
         create.hidden = res.owned.length > 0;
       }, function () { create.hidden = false; });
     }
