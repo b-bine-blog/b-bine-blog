@@ -1,0 +1,42 @@
+# 자동 테스트 (D-128). main을 뺀 작업 브랜치에 push하거나 PR을 만들면 전체 테스트(./gradlew test)를 돌린다.
+# 테스트는 Testcontainers로 MySQL 8.0을 띄우므로 도커가 있는 GitHub 러너(ubuntu-latest)에서 돈다.
+# main은 develop·release에서 이미 테스트한 것을 합치므로 배포(deploy.yml)에서는 다시 돌리지 않는다.
+name: ci
+
+on:
+  push:
+    branches: [develop, 'feature/**', 'release/**', 'hotfix/**']
+    paths-ignore: ['release-notes/**', 'docs/**', '**.md']
+  pull_request:
+    branches: [develop, main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true   # 같은 브랜치에 새로 push하면 이전 테스트는 멈춘다
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+
+      - name: 전체 테스트
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon test
+
+      - name: 실패하면 테스트 보고서 올리기
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: build/reports/tests/test
+          retention-days: 7

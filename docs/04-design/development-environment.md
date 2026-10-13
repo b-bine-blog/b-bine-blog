@@ -72,7 +72,7 @@ Gradle Wrapper가 정해진 Gradle을 내려받으므로 Gradle은 따로 설치
 1. **명세 → 계획 → 작업 → 구현**: 기능마다 Spec Kit으로 `specs/<번호>-<기능>/`에 명세(spec.md), 계획(plan.md), 데이터 모델, API 계약(contracts/), 작업 목록(tasks.md)을 만든 뒤 구현합니다.
 2. **결정 기록**: 정하거나 바꾼 것은 이유와 함께 [결정 기록](../03-decisions/README.md)(D-번호)에 남깁니다.
 3. **브랜치**: Git Flow(D-123). `feature/*`에서 작업해 `develop`에 합치고, 배포할 때 `main`에 합칩니다. 자세한 순서는 [CONTRIBUTING.md](../../CONTRIBUTING.md).
-4. **테스트**: 합치기 전에 `./gradlew test`로 통합 테스트 전체(Testcontainers)를 돌립니다.
+4. **테스트**: `develop`·`feature/*`·`release/*`·`hotfix/*`에 push하거나 PR을 만들면 GitHub Actions(`ci.yml`)가 `./gradlew test`(통합 테스트 전체, Testcontainers)를 자동으로 돌립니다(D-128). 초록색인 것만 `main`에 합칩니다.
 5. **배포**: `main`에 push되면 GitHub Actions가
    - `deploy.yml`: jar를 만들어 `Dockerfile`과 함께 SSH로 서버에 올리고, `deploy/deploy.sh`가 서버에서 이미지를 만들어 컨테이너로 실행(D-127). 새 컨테이너를 쉬는 포트에 먼저 띄운 뒤 옛 것을 끈다(D-126)
    - `tag.yml`: 사이트 버전(`layout.js`의 `SITE_VERSION`)으로 태그를 단다(D-124)
