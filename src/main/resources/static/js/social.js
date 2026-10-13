@@ -1,10 +1,10 @@
 // 소셜 로그인 마무리 화면 (008 FR-003~FR-007, D-125). 글자는 textContent로만 넣는다(D-64).
-// 대기 토큰은 주소 #t=로 받아 바로 주소에서 지우고, 새로 고쳐도 이어지도록 이 탭의 sessionStorage에만 둔다.
+// 대기 토큰은 주소 #t=로 받아 바로 주소에서 지우고 이 화면 메모리에만 둔다.
+// 새로 고치거나 다시 들어오면 이어 하지 않고 로그인 화면에서 처음부터 다시 한다(2026-10-13 사용자 요청).
 (function () {
   'use strict';
 
   var RESEND_SECONDS = 60; // 서버도 1분 안에는 다시 보내지 않는다(USR-02)
-  var KEY_TOKEN = 'mb.socialPending';
   var $ = function (id) { return document.getElementById(id); };
   var state = { token: null, email: null, captchaToken: null, widgetId: null };
 
@@ -33,25 +33,16 @@
     agreePrivacy: '개인정보 수집·이용에 동의해 주세요.'
   };
 
-  function store(value) {
-    try {
-      if (value) { sessionStorage.setItem(KEY_TOKEN, value); } else { sessionStorage.removeItem(KEY_TOKEN); }
-    } catch (e) { /* 저장 못 해도 이 화면에서는 계속 쓴다 */ }
-  }
-
-  function stored() {
-    try { return sessionStorage.getItem(KEY_TOKEN); } catch (e) { return null; }
-  }
-
   function readToken() {
-    var hash = new URLSearchParams(location.hash.replace(/^#/, ''));
-    var token = hash.get('t');
+    var token = new URLSearchParams(location.hash.replace(/^#/, '')).get('t');
     if (token) {
-      store(token);
       history.replaceState(null, '', location.pathname); // 주소와 방문 기록에 토큰을 남기지 않는다
-      return token;
     }
-    return stored();
+    return token;
+  }
+
+  function restart() {
+    location.replace('/login.html?socialError=SOCIAL_RESTART');
   }
 
   function show(el, message, isError) {
@@ -61,7 +52,6 @@
 
   function errorMessage(err) {
     if (err.code === 'SOCIAL_PENDING_INVALID') {
-      store(null);
       return socialLogin.errorText(err.code);
     }
     if (err.code === 'CODE_MISMATCH' && err.body && err.body.remainingAttempts !== undefined) {
@@ -94,7 +84,6 @@
   }
 
   function done() {
-    store(null);
     location.replace('/');
   }
 
@@ -203,11 +192,17 @@
     });
   }
 
+  // 뒤로 가기로 돌아와 이전 화면이 그대로 보이는 경우도 처음부터 다시 한다
+  window.addEventListener('pageshow', function (e) {
+    if (e.persisted) {
+      restart();
+    }
+  });
+
   document.addEventListener('DOMContentLoaded', function () {
     state.token = readToken();
     if (!state.token) {
-      $('loading').hidden = true;
-      show($('message'), socialLogin.errorText('SOCIAL_PENDING_INVALID'), true);
+      restart();
       return;
     }
     api.post('/api/social/pending', { token: state.token }, { noRefresh: true }).then(render, function (err) {

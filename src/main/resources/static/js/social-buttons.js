@@ -6,6 +6,7 @@
   var NAMES = { google: '구글', kakao: '카카오', naver: '네이버' };
   var ERRORS = {
     CANCELLED: '소셜 로그인을 취소했습니다.',
+    SOCIAL_RESTART: '가입을 마치지 않아 처음부터 다시 해야 합니다. 소셜 로그인 버튼을 다시 눌러 주세요.',
     SOCIAL_LOGIN_FAILED: '소셜 로그인에 실패했습니다. 잠시 뒤 다시 시도해 주세요.',
     SOCIAL_ALREADY_LINKED: '이 소셜 계정은 이미 다른 회원과 연결되어 있습니다.',
     SOCIAL_NOT_ALLOWED: '관리자 계정은 소셜 로그인을 쓸 수 없습니다.',
