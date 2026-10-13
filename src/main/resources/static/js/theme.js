@@ -46,3 +46,55 @@
     toggle: function () { return set(current() === 'dark' ? 'light' : 'dark'); }
   };
 })(window);
+
+// 시간대별 사이트 색 (시안, 2026-10-13 사용자 요청). 보는 사람 기기의 시각으로 색상(hue)을 정하고 1분마다 조금씩 옮긴다.
+// 아침(5~11시) 파랑, 점심(11~17시) 초록, 저녁(17~5시) 빨강. 각 시간대의 한가운데(8시·14시·23시)에 그 색이 가장 진하고,
+// 그 사이는 하루 내내 쉬지 않고 조금씩 다음 색으로 넘어간다. 색상은 한 방향으로만 돈다:
+// 파랑 → 청록 → 초록 → 연두·주황 → 빨강 → 보라 → 파랑. 그래서 해 질 녘·새벽처럼 자연스럽게 이어진다.
+// 1분마다 새 색을 정하고, 그사이는 CSS가 1분 동안 천천히 옮긴다(base.css의 @property --hue).
+// 확인용으로 주소 뒤에 ?hour=7.5 처럼 붙이면 그 시각의 색을 보여 준다.
+(function (global) {
+  'use strict';
+
+  var root = document.documentElement;
+  var STOPS = [ // [시각, 색상]. 색상은 계속 줄어들게 적는다(다음날 8시는 32시, 파랑 212 - 360 = -148)
+    [8, 212],   // 아침 파랑
+    [14, 148],  // 점심 초록(지금 사이트 색)
+    [23, 8],    // 저녁 빨강
+    [32, -148]  // 다음날 아침 파랑
+  ];
+
+  function previewHour() {
+    var m = /[?&]hour=([0-9.]+)/.exec(global.location.search);
+    return m ? parseFloat(m[1]) % 24 : null;
+  }
+
+  function hueAt(hour) {
+    var h = hour < STOPS[0][0] ? hour + 24 : hour;
+    for (var i = 0; i < STOPS.length - 1; i++) {
+      var a = STOPS[i], b = STOPS[i + 1];
+      if (h >= a[0] && h <= b[0]) {
+        var t = (h - a[0]) / (b[0] - a[0]);
+        return a[1] + (b[1] - a[1]) * t; // 360을 넘거나 0보다 작아도 hsl()은 한 바퀴 돌려 읽는다
+      }
+    }
+    return STOPS[0][1];
+  }
+
+  var last = null;
+  function update() {
+    var fixed = previewHour();
+    var now = new Date();
+    var hue = hueAt(fixed != null ? fixed : now.getHours() + now.getMinutes() / 60);
+    // 아침 8시에 -148에서 212로 되돌아갈 때(같은 파랑)는 한 바퀴 도는 전환을 보여 주지 않는다
+    var jump = last != null && Math.abs(hue - last) > 30;
+    if (jump) { root.style.transition = 'none'; }
+    root.style.setProperty('--hue', hue.toFixed(2));
+    root.setAttribute('data-daytime', '');
+    if (jump) { void root.offsetWidth; root.style.transition = ''; }
+    last = hue;
+  }
+
+  update();
+  if (previewHour() == null) { global.setInterval(update, 60000); }
+})(window);
