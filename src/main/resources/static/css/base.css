@@ -625,7 +625,8 @@ main.home { grid-template-columns: minmax(0, 1fr); }
 .hero-mine { display: grid; gap: 2px; padding: 10px 12px; border-radius: 14px; background: rgba(255,255,255,.12); }
 .hero-mine[hidden] { display: none; }
 .hero-mine__head { display: flex; justify-content: space-between; align-items: center; padding: 0 4px 2px; font-size: 0.85rem; }
-.hero-mine__title { font-weight: 700; color: #fff; }
+.hero-mine__title { font-weight: 700; color: #fff; text-decoration: none; }
+.hero-mine__title:hover { color: #fff; text-decoration: underline; }
 .hero-mine__all { color: rgba(255,255,255,.85); text-decoration: none; }
 .hero-mine__all:hover { color: #fff; text-decoration: underline; }
 .hero-mine__item { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 4px 6px; border-radius: 10px; color: #fff; text-decoration: none; }

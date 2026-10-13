@@ -122,14 +122,15 @@ public class BlogQueryService {
         return new BlogPage(items, page, size, total == null ? 0 : total);
     }
 
-    /** 운영하는 블로그(지금 블로그장)와 참여한 블로그(부블로그장·멤버). 폐쇄된 블로그는 뺀다(FR-016). */
+    /** 운영하는 블로그(지금 블로그장)와 참여한 블로그(부블로그장·멤버). 폐쇄된 블로그는 뺀다(FR-016).
+     *  블로그가 만들어진 순서(오래된 것부터)로 준다(2026-10-13 사용자 요청). */
     @Transactional(readOnly = true)
     public MyBlogs myBlogs(long userId) {
         List<MyBlogItem> all = jdbc.query("""
                 SELECT b.id, b.name, b.address, m.role, b.status, b.close_scheduled_at
                 FROM blog_members m JOIN blogs b ON b.id = m.blog_id
                 WHERE m.user_id = ? AND b.status IN ('ACTIVE', 'CLOSING')
-                ORDER BY m.joined_at DESC, b.id DESC""",
+                ORDER BY b.created_at, b.id""",
                 (rs, i) -> new MyBlogItem(rs.getLong("id"), rs.getString("name"), rs.getString("address"),
                         rs.getString("role"), rs.getString("status"),
                         rs.getObject("close_scheduled_at", LocalDateTime.class)),

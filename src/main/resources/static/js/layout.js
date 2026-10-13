@@ -17,6 +17,13 @@
   }
 
   // 왼쪽 로고·공지, 가운데 검색, 오른쪽 내 메뉴(2026-10-08 배치 변경). "회원가입"은 버튼처럼 보이고, "블로그 만들기"는 닉네임 메뉴 안에 있다.
+  // 내 블로그 목록은 머리 메뉴의 두 곳에서 쓰므로 한 번만 불러온다
+  var myBlogsRequest = null;
+  function myBlogs() {
+    if (!myBlogsRequest) { myBlogsRequest = api.get('/api/me/blogs'); }
+    return myBlogsRequest;
+  }
+
   function renderHeader(me) {
     var header = document.createElement('header');
     header.className = 'site-header';
@@ -57,7 +64,12 @@
       right.appendChild(bellButton());
       right.appendChild(profileMenu(me));
     } else if (me) {
-      right.appendChild(link('/me/blogs.html', '내 블로그'));
+      // "내 블로그"는 내가 처음 만든 블로그로 바로 간다. 만든 블로그가 없으면 내 블로그 목록 화면(2026-10-13 사용자 요청)
+      var mine = link('/me/blogs.html', '내 블로그');
+      right.appendChild(mine);
+      myBlogs().then(function (res) {
+        if (res.owned.length) { mine.href = '/blog/' + encodeURIComponent(res.owned[0].address); }
+      }, function () { /* 목록 화면으로 둔다 */ });
       right.appendChild(bellButton());
       right.appendChild(profileMenu(me));
     } else {
@@ -93,7 +105,7 @@
       var create = link('/blogs/new.html', '블로그 만들기');
       create.hidden = true;
       list.appendChild(create);
-      api.get('/api/me/blogs').then(function (res) {
+      myBlogs().then(function (res) {
         create.hidden = res.owned.length > 0;
       }, function () { create.hidden = false; });
     }

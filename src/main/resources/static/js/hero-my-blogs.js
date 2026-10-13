@@ -29,10 +29,15 @@
 
   // 로그인하지 않았으면 401이 오고, 빈 곳으로 둔다
   api.get('/api/me/blogs').then(function (res) {
-    var blogs = (res.owned || []).concat(res.joined || []);
+    // 운영·참여 구분 없이 블로그가 만들어진 순서로 보여 준다(id가 만든 순서, 2026-10-13 사용자 요청)
+    var blogs = (res.owned || []).concat(res.joined || []).sort(function (a, b) { return a.id - b.id; });
     if (!blogs.length) { return; }
     var head = el('div', 'hero-mine__head');
-    head.appendChild(el('span', 'hero-mine__title', '내 블로그'));
+    // 제목을 누르면 내가 처음 만든 블로그로, 만든 블로그가 없으면 내 블로그 목록으로 간다
+    var title = el('a', 'hero-mine__title', '내 블로그');
+    title.href = res.owned && res.owned.length
+      ? '/blog/' + encodeURIComponent(res.owned[0].address) : '/me/blogs.html';
+    head.appendChild(title);
     if (blogs.length > MAX_ITEMS) {
       var all = el('a', 'hero-mine__all', '전체 ' + blogs.length + '개');
       all.href = '/me/blogs.html';

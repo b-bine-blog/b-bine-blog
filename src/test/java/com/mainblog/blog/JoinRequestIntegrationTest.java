@@ -133,5 +133,9 @@ class JoinRequestIntegrationTest extends BlogTestBase {
         Res r = getAs(me, "/api/me/blogs");
         assertThat(r.json().get("owned").size()).isEqualTo(2);
         assertThat(r.json().get("joined").size()).isEqualTo(3);
+        // 블로그가 만들어진 순서(오래된 것부터, 2026-10-13 사용자 요청)
+        assertThat(r.json().get("owned").get(0).get("address").asText()).isEqualTo("mine-1");
+        assertThat(r.json().get("joined").get(0).get("address").asText()).isEqualTo("other-1");
+        assertThat(r.json().get("joined").get(2).get("address").asText()).isEqualTo("other-3");
     }
 }
