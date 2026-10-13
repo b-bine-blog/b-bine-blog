@@ -13,6 +13,7 @@
 - [데이터베이스(ERD)](#데이터베이스erd)
 - [폴더 구조](#폴더-구조)
 - [개발 방식](#개발-방식)
+- [브랜치 전략](#브랜치-전략)
 - [팀](#팀)
 - [업데이트](#업데이트)
 - [내 컴퓨터에서 바로 써 보기](#내-컴퓨터에서-바로-써-보기)
@@ -86,6 +87,18 @@ local/                        내 컴퓨터에서 실행(start.sh, 예시 데이
 - 요구사항분석서 → 기능별 명세(`specs/`) → 계획 → 작업 목록 → 구현 순서로 만듭니다([Spec Kit](https://github.com/github/spec-kit)).
 - 정하거나 바꾼 것은 이유와 함께 [결정 기록](docs/03-decisions/README.md)(D-번호)에 남깁니다.
 - 커밋 메시지와 코드 주석에 관련 요구사항 ID(USR·BLG·SOC·BRD·ADM·SEC·SCL)와 결정 번호를 적습니다.
+
+## 브랜치 전략
+
+Git Flow를 씁니다. 자세한 순서는 [CONTRIBUTING.md](CONTRIBUTING.md)에 있습니다.
+
+| 브랜치 | 하는 일 |
+|---|---|
+| `main` | 운영. 합치면 GitHub Actions가 서버에 배포 |
+| `develop` | 다음 버전 작업을 모음 |
+| `feature/<이름>` | 기능 하나(`develop`에서 만들어 `develop`에 합침) |
+| `release/vX.YY` | 배포 준비(버전 표시·릴리스 노트), `main`과 `develop`에 합침 |
+| `hotfix/vX.YY.Z` | 운영 급한 수정(`main`에서 만들어 `main`과 `develop`에 합침) |
 
 ## 팀
 
