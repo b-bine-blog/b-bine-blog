@@ -75,6 +75,10 @@
     $('step-email').hidden = view.step !== 'EMAIL';
     $('step-signup').hidden = view.step !== 'SIGNUP';
     $('step-link').hidden = view.step !== 'LINK';
+    if (view.step === 'EMAIL') {
+      api.setText($('email-hint'), '첫 가입 시 ' + socialLogin.name(String(view.provider).toLowerCase())
+        + ' 이메일 인증 필요');
+    }
     if (view.step === 'SIGNUP') {
       api.setText($('signup-email'), view.maskedEmail ? '(이메일 ' + view.maskedEmail + ')' : '');
     }
