@@ -216,6 +216,7 @@ Testcontainers가 테스트 때만 쓰고 버리는 MySQL 8.0 컨테이너를 �
 
 ## 문서
 
+- [개발환경](docs/04-design/development-environment.md): 로컬·테스트·운영 환경, 도구 버전, 설정값과 비밀 값, 개발 흐름
 - [CLAUDE.md](CLAUDE.md): AI 코딩 에이전트 작업 규칙
 - [.specify/memory/constitution.md](.specify/memory/constitution.md): 개발 원칙 (Spec Kit)
 - [specs/](specs/README.md): 기능별 명세. 001 회원 [specs/001-member-auth/](specs/001-member-auth/spec.md), 002 블로그 [specs/002-blog-management/](specs/002-blog-management/spec.md), 003 소셜·알림 [specs/003-social-notification/](specs/003-social-notification/spec.md), 004 게시판 [specs/004-board/](specs/004-board/spec.md), 005 관리자 [specs/005-admin-moderation/](specs/005-admin-moderation/spec.md)
