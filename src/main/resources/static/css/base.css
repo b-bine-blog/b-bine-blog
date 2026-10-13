@@ -627,6 +627,14 @@ main.home { grid-template-columns: minmax(0, 1fr); }
 .hero-mine__head { display: flex; justify-content: space-between; align-items: center; padding: 0 4px 2px; font-size: 0.85rem; }
 .hero-mine__title { font-weight: 700; color: #fff; text-decoration: none; }
 .hero-mine__title:hover { color: #fff; text-decoration: underline; }
+.hero-mine__tools { display: flex; align-items: center; gap: 8px; }
+.hero-mine__add { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: rgba(255,255,255,.2);
+  color: #fff; font-size: 1rem; font-weight: 700; line-height: 1; text-decoration: none; }
+.hero-mine__add:hover { background: rgba(255,255,255,.35); color: #fff; }
+.hero-mine__row { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.hero-mine__row .hero-mine__item { flex: 1; }
+.hero-mine__delete { flex-shrink: 0; padding: 2px 8px; border-radius: 999px; font-size: 0.75rem; color: rgba(255,255,255,.75); text-decoration: none; }
+.hero-mine__delete:hover { background: rgba(255,255,255,.18); color: #fff; }
 .hero-mine__all { color: rgba(255,255,255,.85); text-decoration: none; }
 .hero-mine__all:hover { color: #fff; text-decoration: underline; }
 .hero-mine__item { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 4px 6px; border-radius: 10px; color: #fff; text-decoration: none; }
