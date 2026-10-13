@@ -32,6 +32,7 @@
     api.setText($('member-count'), blog.memberCount);
     api.setText($('visibility'), VISIBILITY[blog.visibility]);
     if (blog.coverImageUrl) {
+      $('cover').onerror = function () { show('cover', false); }; // 파일이 없는 표지는 숨긴다
       $('cover').src = blog.coverImageUrl;
       show('cover', true);
     }

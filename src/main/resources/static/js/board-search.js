@@ -41,6 +41,7 @@
       li.appendChild(body);
       if (b.coverImageUrl) {
         var img = el('img', 'post-item__thumb');
+        img.addEventListener('error', function () { img.remove(); }); // 파일이 없는 표지는 뺀다
         img.src = b.coverImageUrl;
         img.alt = '';
         li.appendChild(img);

@@ -29,6 +29,12 @@ export TZ=Asia/Seoul
 
 mkdir -p "$FILE_STORAGE_ROOT"
 
+# 테스트 블로그 표지(2026-10-13 사용자 요청): 저장소의 deploy/seed-covers를 업로드 폴더에 복사한다.
+# 이미 있는 파일은 덮어쓰지 않는다. DB의 images 행은 따로 넣는다.
+if [ -d "$APP_DIR/deploy/seed-covers" ]; then
+  cp -n "$APP_DIR/deploy/seed-covers/"* "$FILE_STORAGE_ROOT/" 2>/dev/null || true
+fi
+
 # java 찾기: SSH로 명령만 실행하면 로그인 때 읽는 PATH 설정이 빠져 java를 못 찾을 수 있다
 find_java() {
   local c

@@ -31,14 +31,14 @@ jobs:
           ./gradlew --no-daemon bootJar -x test
           cp build/libs/*-SNAPSHOT.jar app.jar.new
 
-      - name: 서버로 jar와 스크립트 보내기
+      - name: 서버로 jar와 스크립트, 테스트 블로그 표지 보내기
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_ADDRESS }}
           username: ${{ secrets.SSH_ID }}
           password: ${{ secrets.SSH_PASSWORD }}
           port: ${{ secrets.SSH_PORT }}
-          source: app.jar.new,deploy/deploy.sh
+          source: app.jar.new,deploy/deploy.sh,deploy/seed-covers
           target: ~/blogproject
           overwrite: true
 

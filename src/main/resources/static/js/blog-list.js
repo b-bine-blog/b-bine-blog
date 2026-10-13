@@ -41,15 +41,20 @@
     var a = el('a', 'blog-tile__link');
     a.href = '/blog/' + encodeURIComponent(blog.address);
     var cover = el('div', 'blog-tile__cover');
-    if (blog.coverImageUrl) {
-      var img = el('img');
-      img.src = blog.coverImageUrl;
-      img.alt = '';
-      img.loading = 'lazy';
-      cover.appendChild(img);
-    } else {
+    function showInitial() {
+      cover.textContent = '';
       cover.classList.add('is-empty');
       cover.appendChild(el('span', 'blog-tile__initial', Array.from(blog.name || '?')[0]));
+    }
+    if (blog.coverImageUrl) {
+      var img = el('img');
+      img.alt = '';
+      img.loading = 'lazy';
+      img.addEventListener('error', showInitial); // 파일이 없거나 깨진 표지는 첫 글자로 바꾼다
+      img.src = blog.coverImageUrl;
+      cover.appendChild(img);
+    } else {
+      showInitial();
     }
     a.appendChild(cover);
     var body = el('div', 'blog-tile__body');
@@ -68,6 +73,7 @@
     var li = el('li', 'blog-card');
     if (blog.coverImageUrl) {
       var img = el('img', 'blog-card__cover');
+      img.addEventListener('error', function () { img.remove(); }); // 깨진 표지는 빼고 글자만 보인다
       img.src = blog.coverImageUrl;
       img.alt = '';
       img.loading = 'lazy';

@@ -13,6 +13,8 @@
     <div class="hero__inner">
       <h1>함께 쓰는 블로그</h1>
       <p>관심 있는 글과 블로그를 찾아보세요.</p>
+      <!-- 최신 공지·인기 블로그·인기 글을 번갈아 보여 준다(D-116) -->
+      <div id="hero-spotlight" class="spotlight" aria-live="polite" hidden></div>
       <form id="search-form" class="blog-search" role="search">
         <label for="q" class="sr-only">통합 검색</label>
         <input id="q" name="q" type="search" maxlength="20" placeholder="블로그·글 제목·태그·닉네임 검색">
@@ -66,5 +68,6 @@
   <script src="/js/blog-list.js"></script>
   <script src="/js/board-common.js"></script>
   <script src="/js/board-feed.js"></script>
+  <script src="/js/hero-spotlight.js"></script>
 </body>
 </html>
