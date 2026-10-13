@@ -81,13 +81,20 @@
         <a href="/blogs/new.html" class="button-light">+ 블로그 만들기</a>
       </div>
       <p id="blogs-message" class="message" role="alert"></p>
+      <!-- 운영·참여한 블로그 모두 5개씩 넘겨 본다(2026-10-13 사용자 요청) -->
       <div class="me-blogs__cols">
         <div>
-          <h3>운영하는 블로그</h3>
+          <div class="me-blogs__head">
+            <h3>운영하는 블로그</h3>
+            <div class="me-pager" id="owned-pager" hidden>
+              <button type="button" id="owned-prev" class="button-light button-small" aria-label="이전 운영 블로그">‹</button>
+              <span id="owned-page" aria-live="polite"></span>
+              <button type="button" id="owned-next" class="button-light button-small" aria-label="다음 운영 블로그">›</button>
+            </div>
+          </div>
           <ul id="owned" class="blog-list"></ul>
         </div>
         <div>
-          <!-- 운영하는 블로그는 많아야 8개(공개 3 + 비공개 5, BLG-10)지만 참여한 블로그는 제한이 없어 넘겨 본다 -->
           <div class="me-blogs__head">
             <h3>참여한 블로그</h3>
             <div class="me-pager" id="joined-pager" hidden>

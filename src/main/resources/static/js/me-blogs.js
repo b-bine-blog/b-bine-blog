@@ -47,28 +47,28 @@
     items.forEach(function (b) { list.appendChild(renderItem(b)); });
   }
 
-  // 참여한 블로그는 개수 제한이 없어 한 번에 JOINED_PAGE_SIZE개씩 넘겨 본다(2026-10-13 사용자 요청)
-  var JOINED_PAGE_SIZE = 5;
-  function pageJoined(items) {
-    var pages = Math.max(1, Math.ceil(items.length / JOINED_PAGE_SIZE));
+  // 운영·참여한 블로그 모두 한 번에 PAGE_SIZE개씩 넘겨 본다(2026-10-13 사용자 요청). key는 owned·joined
+  var PAGE_SIZE = 5;
+  function paged(key, items, emptyText) {
+    var pages = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
     var page = 1;
     function show() {
-      fill('joined', items.slice((page - 1) * JOINED_PAGE_SIZE, page * JOINED_PAGE_SIZE), '참여한 블로그가 없습니다');
-      $('joined-page').textContent = page + ' / ' + pages;
-      $('joined-prev').disabled = page === 1;
-      $('joined-next').disabled = page === pages;
+      fill(key, items.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), emptyText);
+      $(key + '-page').textContent = page + ' / ' + pages;
+      $(key + '-prev').disabled = page === 1;
+      $(key + '-next').disabled = page === pages;
     }
-    $('joined-pager').hidden = pages === 1;
-    $('joined-prev').addEventListener('click', function () { if (page > 1) { page--; show(); } });
-    $('joined-next').addEventListener('click', function () { if (page < pages) { page++; show(); } });
+    $(key + '-pager').hidden = pages === 1;
+    $(key + '-prev').addEventListener('click', function () { if (page > 1) { page--; show(); } });
+    $(key + '-next').addEventListener('click', function () { if (page < pages) { page++; show(); } });
     show();
   }
 
   api.get('/api/auth/session').then(function (me) {
     if (me.admin) { return; }
     return api.get('/api/me/blogs').then(function (res) {
-      fill('owned', res.owned, '운영하는 블로그가 없습니다');
-      pageJoined(res.joined);
+      paged('owned', res.owned, '운영하는 블로그가 없습니다');
+      paged('joined', res.joined, '참여한 블로그가 없습니다');
       $('blogs').hidden = false;
       if (location.hash === '#blogs') { $('blogs').scrollIntoView(); }
     });
