@@ -108,7 +108,7 @@ specs/                        기능별 명세·계획·API 계약·작업 목�
 release-notes/                버전별 업데이트 노트(사이트 공지로도 올라감)
 deploy/                       서버 실행 스크립트, nginx 설정
 local/                        내 컴퓨터에서 실행(start.sh, 예시 데이터)
-.github/workflows/            배포·릴리스 노트 자동화
+.github/workflows/            자동 테스트·배포·릴리스 노트 자동화
 ```
 
 ## 개발 방식
@@ -213,7 +213,7 @@ cp .env.example .env
 ./gradlew test
 ```
 
-Testcontainers가 테스트 때만 쓰고 버리는 MySQL 8.0 컨테이너를 띄우고(`docs/04-design/schema.sql`), 메일은 GreenMail(SMTP 3025)로 받습니다. 테스트가 데이터를 지우고 다시 넣기 때문에 Crowfoot DB에는 연결하지 않습니다. 자동 테스트는 개발 환경(Claude 작업 환경)에서 돌리므로, 내 컴퓨터에서 앱만 쓸 때는 필요 없습니다.
+Testcontainers가 테스트 때만 쓰고 버리는 MySQL 8.0 컨테이너를 띄우고(`docs/04-design/schema.sql`), 메일은 GreenMail(SMTP 3025)로 받습니다. 테스트가 데이터를 지우고 다시 넣기 때문에 Crowfoot DB에는 연결하지 않습니다. `develop`·`feature/*`·`release/*`·`hotfix/*`에 올리거나 PR을 만들면 GitHub Actions(`ci.yml`)가 같은 테스트를 자동으로 돌립니다(D-128). 내 컴퓨터에서 앱만 쓸 때는 필요 없습니다.
 
 ## 문서
 
