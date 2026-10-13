@@ -1,10 +1,10 @@
 # jar를 만들어 서버에 배포한다 (D-106, 도커 없이).
-# main에 push되면 실행된다. "Run workflow" 버튼은 이 파일이 main에 들어간 뒤에 보인다.
+# main에 push되면 실행된다(Git Flow, D-123: release/*·hotfix/* 브랜치를 main에 합치면 배포). "Run workflow" 버튼은 이 파일이 main에 들어간 뒤에 보인다.
 name: deploy
 
 on:
   push:
-    branches: [main, deploy-docker]   # deploy-docker: main 병합 전 PR 브랜치에서 배포 확인용
+    branches: [main]   # Git Flow: 운영 배포는 main에 합칠 때만(D-123)
     paths-ignore: ['release-notes/**']   # 노트만 더한 push는 배포하지 않고 release-note가 공지로 올린다(D-108)
   workflow_dispatch:
 

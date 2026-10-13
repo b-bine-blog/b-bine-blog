@@ -8,7 +8,7 @@ name: release-note
 
 on:
   push:
-    branches: [main, deploy-docker]
+    branches: [main]   # D-123
     paths: ['release-notes/**']
   workflow_dispatch:
     inputs:
