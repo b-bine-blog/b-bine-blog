@@ -1,4 +1,21 @@
-# blogproject
+# b-bine blog
+
+여러 사람이 함께 쓰는 블로그 플랫폼입니다. 👉 **https://mainttblog.java21.net**
+
+## 업데이트
+
+새 버전이 나가면 맨 위에 더합니다. 사이트의 공지사항에도 같은 내용이 "업데이트"로 올라갑니다.
+
+| 버전 | 날짜 | 바뀐 점 |
+|---|---|---|
+| [v1.05](release-notes/2026-10-13-blog-cards-rules/notice.md) | 2026-10-13 | 메인 화면 블로그 둘러보기를 글 위 표지 카드 5개로, 화면 아래 "운영 규칙"(삭제 시점·제한 안내) 추가 |
+| [v1.04](release-notes/2026-10-13-inquiry-dark/notice.md) | 2026-10-13 | "시스템 문의"로 관리자에게 문의(비회원도 가능), 다크 모드 |
+| [v1.03](release-notes/2026-10-12-og-preview/notice.md) | 2026-10-12 | 링크 미리보기 그림을 글 화면 모양으로, 업데이트 공지에 "업데이트" 표시 |
+| [v1.02](release-notes/2026-10-12-feed-notice/notice.md) | 2026-10-12 | 메인 글 목록 위에 최근 공지 고정, 메뉴 정리 |
+| [v1.01](release-notes/2026-10-12-github-link/notice.md) | 2026-10-12 | 화면 아래에 GitHub 링크 |
+| [v1.00](release-notes/2026-10-12-b-bine-blog/notice.md) | 2026-10-12 | 새 이름 b-bine blog와 초록 디자인 |
+
+## 프로젝트 소개
 
 티스토리형 블로그 플랫폼(메인블로그) 프로젝트입니다.
 
