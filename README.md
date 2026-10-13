@@ -43,7 +43,7 @@
 | 메일 | Gmail SMTP (로컬은 Mailpit 가짜 메일함) |
 | 파일 | `FileStorage` 인터페이스로 서버 디스크에 저장(나중에 S3로 바꿀 수 있게 분리) |
 | 테스트 | JUnit 5, Testcontainers(MySQL), GreenMail |
-| 배포 | GitHub Actions → SSH로 서버에 jar 배포, nginx |
+| 배포 | GitHub Actions → SSH로 서버에 jar 전송 → 서버에서 도커 이미지로 실행(D-127), 두 포트를 번갈아 쓰는 무중단 배포(D-126), nginx |
 
 ## 구조
 
@@ -55,7 +55,7 @@ flowchart LR
   A --> F[[업로드 파일<br/>FileStorage · 서버 디스크]]
   A --> M[Gmail SMTP]
   U -.사람 확인.-> T[Cloudflare Turnstile]
-  G[GitHub Actions] -->|jar 빌드 · SSH 배포| A
+  G[GitHub Actions] -->|jar 빌드 · SSH 배포 · 도커 컨테이너| A
 ```
 
 - 화면은 `src/main/resources/static`의 정적 파일이고, 모든 데이터는 `/api/**`로 주고받습니다. 공통 `api.js`가 CSRF 헤더(`X-XSRF-TOKEN`)를 붙입니다.
@@ -216,6 +216,7 @@ Testcontainers가 테스트 때만 쓰고 버리는 MySQL 8.0 컨테이너를 �
 
 ## 문서
 
+- [개발환경](docs/04-design/development-environment.md): 로컬·테스트·운영 환경, 도구 버전, 설정값과 비밀 값, 개발 흐름
 - [CLAUDE.md](CLAUDE.md): AI 코딩 에이전트 작업 규칙
 - [.specify/memory/constitution.md](.specify/memory/constitution.md): 개발 원칙 (Spec Kit)
 - [specs/](specs/README.md): 기능별 명세. 001 회원 [specs/001-member-auth/](specs/001-member-auth/spec.md), 002 블로그 [specs/002-blog-management/](specs/002-blog-management/spec.md), 003 소셜·알림 [specs/003-social-notification/](specs/003-social-notification/spec.md), 004 게시판 [specs/004-board/](specs/004-board/spec.md), 005 관리자 [specs/005-admin-moderation/](specs/005-admin-moderation/spec.md)

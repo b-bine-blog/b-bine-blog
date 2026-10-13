@@ -2,9 +2,15 @@
 # 숫자 규칙은 모두 설정값으로 두고 환경변수로 바꿀 수 있게 한다(D-68). 값의 근거는 specs/001-member-auth/data-model.md "설정값".
 # 비밀 값(DB 비밀번호, JWT_SECRET 등)은 기본값을 두지 않는다. 없으면 시작에 실패한다.
 
+server:
+  # 무중단 배포(D-126): 옛 앱을 끌 때 처리 중인 요청은 끝내고 내려간다
+  shutdown: graceful
+
 spring:
   application:
     name: mainblog
+  lifecycle:
+    timeout-per-shutdown-phase: ${APP_SHUTDOWN_TIMEOUT:20s}
   config:
     # 로컬 실행 때 저장소 루트의 .env를 읽는다(.env.example 참고). 운영은 환경변수로 넣는다.
     import: optional:file:.env[.properties]
