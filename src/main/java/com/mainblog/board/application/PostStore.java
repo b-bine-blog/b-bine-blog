@@ -80,8 +80,9 @@ public class PostStore {
     }
 
     public void update(long id, String title, String content, Long categoryId, LocalDateTime now) {
-        jdbc.update("UPDATE posts SET title = ?, content = ?, category_id = ?, updated_at = ? WHERE id = ?",
-                title, content, categoryId, now, id);
+        // edited_at: 조회수·좋아요도 updated_at을 바꾸므로 고친 일시는 따로 둔다(D-133)
+        jdbc.update("UPDATE posts SET title = ?, content = ?, category_id = ?, edited_at = ?, updated_at = ? WHERE id = ?",
+                title, content, categoryId, now, now, id);
     }
 
     public void markDeleted(long id, long deletedBy, LocalDateTime now) {

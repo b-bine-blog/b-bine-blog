@@ -327,6 +327,7 @@ CREATE TABLE posts (
     hidden_at DATETIME COMMENT '숨긴 시각',
     deleted_at DATETIME COMMENT '삭제 시각',
     deleted_by BIGINT COMMENT '삭제한 회원 번호-----users.id(FK 선 없음). 작성자가 아니면 "내 글 삭제됨" 알림',
+    edited_at DATETIME(6) COMMENT '고친 일시-----글을 수정하면 기록. NULL이면 고친 적 없음. 목록에 "수정됨" 표시(D-133)',
     created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) COMMENT '작성 일시',
     updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6) COMMENT '수정 일시',
     PRIMARY KEY (id),
