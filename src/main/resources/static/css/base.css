@@ -785,3 +785,13 @@ button.social-button--naver:hover:not(:disabled) { background: #02b351; color: #
 .tabs .tab-add { padding: 6px 12px; font-weight: 700; background: #fff; color: var(--green-700); border: 1px dashed var(--green-500); }
 .feed-tag-form { margin: 0 0 12px; }
 .feed-tag-form input { flex: 1; min-width: 160px; max-width: 280px; }
+
+/* 스크랩(D-134): 글 카드 오른쪽 위 책갈피 버튼, 목록 카테고리 줄의 책갈피 표시 */
+.post-card__head .scrap-button { position: absolute; top: 20px; right: 24px; margin: 0; width: 44px; height: 44px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center; border-radius: 999px;
+  background: transparent; color: var(--green-700); border: 1px solid var(--line); }
+.post-card__head .scrap-button:hover:not(:disabled) { background: var(--green-50); color: var(--green-800); }
+.post-card__head .scrap-button[aria-pressed="true"] { color: var(--green-500); border-color: var(--green-500); }
+.scrap-button__icon { width: 22px; height: 22px; }
+.post-item__scrap-mark { width: 13px; height: 13px; color: var(--green-500); flex: none; }
+@media (max-width: 600px) { .post-card__head .scrap-button { top: 14px; right: 12px; width: 38px; height: 38px; } }

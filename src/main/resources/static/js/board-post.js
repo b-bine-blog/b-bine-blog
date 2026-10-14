@@ -111,11 +111,15 @@
   });
 
   // 스크랩(D-134): 로그인한 일반 회원이 블로그 글에서만. 다시 누르면 취소.
+  // 글 카드 오른쪽 위의 책갈피 그림 버튼. 채워지면 스크랩한 상태.
   function renderScrap() {
-    $('scrap').hidden = isNotice || !me || !me.memberId || !!me.admin;
-    $('scrap').setAttribute('aria-pressed', post.scrapped ? 'true' : 'false');
-    api.setText($('scrap'), post.scrapped ? '스크랩됨' : '스크랩');
-    $('scrap').style.fontWeight = post.scrapped ? '700' : '400';
+    var b = $('scrap');
+    b.hidden = isNotice || !me || !me.memberId || !!me.admin;
+    b.setAttribute('aria-pressed', post.scrapped ? 'true' : 'false');
+    b.setAttribute('aria-label', post.scrapped ? '스크랩 취소' : '스크랩');
+    b.title = post.scrapped ? '스크랩 취소' : '스크랩';
+    board.clear(b);
+    b.appendChild(board.bookmarkIcon(!!post.scrapped, 'scrap-button__icon'));
   }
 
   $('scrap').addEventListener('click', function () {

@@ -91,10 +91,18 @@
     toggle.setAttribute('aria-controls', list.id);
     list.appendChild(link('/me/index.html', '내 정보'));
     if (!me.admin) { list.appendChild(link('/inquiry.html#mine', '내 문의')); } // ADM-08, D-112
-    if (!me.admin) { // 작성글·작성댓글·스크랩(D-134)
-      list.appendChild(link('/me/activity.html#posts', '작성글'));
-      list.appendChild(link('/me/activity.html#comments', '작성댓글'));
-      list.appendChild(link('/me/activity.html#scraps', '스크랩'));
+    if (!me.admin) { // 작성글·작성댓글·스크랩(D-134). 회원가입처럼 지금 화면 위 창으로 연다(2026-10-14 사용자 요청)
+      [['#posts', '작성글'], ['#comments', '작성댓글'], ['#scraps', '스크랩']].forEach(function (m) {
+        var a = link('/me/activity.html' + m[0], m[1]);
+        a.addEventListener('click', function (e) {
+          if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) { return; }
+          e.preventDefault();
+          list.hidden = true;
+          toggle.setAttribute('aria-expanded', 'false');
+          authModal(a.getAttribute('href'), 'activity');
+        });
+        list.appendChild(a);
+      });
     }
     if (!me.admin) {
       // 운영하는 블로그가 이미 있으면 메뉴에서는 뺀다. 더 만들 때는 내 정보의 내 블로그에 있는 링크를 쓴다(D-109, D-117)
@@ -209,6 +217,8 @@
   var AUTH_PAGES = /^\/(login|signup|find-email|find-password)\.html$/;
   // 회원 프로필도 지금 화면 위 창으로 띄운다(SOC-03, 2026-10-14 사용자 요청)
   var PROFILE_PAGE = /^\/profile\/\d+\/?$/;
+  // 작성글·작성댓글·스크랩도 창으로 띄운다(D-134)
+  var ACTIVITY_PAGE = /^\/me\/activity\.html$/;
 
   function openInModal(a) {
     a.addEventListener('click', function (e) {
@@ -219,7 +229,10 @@
   }
 
   var modal = null;
-  function authModal(href, profile) {
+  // kind: 없으면 로그인·회원가입, 'profile'은 회원 프로필, 'activity'는 작성글·작성댓글·스크랩. 뒤 둘은 넓은 창이다.
+  function authModal(href, kind) {
+    var profile = kind === true || kind === 'profile';
+    var wide = profile || kind === 'activity';
     if (!modal) {
       modal = document.createElement('dialog');
       modal.className = 'auth-modal';
@@ -251,10 +264,10 @@
     }
     var url = new URL(href, location.href);
     var frame = modal.querySelector('iframe');
-    modal.classList.toggle('auth-modal--wide', !!profile);
-    frame.title = profile ? '회원 프로필' : '로그인·회원가입';
-    if (!profile) { url.searchParams.set('next', location.pathname + location.search); }
-    frame.src = url.pathname + url.search;
+    modal.classList.toggle('auth-modal--wide', wide);
+    frame.title = kind === 'activity' ? '작성글·작성댓글·스크랩' : (profile ? '회원 프로필' : '로그인·회원가입');
+    if (!wide) { url.searchParams.set('next', location.pathname + location.search); }
+    frame.src = url.pathname + url.search + url.hash;
     if (!modal.open) { modal.showModal(); }
   }
 
@@ -282,7 +295,8 @@
       var a = e.target.closest && e.target.closest('a[href]');
       if (!a || a.target) { return; }
       var url = new URL(a.href, location.href);
-      if (url.origin === location.origin && (AUTH_PAGES.test(url.pathname) || PROFILE_PAGE.test(url.pathname))) { return; }
+      if (url.origin === location.origin && (AUTH_PAGES.test(url.pathname) || PROFILE_PAGE.test(url.pathname)
+          || ACTIVITY_PAGE.test(url.pathname))) { return; }
       e.preventDefault();
       window.top.location.href = a.href;
     });
