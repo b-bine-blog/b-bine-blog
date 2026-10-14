@@ -1,5 +1,6 @@
 package com.mainblog.board.application;
 
+import com.mainblog.blog.application.BlogPermissionService;
 import com.mainblog.board.application.BoardViews.BlogRef;
 import com.mainblog.board.application.BoardViews.PostPage;
 import com.mainblog.board.application.BoardViews.PostSummary;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Component;
 /**
  * 글 목록 한 줄(PostSummary) 읽기 (004 T025). 블로그 목록·피드·검색·태그·공지 목록이 같이 쓴다.
  * 첫 사진은 저장된 본문을 걸러 처음 나오는 이미지로 정한다(D-100 #7). 별칭: posts p, users u, blogs b, categories c.
+ * 로그인한 회원이 보면 그 회원이 스크랩한 글인지(scrapped)도 함께 읽는다(D-134). 비회원은 늘 false.
  */
 @Component
 public class PostSummaryReader {
@@ -60,7 +62,13 @@ public class PostSummaryReader {
         all.addAll(orderArgs);
         all.add(limit);
         all.add(offset);
-        return jdbc.query(SELECT + FROM + "WHERE " + where + " ORDER BY " + orderBy + " LIMIT ? OFFSET ?",
+        Long viewerId = BlogPermissionService.currentUserId();
+        String scrapped = ", FALSE AS scrapped";
+        if (viewerId != null) {
+            scrapped = ", EXISTS (SELECT 1 FROM post_scraps ps WHERE ps.post_id = p.id AND ps.user_id = ?) AS scrapped";
+            all.add(0, viewerId);
+        }
+        return jdbc.query(SELECT + scrapped + FROM + "WHERE " + where + " ORDER BY " + orderBy + " LIMIT ? OFFSET ?",
                 this::map, all.toArray());
     }
 
@@ -74,6 +82,6 @@ public class PostSummaryReader {
                         rs.getString("profile_name"), rs.getBoolean("author_left")),
                 rs.getString("category_name"), MarkdownText.firstImage(html), rs.getInt("like_count"),
                 rs.getInt("view_count"), rs.getInt("comment_count"), rs.getTimestamp("created_at").toLocalDateTime(),
-                rs.getTimestamp("edited_at") != null);
+                rs.getTimestamp("edited_at") != null, rs.getBoolean("scrapped"));
     }
 }

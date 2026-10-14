@@ -52,6 +52,7 @@
         var cat = el('div', 'post-item__cat', p.categoryName || UNCATEGORIZED);
         if (p.thumbnailUrl) { cat.appendChild(imageMark()); }
         if (p.edited) { cat.appendChild(el('span', 'post-item__edited', '수정됨')); }  // 고친 글(D-133)
+        if (p.scrapped) { cat.appendChild(bookmarkIcon(true, 'post-item__scrap-mark', '스크랩한 글')); }  // D-134
         body.appendChild(cat);
       }
       var a = el('a', 'post-item__title', p.title);
@@ -105,6 +106,31 @@
     return svg;
   }
 
+  // 책갈피(스크랩) 그림. 채우면 스크랩한 상태(D-134). 모양은 Lucide bookmark.
+  function bookmarkIcon(filled, className, label) {
+    var ns = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('class', className);
+    svg.setAttribute('viewBox', '0 0 24 24');
+    if (label) {
+      svg.setAttribute('role', 'img');
+      svg.setAttribute('aria-label', label);
+      var title = document.createElementNS(ns, 'title');
+      title.textContent = label;
+      svg.appendChild(title);
+    } else {
+      svg.setAttribute('aria-hidden', 'true');
+    }
+    var path = document.createElementNS(ns, 'path');
+    path.setAttribute('d', 'm19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z');
+    path.setAttribute('fill', filled ? 'currentColor' : 'none');
+    path.setAttribute('stroke', 'currentColor');
+    path.setAttribute('stroke-width', '2');
+    path.setAttribute('stroke-linejoin', 'round');
+    svg.appendChild(path);
+    return svg;
+  }
+
   // 작성자 닉네임. 활동 중인 회원이면 프로필 링크(003 T021, FR-001), 탈퇴·블로그 탈퇴는 글자만.
   function authorNode(author) {
     if (!author) { return document.createTextNode(''); }
@@ -153,7 +179,7 @@
   }
 
   global.board = {
-    el: el, clear: clear, UNCATEGORIZED: UNCATEGORIZED, formatTime: formatTime, postUrl: postUrl, renderPosts: renderPosts, authorNode: authorNode,
+    el: el, clear: clear, bookmarkIcon: bookmarkIcon, UNCATEGORIZED: UNCATEGORIZED, formatTime: formatTime, postUrl: postUrl, renderPosts: renderPosts, authorNode: authorNode,
     renderPager: renderPager, say: say, sayError: sayError
   };
 })(window);

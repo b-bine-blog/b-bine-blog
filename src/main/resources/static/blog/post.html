@@ -17,6 +17,7 @@
     <article id="post" class="panel post-card" hidden>
       <header class="post-card__head">
         <h1 class="post-title" id="title"></h1>
+        <button type="button" id="scrap" class="scrap-button" hidden aria-pressed="false" aria-label="스크랩" title="스크랩"></button>
         <p class="hint post-card__meta" id="meta"></p>
       </header>
       <div class="post-content" id="content"></div>
@@ -25,7 +26,6 @@
         <button type="button" id="like" class="like-button" hidden>좋아요 <span id="like-count">0</span></button>
         <span class="hint" id="like-static" hidden></span>
         <button type="button" id="share" class="button-outline" hidden>링크 복사</button>
-        <button type="button" id="scrap" class="button-outline" hidden aria-pressed="false">스크랩</button>
         <span class="post-card__spacer"></span>
         <a id="edit" class="button button-outline" hidden>수정</a>
         <button type="button" id="delete" class="button-quiet" hidden>삭제</button>

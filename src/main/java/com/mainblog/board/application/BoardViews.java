@@ -17,7 +17,8 @@ public final class BoardViews {
 
     public record PostSummary(long id, String boardType, BlogRef blog, String title, Author author,
                               String categoryName, String thumbnailUrl, int likeCount, int viewCount,
-                              int commentCount, LocalDateTime createdAt, boolean edited) {}
+                              int commentCount, LocalDateTime createdAt, boolean edited,
+                              boolean scrapped) {}
 
     public record PostDetail(long id, String boardType, BlogRef blog, String title, Author author,
                              String categoryName, String thumbnailUrl, int likeCount, int viewCount,

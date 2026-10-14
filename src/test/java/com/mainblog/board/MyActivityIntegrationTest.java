@@ -33,6 +33,14 @@ class MyActivityIntegrationTest extends BoardTestBase {
         assertThat(mine.get("items").get(0).get("title").asText()).isEqualTo("첫 글");  // 스크랩한 순서 최신부터
         assertThat(getAs(b.owner(), "/api/me/scraps").json().get("totalElements").asInt()).isZero();
 
+        // 글 목록에서도 보는 회원이 스크랩한 글만 scrapped(카테고리 줄 책갈피 표시)
+        JsonNode list = getAs(reader, "/api/blogs/" + b.blogId() + "/posts").json().get("items");
+        list.forEach(item -> assertThat(item.get("scrapped").asBoolean()).isTrue());
+        getAs(null, "/api/blogs/" + b.blogId() + "/posts").json().get("items")
+                .forEach(item -> assertThat(item.get("scrapped").asBoolean()).isFalse());
+        getAs(b.owner(), "/api/blogs/" + b.blogId() + "/posts").json().get("items")
+                .forEach(item -> assertThat(item.get("scrapped").asBoolean()).isFalse());
+
         assertThat(putAs(reader, "/api/posts/" + first + "/scrap", null).json().get("scrapped").asBoolean()).isFalse();
         assertThat(getAs(reader, "/api/me/scraps").json().get("totalElements").asInt()).isEqualTo(1);
         assertThat(getAs(null, "/api/me/scraps").status()).isEqualTo(401);
