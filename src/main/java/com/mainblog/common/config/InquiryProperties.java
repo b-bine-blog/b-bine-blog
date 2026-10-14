@@ -9,6 +9,7 @@ import org.springframework.validation.annotation.Validated;
 /**
  * 시스템 문의 설정값 (ADM-08, D-68, D-112). 글자 수는 system_inquiries 칸 길이(제목 30, 내용·답변 2000, 이메일 255) 이하로 둔다.
  * 문의 보내기는 회원·비회원 모두 같은 IP에서 rateWindow 동안 rateLimit건까지.
+ * contactEmail: 개인정보 처리방침의 보호책임자 연락처. 따로 정하지 않으면 메일 발송 계정(문의 답변 메일)과 같다(4.6).
  */
 @Validated
 @ConfigurationProperties("inquiry")
@@ -18,7 +19,8 @@ public record InquiryProperties(
         @Positive int answerMaxLength,
         @Positive int rateLimit,
         @NotNull Duration rateWindow,
-        @NotNull Duration retention) {
+        @NotNull Duration retention,
+        String contactEmail) {
 
     public InquiryProperties {
         if (titleMaxLength > 30 || contentMaxLength > 2000 || answerMaxLength > 2000) {

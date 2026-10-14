@@ -250,6 +250,7 @@ inquiry:
   rate-limit: ${INQUIRY_RATE_LIMIT:5}                           # 같은 IP 하루 5건
   rate-window: ${INQUIRY_RATE_WINDOW:1d}
   retention: ${INQUIRY_RETENTION:365d}                          # 1년 뒤 04:00 배치가 삭제
+  contact-email: ${INQUIRY_CONTACT_EMAIL:${MAIL_USERNAME:}}     # 개인정보 처리방침 연락처(4.6). 기본은 문의 답변 메일 계정
 
 app:
   base-url: ${APP_BASE_URL:http://localhost:8080}                # og 절대 주소(004 research R-12)
