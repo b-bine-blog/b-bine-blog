@@ -47,6 +47,12 @@
       } else if (options.updateBadge && isUpdate(p)) {
         body.appendChild(el('span', 'post-item__badge', '업데이트')); // D-111
       }
+      // 제목 위에 카테고리(없으면 "잡담")를 작게, 본문에 그림이 있으면 그림 표시(BRD-02, D-132)
+      if (!options.pinned) {
+        var cat = el('div', 'post-item__cat', p.categoryName || UNCATEGORIZED);
+        if (p.thumbnailUrl) { cat.appendChild(imageMark()); }
+        body.appendChild(cat);
+      }
       var a = el('a', 'post-item__title', p.title);
       a.href = postUrl(p);
       body.appendChild(a);
@@ -58,7 +64,6 @@
         metaLine.appendChild(blogLink);
         metaLine.appendChild(document.createTextNode(' · '));
       }
-      if (p.categoryName) { metaLine.appendChild(document.createTextNode(p.categoryName + ' · ')); }
       metaLine.appendChild(authorNode(p.author));
       metaLine.appendChild(document.createTextNode(' · ' + formatTime(p.createdAt) + ' · 좋아요 ' + p.likeCount
         + ' · 댓글 ' + p.commentCount + ' · 조회 ' + p.viewCount));
@@ -73,6 +78,30 @@
       }
       list.appendChild(li);
     });
+  }
+
+  // 카테고리가 없는 글의 이름(D-132, 예전 "미분류")
+  var UNCATEGORIZED = '잡담';
+
+  // 그림이 들어 있는 글 표시(작은 그림 아이콘)
+  function imageMark() {
+    var ns = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('class', 'post-item__image-mark');
+    svg.setAttribute('viewBox', '0 0 16 16');
+    svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', '그림 있음');
+    var title = document.createElementNS(ns, 'title');
+    title.textContent = '그림 있음';
+    svg.appendChild(title);
+    var path = document.createElementNS(ns, 'path');
+    path.setAttribute('d', 'M2 3h12v10H2z M2 11l3.5-3.5 2.5 2.5 2-2 4 4 M10.5 6.5a1 1 0 1 0 0.01 0');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', 'currentColor');
+    path.setAttribute('stroke-width', '1.4');
+    path.setAttribute('stroke-linejoin', 'round');
+    svg.appendChild(path);
+    return svg;
   }
 
   // 작성자 닉네임. 활동 중인 회원이면 프로필 링크(003 T021, FR-001), 탈퇴·블로그 탈퇴는 글자만.
@@ -123,7 +152,7 @@
   }
 
   global.board = {
-    el: el, clear: clear, formatTime: formatTime, postUrl: postUrl, renderPosts: renderPosts, authorNode: authorNode,
+    el: el, clear: clear, UNCATEGORIZED: UNCATEGORIZED, formatTime: formatTime, postUrl: postUrl, renderPosts: renderPosts, authorNode: authorNode,
     renderPager: renderPager, say: say, sayError: sayError
   };
 })(window);

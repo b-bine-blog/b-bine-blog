@@ -186,6 +186,8 @@ table.data th, table.data td { white-space: nowrap; } /* 좁은 폭에서는 표
 .post-item__body { flex: 1; min-width: 0; }
 .post-item__title { font-weight: 600; overflow-wrap: anywhere; }
 .post-item__meta { color: var(--muted); font-size: 0.875rem; overflow-wrap: anywhere; }
+.post-item__cat { display: flex; align-items: center; gap: 4px; margin-bottom: 2px; color: var(--green-700); font-size: 0.75rem; font-weight: 600; }
+.post-item__image-mark { width: 14px; height: 14px; color: var(--muted); flex: none; }
 .post-item--notice { background: var(--green-50); border-color: var(--green-100); } /* 피드 위 고정 공지(D-109) */
 .post-item__badge { display: inline-block; margin-right: 6px; padding: 1px 8px; border-radius: 999px; background: var(--green-600); color: #fff; font-size: 0.75rem; font-weight: 700; vertical-align: 2px; }
 .post-item--notice .post-item__title, .post-item__badge + .post-item__title { display: inline; }
