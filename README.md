@@ -139,6 +139,7 @@ Git Flow를 씁니다. 자세한 순서는 [CONTRIBUTING.md](CONTRIBUTING.md)에
 
 | 버전 | 날짜 | 바뀐 점 |
 |---|---|---|
+| [v1.14](release-notes/2026-10-14-profile-window/notice.md) | 2026-10-14 | 닉네임을 누르면 프로필이 창으로 뜸, 글 목록의 블로그 이름으로 블로그 이동, 댓글 칸을 본문과 같은 너비로 |
 | [v1.13](release-notes/2026-10-13-docker/notice.md) | 2026-10-13 | 서버를 도커 컨테이너로 옮김, 무중단 배포 준비, 소셜 가입 이메일 인증 안내 |
 | [v1.12](release-notes/2026-10-13-social-restart/notice.md) | 2026-10-13 | 소셜 가입 도중 새로 고치거나 다시 들어오면 처음부터 |
 | [v1.11](release-notes/2026-10-13-social-login/notice.md) | 2026-10-13 | 구글·카카오·네이버로 가입·로그인, 같은 이메일 회원은 비밀번호 확인 뒤 연결, 내 정보에서 소셜 연결 관리 |
