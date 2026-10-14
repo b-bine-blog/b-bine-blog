@@ -828,8 +828,8 @@ label.inline:has(> select), label.inline > select { border-radius: var(--corner)
 /* 블로그 "10개" 칸을 살짝 위로(2026-10-14): 아래 글쓰기 버튼이 더 내려가 보이는 착시를 줄인다 */
 #posts .blog-toolbar label.inline--bare { position: relative; top: -4px; }
 
-/* 태그 탭 "+"(2026-10-14): 초록 동그라미에 흰 + (사용자 예시 그림) */
+/* 태그 탭 "+"(2026-10-14): 동그라미 정중앙에 그림 +. 평소엔 반투명 초록, 올리거나 열려 있으면 진한 초록 */
 .tabs .tab-add { display: inline-flex; align-items: center; justify-content: center; width: 31px; height: 31px; padding: 0;
-  border: 0; border-radius: 50%; background: var(--green-600); color: #fff; font-size: 1.15rem; line-height: 1; }
-.tabs .tab-add:hover:not(:disabled) { background: var(--green-700); color: #fff; }
-[data-theme="dark"] .tabs .tab-add { background: var(--green-600); color: #fff; }
+  border: 0; border-radius: 50%; background: color-mix(in srgb, var(--green-600) 45%, transparent); color: #fff; line-height: 0; box-shadow: none; }
+.tabs .tab-add:hover:not(:disabled), .tabs .tab-add[aria-expanded="true"] { background: var(--green-600); color: #fff; }
+.tab-add__icon { display: block; }
