@@ -757,6 +757,11 @@ label.inline > select { -webkit-appearance: none; appearance: none; margin: 0; p
   color: var(--text); font-size: .85rem; font-weight: 600; cursor: pointer; }
 label.inline > select:focus-visible { outline: 2px solid var(--green-500); outline-offset: 1px; }
 [data-theme="dark"] label.inline > select { background-color: transparent; }
+/* 글자 없이 고르는 칸만 있을 때("10개", 2026-10-14): 바깥 알약을 없애고 고르는 칸 하나만 알약으로 보인다 */
+label.inline.inline--bare { padding: 0; border: 0; background: none; }
+label.inline.inline--bare > select { padding: 5px 26px 5px 12px; border: 1px solid var(--line); background-color: var(--green-50); color: var(--green-800); }
+[data-theme="dark"] label.inline.inline--bare > select { background-color: var(--surface); color: var(--text); }
+label.inline.inline--bare > select:focus-visible { outline-offset: 2px; }
 [data-theme="dark"] label.inline > select option { background: var(--surface); }
 
 /* 소셜 로그인 버튼 (008, D-125). 각 서비스 안내서의 색을 따른다 */
