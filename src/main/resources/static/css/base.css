@@ -342,6 +342,7 @@ main.reading article > .row > * { margin-top: 0; }
 .profile-card__body { flex: 1; min-width: 0; }
 .profile-card__body h1 { margin: 0 0 6px; overflow-wrap: anywhere; }
 .profile-card__bio { margin: 0 0 8px; white-space: pre-line; overflow-wrap: anywhere; }
+.profile-card__bio--empty { color: var(--muted); font-size: 0.9rem; }
 .profile-card #actions button, .profile-card #actions a { margin-top: 0; }
 .profile-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 16px 0; }
 @media (max-width: 640px) { .profile-grid { grid-template-columns: minmax(0, 1fr); } }
