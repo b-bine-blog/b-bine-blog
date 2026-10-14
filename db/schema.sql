@@ -411,6 +411,15 @@ CREATE TABLE recent_searches (
     updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6) COMMENT '수정 일시',
     PRIMARY KEY (id)
 ) COMMENT='최근 검색어-----본인에게만 최근 10개. 같은 검색어는 searched_at만 바꿔 맨 앞으로(중복 없음), 비회원은 저장 안 함(D-100 #17)';
+CREATE TABLE feed_tags (
+    id BIGINT NOT NULL AUTO_INCREMENT COMMENT '번호',
+    user_id BIGINT NOT NULL COMMENT '회원 번호',
+    tag_id BIGINT NOT NULL COMMENT '태그 번호',
+    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) COMMENT '추가한 시각',
+    updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6) COMMENT '수정 일시',
+    PRIMARY KEY (id),
+    CONSTRAINT uk_feed_tags_user_id_tag_id UNIQUE (user_id, tag_id)
+) COMMENT='피드 태그 탭-----메인 피드 팔로우 옆 + 로 추가한 태그. 본인만 봄. 회원당 최대 5개(설정값, D-135)';
 CREATE TABLE post_views (
     id BIGINT NOT NULL AUTO_INCREMENT COMMENT '번호',
     post_id BIGINT NOT NULL COMMENT '글 번호',
@@ -564,6 +573,8 @@ ALTER TABLE comments ADD CONSTRAINT fk_comments_comments FOREIGN KEY (parent_id)
 ALTER TABLE post_likes ADD CONSTRAINT fk_post_likes_users FOREIGN KEY (user_id) REFERENCES users (id);
 ALTER TABLE post_likes ADD CONSTRAINT fk_post_likes_posts FOREIGN KEY (post_id) REFERENCES posts (id) ON DELETE CASCADE;
 ALTER TABLE recent_searches ADD CONSTRAINT fk_recent_searches_users FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE;
+ALTER TABLE feed_tags ADD CONSTRAINT fk_feed_tags_users FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE;
+ALTER TABLE feed_tags ADD CONSTRAINT fk_feed_tags_tags FOREIGN KEY (tag_id) REFERENCES tags (id);
 ALTER TABLE post_views ADD CONSTRAINT fk_post_views_posts FOREIGN KEY (post_id) REFERENCES posts (id) ON DELETE CASCADE;
 ALTER TABLE admin_actions ADD CONSTRAINT fk_admin_actions_users FOREIGN KEY (admin_id) REFERENCES users (id);
 ALTER TABLE admin_actions ADD CONSTRAINT fk_admin_actions_reports FOREIGN KEY (report_id) REFERENCES reports (id);
