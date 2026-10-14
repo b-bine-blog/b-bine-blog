@@ -4,6 +4,7 @@
 -- 005(D-103 #11·#12): comments.deleted_by, owner_warnings.reason과 admin_actions.action_type 설명은 개발 DB에 먼저 반영된 것을 손으로 맞췄다(005 T057).
 -- 글 수정됨(D-133): posts.edited_at은 문서 버전 56에서 더했다. 운영 DB에는 그 ALTER 한 문장만 실행한다(2026-10-14).
 -- 스크랩(D-134): post_scraps는 문서 버전 58~60에서 더했다. 운영 DB에는 CREATE TABLE과 FK 두 문장만 실행했다(2026-10-14).
+-- 피드 태그 탭(D-135): feed_tags는 문서 버전 58~60에서 더했다. 운영 DB에는 CREATE TABLE과 FK 두 문장만 실행했다(2026-10-14).
 
 -- 메인블로그 — MySQL DDL
 
@@ -421,6 +422,15 @@ CREATE TABLE recent_searches (
     updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6) COMMENT '수정 일시',
     PRIMARY KEY (id)
 ) COMMENT='최근 검색어-----본인에게만 최근 10개. 같은 검색어는 searched_at만 바꿔 맨 앞으로(중복 없음), 비회원은 저장 안 함(D-100 #17)';
+CREATE TABLE feed_tags (
+    id BIGINT NOT NULL AUTO_INCREMENT COMMENT '번호',
+    user_id BIGINT NOT NULL COMMENT '회원 번호',
+    tag_id BIGINT NOT NULL COMMENT '태그 번호',
+    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) COMMENT '추가한 시각',
+    updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6) COMMENT '수정 일시',
+    PRIMARY KEY (id),
+    CONSTRAINT uk_feed_tags_user_id_tag_id UNIQUE (user_id, tag_id)
+) COMMENT='피드 태그 탭-----메인 피드 팔로우 옆 + 로 추가한 태그. 본인만 봄. 회원당 최대 5개(설정값, D-135)';
 CREATE TABLE post_views (
     id BIGINT NOT NULL AUTO_INCREMENT COMMENT '번호',
     post_id BIGINT NOT NULL COMMENT '글 번호',
@@ -576,6 +586,8 @@ ALTER TABLE post_likes ADD CONSTRAINT fk_post_likes_posts FOREIGN KEY (post_id) 
 ALTER TABLE post_scraps ADD CONSTRAINT fk_post_scraps_users FOREIGN KEY (user_id) REFERENCES users (id);
 ALTER TABLE post_scraps ADD CONSTRAINT fk_post_scraps_posts FOREIGN KEY (post_id) REFERENCES posts (id) ON DELETE CASCADE;
 ALTER TABLE recent_searches ADD CONSTRAINT fk_recent_searches_users FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE;
+ALTER TABLE feed_tags ADD CONSTRAINT fk_feed_tags_users FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE;
+ALTER TABLE feed_tags ADD CONSTRAINT fk_feed_tags_tags FOREIGN KEY (tag_id) REFERENCES tags (id);
 ALTER TABLE post_views ADD CONSTRAINT fk_post_views_posts FOREIGN KEY (post_id) REFERENCES posts (id) ON DELETE CASCADE;
 ALTER TABLE admin_actions ADD CONSTRAINT fk_admin_actions_users FOREIGN KEY (admin_id) REFERENCES users (id);
 ALTER TABLE admin_actions ADD CONSTRAINT fk_admin_actions_reports FOREIGN KEY (report_id) REFERENCES reports (id);

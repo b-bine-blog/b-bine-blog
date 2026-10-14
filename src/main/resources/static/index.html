@@ -2,6 +2,9 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>b-bine blog</title>
   <link rel="stylesheet" href="/css/base.css">
@@ -57,7 +60,15 @@
         <button type="button" role="tab" data-feed="POPULAR">인기</button>
         <button type="button" role="tab" data-feed="SUBSCRIBED" data-login hidden>구독</button>
         <button type="button" role="tab" data-feed="FOLLOWING" data-login hidden>팔로우</button>
+        <span id="feed-tag-tabs" class="feed-tag-tabs"></span>
+        <button type="button" id="feed-tag-add" class="tab-add" data-login hidden aria-label="태그 탭 추가" title="태그 탭 추가">+</button>
       </div>
+      <form id="feed-tag-form" class="feed-tag-form row" hidden>
+        <label class="sr-only" for="feed-tag-input">추가할 태그</label>
+        <input type="text" id="feed-tag-input" maxlength="21" placeholder="태그 이름 (예: 여행)" autocomplete="off">
+        <button type="submit">추가</button>
+        <button type="button" id="feed-tag-cancel" class="button-quiet">취소</button>
+      </form>
       <p id="feed-message" class="message" role="alert"></p>
       <ul id="feed-list" class="post-list"></ul>
       <nav id="feed-pages" class="pagination" aria-label="글 페이지"></nav>
