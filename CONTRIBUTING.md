@@ -38,9 +38,9 @@ gitGraph
 
 ## 순서
 
-1. 기능: `develop`에서 `feature/<이름>`을 만들어 작업하고, 끝나면 `develop`에 합친다(`--no-ff`).
+1. 기능: `develop`에서 `feature/<이름>`을 만들어 작업하고, 끝나면 `develop`에 합친다(`--no-ff`). push할 때마다 GitHub Actions(`ci.yml`)가 전체 테스트를 돌리고, 초록색이어야 합친다(D-128).
 2. 배포 준비: `develop`에서 `release/vX.YY`를 만들고 버전 표시와 README 업데이트 줄을 고친다.
-3. 배포: `release/vX.YY`를 `main`에 합친다. `main`에 push되면 무중단으로 배포되고(새 앱을 다른 포트에 먼저 켠 뒤 넘긴다, D-126), 태그 워크플로(tag.yml)가 `layout.js`의 버전으로 `vX.YY` 태그를 자동으로 단다(D-124).
+3. 배포: `release/vX.YY`를 `main`에 합친다. `main`에 push되면 도커 컨테이너로 배포되고(D-127, 서버 nginx 설정 후에는 새 앱을 다른 포트에 먼저 켠 뒤 넘기는 무중단, D-126), 태그 워크플로(tag.yml)가 `layout.js`의 버전으로 `vX.YY` 태그를 자동으로 단다(D-124).
 4. 릴리스 노트: 배포를 확인한 뒤 `release/vX.YY`에 `release-notes/<날짜-이름>/notice.md`를 더해 `main`에 한 번 더 합친다. 노트만 바뀐 push는 배포하지 않고 사이트 공지로만 올린다(D-108).
 5. 마무리: `release/vX.YY`를 `develop`에 합치고 release 브랜치를 지운다.
 6. 급한 수정: `main`에서 `hotfix/vX.YY.Z`를 만들어 고치고 버전 표시를 `vX.YY.Z`로 올린 뒤 `main`과 `develop`에 모두 합친다. 태그는 자동으로 달린다.
