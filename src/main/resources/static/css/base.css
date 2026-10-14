@@ -769,3 +769,8 @@ button.social-button--naver:hover:not(:disabled) { background: #02b351; color: #
 .social-connections { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
 .social-connections li { display: flex; align-items: center; justify-content: space-between; gap: 12px;
   border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; background: var(--surface); }
+
+/* 개인정보 처리방침 표 (개인정보 보호법 제30조) */
+.privacy-page table { width: 100%; border-collapse: collapse; margin: 8px 0 12px; font-size: 0.9rem; display: block; overflow-x: auto; }
+.privacy-page th, .privacy-page td { border-bottom: 1px solid var(--line); padding: 6px 8px; text-align: left; vertical-align: top; }
+.privacy-page h2 { margin-top: 28px; font-size: 1.05rem; }
