@@ -2,6 +2,7 @@
 -- Crowfoot export_ddl로 다시 만든다(research R-02). 2026-10-08, 문서 버전 41, 36개 테이블(shedlock 포함).
 -- ADM-08(D-112): system_inquiries는 문서 버전 45에서 더하고 운영 DB에 만든 표를 그대로 옮겼다(2026-10-12).
 -- 005(D-103 #11·#12): comments.deleted_by, owner_warnings.reason과 admin_actions.action_type 설명은 개발 DB에 먼저 반영된 것을 손으로 맞췄다(005 T057).
+-- 글 수정됨(D-133): posts.edited_at은 문서 버전 56에서 더했다. 운영 DB에는 그 ALTER 한 문장만 실행한다(2026-10-14).
 
 -- 메인블로그 — MySQL DDL
 
