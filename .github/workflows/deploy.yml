@@ -1,4 +1,4 @@
-# jar를 만들어 서버로 보내고, 서버에서 도커 이미지로 만들어 컨테이너로 실행한다 (D-127, 무중단 D-126).
+# jar를 만들어 서버로 보내고, 서버에서 도커 이미지로 만들어 컨테이너로 실행한다 (D-127, 롤링 D-129).
 # main에 push되면 실행된다(Git Flow, D-123: release/*·hotfix/* 브랜치를 main에 합치면 배포). "Run workflow" 버튼은 이 파일이 main에 들어간 뒤에 보인다.
 name: deploy
 
@@ -46,7 +46,7 @@ jobs:
         uses: appleboy/ssh-action@v1.2.0
         env:
           APP_PORT: ${{ secrets.APP_PORT }}
-          APP_PORT_B: '8371'   # 무중단 배포 두 번째 포트(D-126)
+          APP_PORT_B: '8371'   # 늘 함께 띄우는 두 번째 앱의 포트(D-129)
           APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
           DB_ADDRESS: ${{ secrets.DB_ADDRESS }}
           DB_PORT: ${{ secrets.DB_PORT }}
