@@ -7,7 +7,7 @@
   'use strict';
 
   // 지금 배포된 버전. 새 버전을 낼 때 README 업데이트 표·release-notes와 같이 올린다(D-108)
-  var SITE_VERSION = 'v1.15';
+  var SITE_VERSION = 'v1.16';
 
   function link(href, text) {
     var a = document.createElement('a');
