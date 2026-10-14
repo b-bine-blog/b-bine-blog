@@ -141,6 +141,7 @@ Git Flow를 씁니다. 자세한 순서는 [CONTRIBUTING.md](CONTRIBUTING.md)에
 
 | 버전 | 날짜 | 바뀐 점 |
 |---|---|---|
+| [v1.19](release-notes/2026-10-14-blog-search/notice.md) | 2026-10-14 | 블로그 안 검색칸, 버튼·탭 각진 모양, 글 개수 선택 정리 |
 | [v1.18](release-notes/2026-10-14-scrap-icon/notice.md) | 2026-10-14 | 스크랩 책갈피 버튼·목록 표시, 작성글·작성댓글·스크랩 창, 글 개수 선택 정리 |
 | [v1.17](release-notes/2026-10-14-my-activity/notice.md) | 2026-10-14 | 스크랩·작성글·작성댓글, 메인 피드 태그 탭, 글 "수정됨" 표시, 개인정보 처리방침, 사이트 아이콘 |
 | [v1.16](release-notes/2026-10-14-post-category/notice.md) | 2026-10-14 | 글 목록 제목 위에 카테고리와 그림 표시, "미분류"를 "잡담"으로 변경 |
