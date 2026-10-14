@@ -65,7 +65,7 @@ flowchart LR
 ## 데이터베이스(ERD)
 
 - ERD 원본은 Crowfoot 문서 "메인블로그"(654)이고, 실제 DB도 그 문서에 연결돼 있습니다.
-- 테이블 정의(DDL): [docs/04-design/schema.sql](docs/04-design/schema.sql). 테스트도 이 파일로 DB를 만듭니다.
+- 테이블 정의(DDL): [db/schema.sql](db/schema.sql). 테스트도 이 파일로 DB를 만듭니다.
 - DB 구조를 바꿀 때는 Crowfoot 문서를 먼저 고치고, 변경 계획을 확인한 뒤 DB에 반영합니다.
 
 ## 파일 업로드
@@ -103,8 +103,8 @@ src/main/java/com/mainblog/   기능별 패키지(api → application → domain
 src/main/resources/static/    화면(HTML·CSS·JS)
 src/main/resources/application.yml   설정값(제한값·만료 시간 등, 환경변수로 바꿈)
 src/test/                     통합 테스트(Testcontainers)
-docs/                         요구사항, 정책, 결정 기록(D-번호), 설계(schema.sql)
-specs/                        기능별 명세·계획·API 계약·작업 목록(Spec Kit)
+db/schema.sql                 테이블 정의(DDL). 테스트가 이 파일로 DB를 만듦
+api-contracts/                API 계약(OpenAPI). 테스트가 실제 응답과 맞는지 확인
 release-notes/                버전별 업데이트 노트(사이트 공지로도 올라감)
 deploy/                       서버 실행 스크립트, nginx 설정
 local/                        내 컴퓨터에서 실행(start.sh, 예시 데이터)
@@ -113,8 +113,8 @@ local/                        내 컴퓨터에서 실행(start.sh, 예시 데이
 
 ## 개발 방식
 
-- 요구사항분석서 → 기능별 명세(`specs/`) → 계획 → 작업 목록 → 구현 순서로 만듭니다([Spec Kit](https://github.com/github/spec-kit)).
-- 정하거나 바꾼 것은 이유와 함께 [결정 기록](docs/03-decisions/README.md)(D-번호)에 남깁니다.
+- 요구사항분석서 → 기능별 명세 → 계획 → 작업 목록 → 구현 순서로 만듭니다([Spec Kit](https://github.com/github/spec-kit)). 명세와 요구사항 문서는 [문서 저장소](https://github.com/b-bine-blog/b-bine-blog-docs)에 따로 둡니다(D-130).
+- 정하거나 바꾼 것은 이유와 함께 [결정 기록](https://github.com/b-bine-blog/b-bine-blog-docs/blob/main/docs/03-decisions/README.md)(D-번호)에 남깁니다.
 - 커밋 메시지와 코드 주석에 관련 요구사항 ID(USR·BLG·SOC·BRD·ADM·SEC·SCL)와 결정 번호를 적습니다.
 
 ## 브랜치 전략
@@ -181,7 +181,7 @@ local\start.bat         # Windows
 관리자(005): `admin@local.test`로 로그인하면 상단에 "관리자" 링크가 생기고 `/admin`에서 회원(가린 이메일·전화번호, "전체 보기")·블로그(숨김·강제 폐쇄·블로그장 경고·바로 강퇴)·신고함·글과 댓글(숨김·삭제·복구)·활동 기록·통계 탭을 씁니다. 관리자가 아닌 계정에는 `/admin`이 404입니다. 예시 관리자 신고·숨긴 글·경고는 `local/seed.sql` 맨 아래에 있습니다.
 회원가입 인증번호 메일은 실제로 나가지 않고 가짜 메일함 http://localhost:8025 (Mailpit)에 쌓입니다. 아무 이메일 주소로 가입해도 그 화면에서 인증번호를 볼 수 있습니다.
 실제 Gmail로 보내려면 `.env`의 `MAIL_HOST=smtp.gmail.com`, `MAIL_PORT=587`, `MAIL_SMTP_AUTH=true`, `MAIL_STARTTLS=true`로 바꾸고 `MAIL_USERNAME`, `MAIL_PASSWORD`(보내는 Gmail 계정의 앱 비밀번호)를 채웁니다.
-DB 구조를 바꿀 때는 Crowfoot 문서를 먼저 고치고 변경 계획(plan_migration)을 승인해 DB에 반영한 뒤, `docs/04-design/schema.sql`을 export_ddl로 다시 만듭니다.
+DB 구조를 바꿀 때는 Crowfoot 문서를 먼저 고치고 변경 계획(plan_migration)을 승인해 DB에 반영한 뒤, `db/schema.sql`을 export_ddl로 다시 만듭니다.
 멈출 때는 Ctrl+C, 가짜 메일함을 끄려면 `docker compose -f local/docker-compose.yml down`.
 
 ## 실행
@@ -214,13 +214,15 @@ cp .env.example .env
 ./gradlew test
 ```
 
-Testcontainers가 테스트 때만 쓰고 버리는 MySQL 8.0 컨테이너를 띄우고(`docs/04-design/schema.sql`), 메일은 GreenMail(SMTP 3025)로 받습니다. 테스트가 데이터를 지우고 다시 넣기 때문에 Crowfoot DB에는 연결하지 않습니다. `develop`·`feature/*`·`release/*`·`hotfix/*`에 올리거나 PR을 만들면 GitHub Actions(`ci.yml`)가 같은 테스트를 자동으로 돌립니다(D-128). 내 컴퓨터에서 앱만 쓸 때는 필요 없습니다.
+Testcontainers가 테스트 때만 쓰고 버리는 MySQL 8.0 컨테이너를 띄우고(`db/schema.sql`), 메일은 GreenMail(SMTP 3025)로 받습니다. 테스트가 데이터를 지우고 다시 넣기 때문에 Crowfoot DB에는 연결하지 않습니다. `develop`·`feature/*`·`release/*`·`hotfix/*`에 올리거나 PR을 만들면 GitHub Actions(`ci.yml`)가 같은 테스트를 자동으로 돌립니다(D-128). 내 컴퓨터에서 앱만 쓸 때는 필요 없습니다.
 
 ## 문서
 
-- [개발환경](docs/04-design/development-environment.md): 로컬·테스트·운영 환경, 도구 버전, 설정값과 비밀 값, 개발 흐름
+요구사항·정책·결정 기록·기능별 명세는 문서 저장소 **[b-bine-blog-docs](https://github.com/b-bine-blog/b-bine-blog-docs)** 에 있습니다(D-130). 이 저장소에는 소스 코드와, 코드·테스트가 직접 읽는 파일만 둡니다.
+
+- [개발환경](DEVELOPMENT.md): 로컬·테스트·운영 환경, 도구 버전, 설정값과 비밀 값, 개발 흐름
+- [CONTRIBUTING.md](CONTRIBUTING.md): 브랜치 전략(Git Flow)
 - [CLAUDE.md](CLAUDE.md): AI 코딩 에이전트 작업 규칙
-- [.specify/memory/constitution.md](.specify/memory/constitution.md): 개발 원칙 (Spec Kit)
-- [specs/](specs/README.md): 기능별 명세. 001 회원 [specs/001-member-auth/](specs/001-member-auth/spec.md), 002 블로그 [specs/002-blog-management/](specs/002-blog-management/spec.md), 003 소셜·알림 [specs/003-social-notification/](specs/003-social-notification/spec.md), 004 게시판 [specs/004-board/](specs/004-board/spec.md), 005 관리자 [specs/005-admin-moderation/](specs/005-admin-moderation/spec.md)
-  (API 계약 `contracts/`, 확인 방법 `quickstart.md`)
-- [docs/](docs/README.md): 원본 요구사항 문서와 결정 기록
+- [api-contracts/](api-contracts/): API 계약(OpenAPI)
+- [db/schema.sql](db/schema.sql): 테이블 정의
+- 문서 저장소: [기능별 명세](https://github.com/b-bine-blog/b-bine-blog-docs/blob/main/specs/README.md), [요구사항 문서](https://github.com/b-bine-blog/b-bine-blog-docs/blob/main/docs/README.md), [결정 기록](https://github.com/b-bine-blog/b-bine-blog-docs/blob/main/docs/03-decisions/README.md), [개발 원칙](https://github.com/b-bine-blog/b-bine-blog-docs/blob/main/.specify/memory/constitution.md)

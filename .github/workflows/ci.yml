@@ -6,7 +6,7 @@ name: ci
 on:
   push:
     branches: [develop, 'feature/**', 'release/**', 'hotfix/**']
-    paths-ignore: ['release-notes/**', 'docs/**', '**.md']
+    paths-ignore: ['release-notes/**', '**.md']
   pull_request:
     branches: [develop, main]
   workflow_dispatch:

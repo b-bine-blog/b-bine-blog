@@ -1,7 +1,7 @@
 # 개발환경
 
 b-bine blog를 만들고, 시험하고, 운영 서버에 올리는 환경을 정리합니다.
-처음 실행하는 방법은 [README "내 컴퓨터에서 바로 써 보기"](../../README.md#내-컴퓨터에서-바로-써-보기)에 있습니다.
+처음 실행하는 방법은 [README "내 컴퓨터에서 바로 써 보기"](README.md#내-컴퓨터에서-바로-써-보기)에 있습니다.
 
 ## 한눈에 보기
 
@@ -32,7 +32,7 @@ flowchart LR
 | 테스트 | Claude Code 작업 환경(`./gradlew test`) | Testcontainers가 띄우고 버리는 MySQL 8.0 | GreenMail(테스트 안 SMTP) | 테스트 키 | 없음 |
 | 운영 | 학원 공용 서버(GitHub Actions가 배포) | 운영 MySQL | Gmail SMTP | 실제 키 | https://mainttblog.java21.net |
 
-- 테스트는 데이터를 지우고 다시 넣기 때문에 Crowfoot DB에 연결하지 않고 매번 새 MySQL을 씁니다. 테이블은 [schema.sql](schema.sql)로 만듭니다.
+- 테스트는 데이터를 지우고 다시 넣기 때문에 Crowfoot DB에 연결하지 않고 매번 새 MySQL을 씁니다. 테이블은 [db/schema.sql](db/schema.sql)로 만듭니다.
 - 로컬은 http라 `AUTH_COOKIE_SECURE=false`로 쿠키의 Secure를 끕니다. 운영은 켭니다.
 - Docker는 로컬의 가짜 메일함, 테스트용 MySQL, 운영 컨테이너(D-127)에 씁니다. 운영 이미지에 Java 21이 들어 있어 서버의 Java 버전과 상관없이 돕니다.
 
@@ -47,7 +47,7 @@ flowchart LR
 | 테스트 | JUnit 5, Testcontainers, GreenMail | GreenMail 2.1.14 |
 | 가짜 메일함 | Mailpit | 1.21.8 |
 | ERD·DB 관리 | [Crowfoot](https://crowfoot.java21.net) | 문서 "메인블로그"(654) |
-| AI 개발 | Claude Code + [Spec Kit](https://github.com/github/spec-kit) | `.claude/skills/speckit-*` |
+| AI 개발 | Claude Code + [Spec Kit](https://github.com/github/spec-kit) | 문서 저장소의 `.claude/skills/speckit-*` |
 | 저장소·CI/CD | GitHub, GitHub Actions | `.github/workflows/` |
 | 운영 실행 | Docker(`Dockerfile`, `eclipse-temurin:21-jre`) | 서버 Docker 29.7.2 |
 | 운영 웹 서버 | nginx(공용 인프라가 관리) | 설정 사본 `deploy/nginx/` |
@@ -65,13 +65,13 @@ Gradle Wrapper가 정해진 Gradle을 내려받으므로 Gradle은 따로 설치
 
 1. Crowfoot의 "메인블로그" ERD 문서를 먼저 고칩니다.
 2. 변경 계획(plan_migration)을 확인하고 승인한 뒤 DB에 반영합니다.
-3. `docs/04-design/schema.sql`을 Crowfoot에서 다시 내보냅니다. 테스트가 이 파일로 DB를 만들기 때문에, 바뀐 구조로 테스트가 돕니다.
+3. `db/schema.sql`을 Crowfoot에서 다시 내보냅니다. 테스트가 이 파일로 DB를 만들기 때문에, 바뀐 구조로 테스트가 돕니다.
 
 ## 개발 흐름
 
-1. **명세 → 계획 → 작업 → 구현**: 기능마다 Spec Kit으로 `specs/<번호>-<기능>/`에 명세(spec.md), 계획(plan.md), 데이터 모델, API 계약(contracts/), 작업 목록(tasks.md)을 만든 뒤 구현합니다.
-2. **결정 기록**: 정하거나 바꾼 것은 이유와 함께 [결정 기록](../03-decisions/README.md)(D-번호)에 남깁니다.
-3. **브랜치**: Git Flow(D-123). `feature/*`에서 작업해 `develop`에 합치고, 배포할 때 `main`에 합칩니다. 자세한 순서는 [CONTRIBUTING.md](../../CONTRIBUTING.md).
+1. **명세 → 계획 → 작업 → 구현**: 기능마다 Spec Kit으로 [문서 저장소](https://github.com/b-bine-blog/b-bine-blog-docs)의 `specs/<번호>-<기능>/`에 명세(spec.md), 계획(plan.md), 데이터 모델, API 계약(이 저장소의 `api-contracts/`), 작업 목록(tasks.md)을 만든 뒤 구현합니다.
+2. **결정 기록**: 정하거나 바꾼 것은 이유와 함께 [결정 기록](https://github.com/b-bine-blog/b-bine-blog-docs/blob/main/docs/03-decisions/README.md)(D-번호)에 남깁니다.
+3. **브랜치**: Git Flow(D-123). `feature/*`에서 작업해 `develop`에 합치고, 배포할 때 `main`에 합칩니다. 자세한 순서는 [CONTRIBUTING.md](CONTRIBUTING.md).
 4. **테스트**: `develop`·`feature/*`·`release/*`·`hotfix/*`에 push하거나 PR을 만들면 GitHub Actions(`ci.yml`)가 `./gradlew test`(통합 테스트 전체, Testcontainers)를 자동으로 돌립니다(D-128). 초록색인 것만 `main`에 합칩니다.
 5. **배포**: `main`에 push되면 GitHub Actions가
    - `deploy.yml`: jar를 만들어 `Dockerfile`과 함께 SSH로 서버에 올리고, `deploy/deploy.sh`가 서버에서 이미지를 만들어 컨테이너로 실행(D-127). 늘 떠 있는 앱 2개(8371, 8370)를 하나씩 차례로 새 버전으로 바꾼다(롤링, D-129)

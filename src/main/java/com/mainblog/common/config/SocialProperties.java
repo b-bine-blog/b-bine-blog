@@ -13,7 +13,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
 /**
- * 소셜 설정값 (003 T002, D-68). 값과 근거는 specs/003-social-notification/data-model.md "설정값".
+ * 소셜 설정값 (003 T002, D-68). 값과 근거는 문서 저장소 specs/003-social-notification/data-model.md "설정값".
  * 소개·신고 설명 길이는 DB 칸(VARCHAR(500))보다 크게 잡으면 앱 시작 때 실패한다.
  */
 @Validated

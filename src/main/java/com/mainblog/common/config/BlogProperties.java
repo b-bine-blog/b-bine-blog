@@ -13,7 +13,7 @@ import org.springframework.boot.context.properties.bind.Name;
 import org.springframework.util.unit.DataSize;
 import org.springframework.validation.annotation.Validated;
 
-/** 블로그 설정값 (T003, D-68). 값과 근거는 specs/002-blog-management/data-model.md "설정값". */
+/** 블로그 설정값 (T003, D-68). 값과 근거는 문서 저장소 specs/002-blog-management/data-model.md "설정값". */
 @Validated
 @ConfigurationProperties("blog")
 public record BlogProperties(

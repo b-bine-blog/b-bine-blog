@@ -33,7 +33,7 @@ import org.yaml.snakeyaml.Yaml;
 @ExtendWith(OutputCaptureExtension.class)
 class AdminSecurityTest extends AdminTestBase {
 
-    static final Path ADMIN_CONTRACT = Path.of("specs/005-admin-moderation/contracts/admin-api.yaml");
+    static final Path ADMIN_CONTRACT = Path.of("api-contracts/admin-api.yaml");
     static final Set<String> METHODS = Set.of("get", "post", "put", "patch", "delete");
 
     @SuppressWarnings("unchecked")

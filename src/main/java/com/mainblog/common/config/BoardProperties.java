@@ -11,7 +11,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.util.unit.DataSize;
 import org.springframework.validation.annotation.Validated;
 
-/** 게시판 설정값 (004 T003, D-68). 값과 근거는 specs/004-board/data-model.md "설정값". */
+/** 게시판 설정값 (004 T003, D-68). 값과 근거는 문서 저장소 specs/004-board/data-model.md "설정값". */
 @Validated
 @ConfigurationProperties("board")
 public record BoardProperties(

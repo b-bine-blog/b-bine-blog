@@ -31,7 +31,7 @@ import org.testcontainers.utility.MountableFile;
 
 /**
  * DB·메일이 걸리는 테스트의 기반 (T022, R-14).
- * - MySQL 8.0 컨테이너에 Crowfoot에서 내보낸 docs/04-design/schema.sql과 shedlock.sql을 넣는다(R-02, R-13).
+ * - MySQL 8.0 컨테이너에 Crowfoot에서 내보낸 db/schema.sql과 shedlock.sql을 넣는다(R-02, R-13).
  *   컨테이너는 모든 테스트 클래스가 함께 쓴다.
  * - 메일은 GreenMail(SMTP 3025)로 받는다.
  * - 시계는 MutableClock으로 고정해 각 테스트 시작 때 같은 시각으로 되돌린다.
@@ -49,7 +49,7 @@ public abstract class IntegrationTestBase {
     static final MySQLContainer<?> MYSQL = new MySQLContainer<>(
             DockerImageName.parse("mirror.gcr.io/library/mysql:8.0").asCompatibleSubstituteFor("mysql"))
             .withDatabaseName("mainblog")
-            .withCopyFileToContainer(MountableFile.forHostPath(Path.of("docs/04-design/schema.sql")),
+            .withCopyFileToContainer(MountableFile.forHostPath(Path.of("db/schema.sql")),
                     "/docker-entrypoint-initdb.d/1-schema.sql")
             .withCopyFileToContainer(MountableFile.forClasspathResource("shedlock.sql"),
                     "/docker-entrypoint-initdb.d/2-shedlock.sql");

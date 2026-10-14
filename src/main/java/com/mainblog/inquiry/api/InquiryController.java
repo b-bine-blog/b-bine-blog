@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-/** 시스템 문의 보내기(회원·비회원)와 내 문의(회원) (ADM-08, D-112, specs/006-system-inquiry/contracts/inquiry-api.yaml). */
+/** 시스템 문의 보내기(회원·비회원)와 내 문의(회원) (ADM-08, D-112, api-contracts/inquiry-api.yaml). */
 @RestController
 public class InquiryController {
 
