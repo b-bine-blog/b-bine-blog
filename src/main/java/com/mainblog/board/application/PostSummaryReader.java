@@ -26,7 +26,7 @@ public class PostSummaryReader {
             + "b.visibility, p.title, p.content, p.author_id, p.author_left, u.nickname, u.status AS user_status, "
             + AuthorView.PROFILE_NAME_SQL + " AS profile_name, c.name AS category_name, p.like_count, p.view_count, "
             + "(SELECT COUNT(*) FROM comments cm WHERE cm.post_id = p.id AND cm.status = 'VISIBLE') AS comment_count, "
-            + "p.created_at";
+            + "p.created_at, p.edited_at";
 
     private final JdbcTemplate jdbc;
     private final MarkdownRenderer renderer;
@@ -73,6 +73,7 @@ public class PostSummaryReader {
                 authorView.ofPost(rs.getLong("author_id"), rs.getString("nickname"), rs.getString("user_status"),
                         rs.getString("profile_name"), rs.getBoolean("author_left")),
                 rs.getString("category_name"), MarkdownText.firstImage(html), rs.getInt("like_count"),
-                rs.getInt("view_count"), rs.getInt("comment_count"), rs.getTimestamp("created_at").toLocalDateTime());
+                rs.getInt("view_count"), rs.getInt("comment_count"), rs.getTimestamp("created_at").toLocalDateTime(),
+                rs.getTimestamp("edited_at") != null);
     }
 }

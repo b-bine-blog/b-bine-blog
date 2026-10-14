@@ -7,7 +7,7 @@
   'use strict';
 
   // 지금 배포된 버전. 새 버전을 낼 때 README 업데이트 표·release-notes와 같이 올린다(D-108)
-  var SITE_VERSION = 'v1.16';
+  var SITE_VERSION = 'v1.17';
 
   function link(href, text) {
     var a = document.createElement('a');
@@ -91,6 +91,11 @@
     toggle.setAttribute('aria-controls', list.id);
     list.appendChild(link('/me/index.html', '내 정보'));
     if (!me.admin) { list.appendChild(link('/inquiry.html#mine', '내 문의')); } // ADM-08, D-112
+    if (!me.admin) { // 작성글·작성댓글·스크랩(D-134)
+      list.appendChild(link('/me/activity.html#posts', '작성글'));
+      list.appendChild(link('/me/activity.html#comments', '작성댓글'));
+      list.appendChild(link('/me/activity.html#scraps', '스크랩'));
+    }
     if (!me.admin) {
       // 운영하는 블로그가 이미 있으면 메뉴에서는 뺀다. 더 만들 때는 내 정보의 내 블로그에 있는 링크를 쓴다(D-109, D-117)
       var create = link('/blogs/new.html', '블로그 만들기');

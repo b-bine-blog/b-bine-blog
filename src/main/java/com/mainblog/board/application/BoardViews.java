@@ -17,14 +17,14 @@ public final class BoardViews {
 
     public record PostSummary(long id, String boardType, BlogRef blog, String title, Author author,
                               String categoryName, String thumbnailUrl, int likeCount, int viewCount,
-                              int commentCount, LocalDateTime createdAt) {}
+                              int commentCount, LocalDateTime createdAt, boolean edited) {}
 
     public record PostDetail(long id, String boardType, BlogRef blog, String title, Author author,
                              String categoryName, String thumbnailUrl, int likeCount, int viewCount,
                              int commentCount, LocalDateTime createdAt,
                              String content, String contentHtml, Long categoryId, List<String> tags, boolean liked,
                              boolean canEdit, boolean canDelete, boolean canComment, boolean shareable,
-                             boolean hiddenByAdmin) {}
+                             boolean hiddenByAdmin, boolean scrapped) {}
 
     public record PostPage(List<PostSummary> items, int page, int size, long totalElements, int totalPages) {
 

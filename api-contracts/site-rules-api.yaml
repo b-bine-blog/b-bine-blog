@@ -80,3 +80,4 @@ components:
             rateLimit: { type: integer }
             rateWindowHours: { type: integer }
             retentionDays: { type: integer }
+            contactEmail: { type: string, nullable: true, description: 개인정보 처리방침의 운영팀 연락처(4.6). 정하지 않았으면 null }

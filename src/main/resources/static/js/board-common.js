@@ -51,6 +51,7 @@
       if (!options.pinned) {
         var cat = el('div', 'post-item__cat', p.categoryName || UNCATEGORIZED);
         if (p.thumbnailUrl) { cat.appendChild(imageMark()); }
+        if (p.edited) { cat.appendChild(el('span', 'post-item__edited', '수정됨')); }  // 고친 글(D-133)
         body.appendChild(cat);
       }
       var a = el('a', 'post-item__title', p.title);

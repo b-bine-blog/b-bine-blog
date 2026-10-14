@@ -59,10 +59,12 @@ public enum ErrorCode {
     CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "카테고리를 찾을 수 없습니다."),
     CATEGORY_DUPLICATE(HttpStatus.CONFLICT, "같은 이름의 카테고리가 있습니다."),
     CATEGORY_LIMIT_EXCEEDED(HttpStatus.CONFLICT, "만들 수 있는 카테고리 개수를 넘었습니다."),
+    FEED_TAG_LIMIT_EXCEEDED(HttpStatus.CONFLICT, "더 추가할 수 없습니다. 태그 탭은 정해진 개수까지만 만들 수 있습니다."),
     COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "댓글을 찾을 수 없습니다."),
     COMMENT_FORBIDDEN(HttpStatus.FORBIDDEN, "이 댓글을 고치거나 지울 수 없습니다."),
     COMMENT_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "공지사항에는 댓글을 달 수 없습니다."),
     LIKE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "공지사항에는 좋아요를 누를 수 없습니다."),
+    SCRAP_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "공지사항은 스크랩할 수 없습니다."),
     SEARCH_KEYWORD_INVALID(HttpStatus.BAD_REQUEST, "검색어는 글자나 숫자를 넣어 2~20자로 입력해 주세요."),
     ADMIN_ONLY(HttpStatus.FORBIDDEN, "메인 관리자만 할 수 있습니다."),
 

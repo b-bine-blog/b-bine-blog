@@ -25,6 +25,7 @@ class SiteRulesIntegrationTest extends BlogTestBase {
         assertThat(r.at("/report/repeatAfterDays").asInt()).isEqualTo(14);
         assertThat(r.at("/inquiry/rateWindowHours").asInt()).isEqualTo(24);
         assertThat(r.at("/inquiry/retentionDays").asInt()).isEqualTo(365);
+        assertThat(r.at("/inquiry/contactEmail").isNull()).isTrue();  // 테스트는 메일 계정이 비어 있음
         assertThat(r.toString()).doesNotContainIgnoringCase("secret");
     }
 }
