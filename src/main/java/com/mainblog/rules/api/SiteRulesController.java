@@ -36,7 +36,8 @@ public class SiteRulesController {
 
     public record Admin(int warningRevokeThreshold, long warningWindowDays, long recordsRetentionDays) {}
 
-    public record Inquiry(int rateLimit, long rateWindowHours, long retentionDays) {}
+    /** contactEmail: 개인정보 처리방침의 운영팀 연락처(4.6). 정하지 않았으면 null */
+    public record Inquiry(int rateLimit, long rateWindowHours, long retentionDays, String contactEmail) {}
 
     public record SiteRules(Account account, Blog blog, Board board, Report report, Notification notification,
                             Admin admin, Inquiry inquiry) {}
@@ -63,7 +64,8 @@ public class SiteRulesController {
                 new Notification(notification.retention().defaultDays(), notification.retention().shortDays()),
                 new Admin(admin.warning().revokeThreshold(), admin.warning().window().toDays(),
                         admin.records().retention().toDays()),
-                new Inquiry(inquiry.rateLimit(), inquiry.rateWindow().toHours(), inquiry.retention().toDays()));
+                new Inquiry(inquiry.rateLimit(), inquiry.rateWindow().toHours(), inquiry.retention().toDays(),
+                        inquiry.contactEmail() == null || inquiry.contactEmail().isBlank() ? null : inquiry.contactEmail()));
     }
 
     @GetMapping("/api/site-rules")
