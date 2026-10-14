@@ -312,7 +312,7 @@
             .then(function () { say('이름을 바꿨습니다.'); loaders.categories(); }).catch(fail);
         }));
         actions.appendChild(button('삭제', function () {
-          if (!confirm('"' + c.name + '" 카테고리를 지울까요? 글은 미분류로 옮겨집니다.')) { return; }
+          if (!confirm('"' + c.name + '" 카테고리를 지울까요? 글은 "잡담"으로 옮겨집니다.')) { return; }
           api.del(base + '/' + c.id, null, { activity: true })
             .then(function () { say('지웠습니다.'); loaders.categories(); }).catch(fail);
         }));

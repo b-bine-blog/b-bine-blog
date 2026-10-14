@@ -90,7 +90,7 @@
     loadPosts(1);
   }
 
-  // 글 목록과 카테고리 (004 T027). categoryId: '' 전체, '0' 미분류.
+  // 글 목록과 카테고리 (004 T027). categoryId: '' 전체, '0' 잡담(카테고리 없음, D-132).
   var postQuery = { categoryId: '', size: 10 };
 
   function loadPosts(page) {
@@ -117,7 +117,7 @@
       if (r.categories.length === 0) { return; }
       tab('전체', '');
       r.categories.forEach(function (c) { tab(c.name + ' (' + c.postCount + ')', String(c.id)); });
-      tab('미분류 (' + r.uncategorizedCount + ')', '0');
+      tab('잡담 (' + r.uncategorizedCount + ')', '0');
     }, function () { /* 카테고리를 못 읽어도 글 목록은 보인다 */ });
   }
 
