@@ -61,6 +61,7 @@
       tags.appendChild(li);
     });
     renderLike();
+    renderScrap();
     $('share').hidden = isNotice || !post.shareable;
     $('edit').hidden = !post.canEdit;
     if (post.canEdit) {
@@ -106,6 +107,21 @@
       post.liked = r.liked;
       post.likeCount = r.likeCount;
       renderLike();
+    }, function (err) { postSay(err.message, true); });
+  });
+
+  // 스크랩(D-134): 로그인한 일반 회원이 블로그 글에서만. 다시 누르면 취소.
+  function renderScrap() {
+    $('scrap').hidden = isNotice || !me || !me.memberId || !!me.admin;
+    $('scrap').setAttribute('aria-pressed', post.scrapped ? 'true' : 'false');
+    api.setText($('scrap'), post.scrapped ? '스크랩됨' : '스크랩');
+    $('scrap').style.fontWeight = post.scrapped ? '700' : '400';
+  }
+
+  $('scrap').addEventListener('click', function () {
+    api.put('/api/posts/' + post.id + '/scrap', null, { activity: true }).then(function (r) {
+      post.scrapped = r.scrapped;
+      renderScrap();
     }, function (err) { postSay(err.message, true); });
   });
 

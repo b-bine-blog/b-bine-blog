@@ -63,6 +63,7 @@ public enum ErrorCode {
     COMMENT_FORBIDDEN(HttpStatus.FORBIDDEN, "이 댓글을 고치거나 지울 수 없습니다."),
     COMMENT_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "공지사항에는 댓글을 달 수 없습니다."),
     LIKE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "공지사항에는 좋아요를 누를 수 없습니다."),
+    SCRAP_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "공지사항은 스크랩할 수 없습니다."),
     SEARCH_KEYWORD_INVALID(HttpStatus.BAD_REQUEST, "검색어는 글자나 숫자를 넣어 2~20자로 입력해 주세요."),
     ADMIN_ONLY(HttpStatus.FORBIDDEN, "메인 관리자만 할 수 있습니다."),
 

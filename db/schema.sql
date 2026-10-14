@@ -402,6 +402,15 @@ CREATE TABLE post_likes (
     PRIMARY KEY (id),
     CONSTRAINT uk_post_likes_user_id_post_id UNIQUE (user_id, post_id)
 ) COMMENT='좋아요-----한 회원이 한 글에 하나. 다시 누르면 취소';
+CREATE TABLE post_scraps (
+    id BIGINT NOT NULL AUTO_INCREMENT COMMENT '번호',
+    user_id BIGINT NOT NULL COMMENT '회원 번호',
+    post_id BIGINT NOT NULL COMMENT '글 번호',
+    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) COMMENT '스크랩한 시각',
+    updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6) COMMENT '수정 일시',
+    PRIMARY KEY (id),
+    CONSTRAINT uk_post_scraps_user_id_post_id UNIQUE (user_id, post_id)
+) COMMENT='스크랩-----회원이 나중에 볼 글을 모아 둠. 본인만 봄. 다시 누르면 취소(D-134)';
 CREATE TABLE recent_searches (
     id BIGINT NOT NULL AUTO_INCREMENT COMMENT '번호',
     user_id BIGINT NOT NULL COMMENT '회원 번호',
@@ -563,6 +572,8 @@ ALTER TABLE comments ADD CONSTRAINT fk_comments_users FOREIGN KEY (author_id) RE
 ALTER TABLE comments ADD CONSTRAINT fk_comments_comments FOREIGN KEY (parent_id) REFERENCES comments (id);
 ALTER TABLE post_likes ADD CONSTRAINT fk_post_likes_users FOREIGN KEY (user_id) REFERENCES users (id);
 ALTER TABLE post_likes ADD CONSTRAINT fk_post_likes_posts FOREIGN KEY (post_id) REFERENCES posts (id) ON DELETE CASCADE;
+ALTER TABLE post_scraps ADD CONSTRAINT fk_post_scraps_users FOREIGN KEY (user_id) REFERENCES users (id);
+ALTER TABLE post_scraps ADD CONSTRAINT fk_post_scraps_posts FOREIGN KEY (post_id) REFERENCES posts (id) ON DELETE CASCADE;
 ALTER TABLE recent_searches ADD CONSTRAINT fk_recent_searches_users FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE;
 ALTER TABLE post_views ADD CONSTRAINT fk_post_views_posts FOREIGN KEY (post_id) REFERENCES posts (id) ON DELETE CASCADE;
 ALTER TABLE admin_actions ADD CONSTRAINT fk_admin_actions_users FOREIGN KEY (admin_id) REFERENCES users (id);
