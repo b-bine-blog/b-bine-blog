@@ -800,3 +800,23 @@ button.social-button--naver:hover:not(:disabled) { background: #02b351; color: #
 .scrap-button__icon { width: 22px; height: 22px; }
 .post-item__scrap-mark { width: 13px; height: 13px; color: var(--green-500); flex: none; }
 @media (max-width: 600px) { .post-card__head .scrap-button { top: 14px; right: 12px; width: 38px; height: 38px; } }
+
+/* 각진 모양(2026-10-14): 알약(999px)이던 버튼·탭·고르는 칸·작은 표시를 모서리만 살짝 둥근 네모로 바꾼다.
+   프로필 사진, 점, 알림 숫자, 종·테마 같은 아이콘 버튼은 그대로 동그랗게 둔다 */
+:root { --corner: 6px; }
+button, a.button, .tabs button, .pagination button,
+.site-header .button-light, .site-header button, .site-header__search input[type="search"],
+.hero .blog-search input, .hero .blog-search button, .hero__actions a,
+.blog-meta li, .like-button, .post-back a, .me-links a, .post-item__badge, .status-chip,
+.spotlight__label, .hero-mine__delete, .post-card__head .scrap-button,
+label.inline:has(> select), label.inline > select { border-radius: var(--corner); }
+.tabs .tab-group button[role="tab"] { border-radius: var(--corner) 0 0 var(--corner); }
+.tabs .tab-remove { border-radius: 0 var(--corner) var(--corner) 0; }
+.site-header button.site-header__bell, .site-header button.site-header__theme,
+.hero-mine__add, .spotlight__dot, .auth-modal__close { border-radius: 50%; }
+
+/* 블로그 안 검색칸(D-136): "글" 제목 옆. 좁은 화면에서는 한 줄을 다 쓴다 */
+.blog-post-search { display: flex; gap: 6px; flex: 1; max-width: 360px; margin: 0 auto 0 8px; }
+.blog-post-search input { flex: 1; min-width: 0; margin: 0; padding: 6px 10px; border: 1px solid var(--line); border-radius: var(--corner); }
+.blog-post-search button { margin: 0; padding: 6px 14px; white-space: nowrap; }
+@media (max-width: 600px) { .blog-post-search { order: 3; flex-basis: 100%; max-width: none; } }
