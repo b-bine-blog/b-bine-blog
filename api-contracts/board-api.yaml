@@ -535,6 +535,7 @@ components:
         commentCount: { type: integer }
         createdAt: { type: string, format: date-time }
         edited: { type: boolean, description: "글을 고친 적이 있으면 true. 목록에 \"수정됨\" 표시(D-133)" }
+        scrapped: { type: boolean, description: "보는 회원이 스크랩한 글이면 true. 비회원은 늘 false. 목록 카테고리 줄에 책갈피 표시(D-134)" }
     PostDetail:
       allOf:
         - $ref: '#/components/schemas/PostSummary'
