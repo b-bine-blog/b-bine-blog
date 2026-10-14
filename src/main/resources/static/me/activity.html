@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>내 활동 - b-bine blog</title>
+  <link rel="stylesheet" href="/css/base.css">
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <main>
+    <p class="hint"><a href="/me/index.html">내 정보</a></p>
+    <h1>내 활동</h1>
+    <!-- 계정 메뉴의 작성글·작성댓글·스크랩 (D-134). 주소 끝 #posts, #comments, #scraps로 탭을 고른다 -->
+    <div class="tabs" role="tablist" id="activity-tabs">
+      <button type="button" role="tab" data-tab="posts">작성글</button>
+      <button type="button" role="tab" data-tab="comments">작성댓글</button>
+      <button type="button" role="tab" data-tab="scraps">스크랩</button>
+    </div>
+    <section class="panel" id="activity" hidden>
+      <ul class="post-list" id="activity-list"></ul>
+      <nav class="pagination" id="activity-pages" aria-label="목록 페이지"></nav>
+    </section>
+    <p class="message" id="message" role="alert"></p>
+  </main>
+  <script src="/js/api.js"></script>
+  <script src="/js/session.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/board-common.js"></script>
+  <script src="/js/me-activity.js"></script>
+</body>
+</html>

@@ -21,6 +21,7 @@ tags:
   - name: image
   - name: comment
   - name: like
+  - name: scrap
   - name: tag
   - name: search
   - name: feed
@@ -250,6 +251,55 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
         '429': { description: RATE_LIMITED(001과 같은 코드), content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+
+  /api/posts/{postId}/scrap:
+    parameters: [ { $ref: '#/components/parameters/PostId' } ]
+    put:
+      tags: [scrap]
+      summary: 스크랩하기·취소 (D-134)
+      description: 없으면 스크랩하고 있으면 취소. 본인만 본다. 볼 수 없는 글은 404, 공지는 400, 메인 관리자는 403.
+      responses:
+        '200': { description: 결과, content: { application/json: { schema: { $ref: '#/components/schemas/ScrapResult' } } } }
+        '400': { description: SCRAP_NOT_ALLOWED(공지), content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/me/scraps:
+    get:
+      tags: [scrap]
+      summary: 내 스크랩 (D-134)
+      description: 스크랩한 순서 최신부터. 지워졌거나 이제 볼 수 없는 글은 빠진다.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200': { description: 목록, content: { application/json: { schema: { $ref: '#/components/schemas/PostPage' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /api/me/posts:
+    get:
+      tags: [scrap]
+      summary: 내가 쓴 글 (D-134)
+      description: 지금 볼 수 있는 블로그의 보이는 글만, 최신순. 떠난 블로그에 남은 글은 뺀다.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200': { description: 목록, content: { application/json: { schema: { $ref: '#/components/schemas/PostPage' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /api/me/comments:
+    get:
+      tags: [scrap]
+      summary: 내가 쓴 댓글 (D-134)
+      description: 지운 댓글과 지금 볼 수 없는 글의 댓글은 뺀다. 최신순.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200': { description: 목록, content: { application/json: { schema: { $ref: '#/components/schemas/MyCommentPage' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
 
   /api/tags/{name}/posts:
     parameters:
@@ -499,6 +549,7 @@ components:
             canDelete: { type: boolean }
             canComment: { type: boolean }
             shareable: { type: boolean, description: 비공개 블로그면 false(FR-047) }
+            scrapped: { type: boolean, description: 로그인한 회원이 스크랩했는지(D-134) }
             hiddenByAdmin: { type: boolean, description: "메인 관리자가 숨긴 글이면 true. 작성자 본인에게만 이 상태로 보이고 고치기·댓글·좋아요·공유는 막힌다(005 T041, D-103 #10)" }
     PostPage:
       type: object
@@ -564,6 +615,28 @@ components:
         page: { type: integer }
         totalPages: { type: integer }
         totalElements: { type: integer, format: int64 }
+    ScrapResult:
+      type: object
+      properties:
+        scrapped: { type: boolean }
+    MyComment:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        content: { type: string }
+        createdAt: { type: string, format: date-time }
+        postId: { type: integer, format: int64 }
+        postTitle: { type: string }
+        blogAddress: { type: string, nullable: true, description: 공지 댓글이면 null }
+        blogName: { type: string, nullable: true }
+    MyCommentPage:
+      type: object
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/MyComment' } }
+        page: { type: integer }
+        size: { type: integer }
+        totalElements: { type: integer, format: int64 }
+        totalPages: { type: integer }
     LikeResult:
       type: object
       properties:

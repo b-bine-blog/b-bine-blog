@@ -67,11 +67,14 @@ public class PostQueryService {
         boolean liked = viewer.userId() != null && Boolean.TRUE.equals(jdbc.queryForObject(
                 "SELECT EXISTS (SELECT 1 FROM post_likes WHERE post_id = ? AND user_id = ?)", Boolean.class,
                 post.id(), viewer.userId()));
+        boolean scrapped = viewer.userId() != null && Boolean.TRUE.equals(jdbc.queryForObject(
+                "SELECT EXISTS (SELECT 1 FROM post_scraps WHERE post_id = ? AND user_id = ?)", Boolean.class,
+                post.id(), viewer.userId()));  // 스크랩 버튼 상태(D-134)
         boolean shareable = s.blog() == null || !"PRIVATE".equals(s.blog().visibility());
         return new PostDetail(s.id(), s.boardType(), s.blog(), s.title(), s.author(), s.categoryName(),
                 s.thumbnailUrl(), s.likeCount(), s.viewCount(), s.commentCount(), s.createdAt(),
                 canEdit ? post.content() : null, renderer.toSafeHtml(post.content()), post.categoryId(),
                 store.tagsOf(post.id()), liked, canEdit, PostPolicy.canDelete(post, viewer),
-                !hidden && PostPolicy.canComment(post, viewer), !hidden && shareable, hidden);
+                !hidden && PostPolicy.canComment(post, viewer), !hidden && shareable, hidden, scrapped);
     }
 }
