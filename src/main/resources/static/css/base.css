@@ -736,6 +736,7 @@ label.button-file:hover { background: var(--green-100); }
 .auth-modal::backdrop { background: rgba(0,0,0,.45); }
 /* 창 뒤 어둠도 시간대 색으로 살짝 물들인다(D-117, D-118). 변수를 못 읽는 옛 브라우저는 위의 검은 어둠 */
 :root[data-daytime] .auth-modal::backdrop { background: hsl(var(--hue, 148) 40% 8% / .5); }
+.auth-modal--wide { width: min(880px, calc(100vw - 32px)); }   /* 회원 프로필 창(SOC-03) */
 .auth-modal__frame { display: block; width: 100%; height: 520px; border: 0; }
 .auth-modal__close { position: absolute; top: 10px; right: 10px; z-index: 1; width: 32px; height: 32px; min-width: 0; margin: 0; padding: 0;
   border-radius: 50%; background: var(--surface); color: var(--muted); font-size: 1.3rem; line-height: 1; box-shadow: none; }
@@ -743,6 +744,7 @@ label.button-file:hover { background: var(--green-100); }
 /* 창 안에 뜬 화면: 머리 메뉴·아래 링크 없이 여백만 줄인다 */
 .is-embedded body { min-height: 0; }
 .is-embedded main { padding: 20px 24px 24px; max-width: none; }
+.is-embedded main.profile-page { padding-top: 52px; }   /* 프로필 창의 닫기 단추와 겹치지 않게 */
 
 /* "보기 10개" 같은 개수 고르기(2026-10-13, D-122): 글자와 고르는 칸을 한 덩어리 알약 모양으로 묶어 다른 버튼과 어울리게 한다 */
 label.inline:has(> select) { gap: 2px; padding: 0 4px 0 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--green-50); color: var(--green-800); font-size: .85rem; }

@@ -50,11 +50,15 @@
       var a = el('a', 'post-item__title', p.title);
       a.href = postUrl(p);
       body.appendChild(a);
-      var before = [];
-      if (options.showBlog && p.blog) { before.push(p.blog.name); }
-      if (p.categoryName) { before.push(p.categoryName); }
       var metaLine = el('div', 'post-item__meta');
-      if (before.length) { metaLine.appendChild(document.createTextNode(before.join(' · ') + ' · ')); }
+      // 블로그 이름은 그 블로그로 가는 링크(2026-10-14 사용자 요청)
+      if (options.showBlog && p.blog) {
+        var blogLink = el('a', 'author-link', p.blog.name);
+        blogLink.href = '/blog/' + encodeURIComponent(p.blog.address);
+        metaLine.appendChild(blogLink);
+        metaLine.appendChild(document.createTextNode(' · '));
+      }
+      if (p.categoryName) { metaLine.appendChild(document.createTextNode(p.categoryName + ' · ')); }
       metaLine.appendChild(authorNode(p.author));
       metaLine.appendChild(document.createTextNode(' · ' + formatTime(p.createdAt) + ' · 좋아요 ' + p.likeCount
         + ' · 댓글 ' + p.commentCount + ' · 조회 ' + p.viewCount));

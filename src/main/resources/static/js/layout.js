@@ -202,6 +202,8 @@
   // 창 안의 화면은 머리 메뉴·아래 링크 없이 보이고(embedded), 로그인이 끝나면 바깥 화면을 새로 고친다(login.js).
   var embedded = window.top !== window.self;
   var AUTH_PAGES = /^\/(login|signup|find-email|find-password)\.html$/;
+  // 회원 프로필도 지금 화면 위 창으로 띄운다(SOC-03, 2026-10-14 사용자 요청)
+  var PROFILE_PAGE = /^\/profile\/\d+\/?$/;
 
   function openInModal(a) {
     a.addEventListener('click', function (e) {
@@ -212,7 +214,7 @@
   }
 
   var modal = null;
-  function authModal(href) {
+  function authModal(href, profile) {
     if (!modal) {
       modal = document.createElement('dialog');
       modal.className = 'auth-modal';
@@ -229,7 +231,9 @@
       frame.addEventListener('load', function () {
         var doc = frame.contentDocument;
         if (!doc || !doc.body) { return; }
-        var fit = function () { frame.style.height = Math.min(Math.ceil(doc.body.getBoundingClientRect().height), window.innerHeight * 0.85) + 'px'; };
+        // 프로필 창은 신고 창이 들어갈 만큼 최소 높이를 둔다
+        var min = modal.classList.contains('auth-modal--wide') ? 460 : 0;
+        var fit = function () { frame.style.height = Math.min(Math.max(Math.ceil(doc.body.getBoundingClientRect().height), min), window.innerHeight * 0.85) + 'px'; };
         fit();
         if (window.ResizeObserver) { new ResizeObserver(fit).observe(doc.body); }
       });
@@ -241,9 +245,25 @@
       document.body.appendChild(modal);
     }
     var url = new URL(href, location.href);
-    url.searchParams.set('next', location.pathname + location.search);
-    modal.querySelector('iframe').src = url.pathname + url.search;
-    modal.showModal();
+    var frame = modal.querySelector('iframe');
+    modal.classList.toggle('auth-modal--wide', !!profile);
+    frame.title = profile ? '회원 프로필' : '로그인·회원가입';
+    if (!profile) { url.searchParams.set('next', location.pathname + location.search); }
+    frame.src = url.pathname + url.search;
+    if (!modal.open) { modal.showModal(); }
+  }
+
+  // 화면 어디서든(글 작성자, 댓글, 팔로워 목록 등) 회원 프로필 링크를 누르면 창으로 연다
+  function openProfilesInModal() {
+    document.addEventListener('click', function (e) {
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) { return; }
+      var a = e.target.closest && e.target.closest('a[href]');
+      if (!a || a.target) { return; }
+      var url = new URL(a.href, location.href);
+      if (url.origin !== location.origin || !PROFILE_PAGE.test(url.pathname)) { return; }
+      e.preventDefault();
+      authModal(url.pathname, true);
+    });
   }
 
   // 창 안에서는 로그인·회원가입·아이디/비밀번호 찾기 사이만 창 안에서 오가고, 다른 링크는 바깥 화면에서 연다
@@ -257,7 +277,7 @@
       var a = e.target.closest && e.target.closest('a[href]');
       if (!a || a.target) { return; }
       var url = new URL(a.href, location.href);
-      if (url.origin === location.origin && AUTH_PAGES.test(url.pathname)) { return; }
+      if (url.origin === location.origin && (AUTH_PAGES.test(url.pathname) || PROFILE_PAGE.test(url.pathname))) { return; }
       e.preventDefault();
       window.top.location.href = a.href;
     });
@@ -287,6 +307,7 @@
       return;
     }
     renderFooter();
+    openProfilesInModal();
     if (document.body.hasAttribute('data-no-header')) {
       return;
     }
