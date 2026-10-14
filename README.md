@@ -18,6 +18,8 @@
 - [팀](#팀)
 - [업데이트](#업데이트)
 - [내 컴퓨터에서 바로 써 보기](#내-컴퓨터에서-바로-써-보기)
+- [실행](#실행)
+- [테스트](#테스트)
 - [문서](#문서)
 
 ## 주요 기능
@@ -157,14 +159,26 @@ Git Flow를 씁니다. 자세한 순서는 [CONTRIBUTING.md](CONTRIBUTING.md)에
 
 ## 내 컴퓨터에서 바로 써 보기
 
-준비물: JDK 21, Docker(가짜 메일함에만 씀). DB는 Crowfoot이 내어 준 MySQL(문서 654에 연결된 `cf_u33_d1`)을 바로 씁니다. 저장소 루트에서 아래 하나만 실행합니다.
+#### 준비물
+- JDK 21
+- Docker (가짜 메일함에만 씀)
+- DB는 따로 띄우지 않고 Crowfoot이 내어 준 MySQL(문서 654에 연결된 `cf_u33_d1`)을 씁니다.
+
+#### 실행
+저장소 루트에서 아래 하나만 실행합니다.
 
 ```bash
 ./local/start.sh        # macOS·Linux
 local\start.bat         # Windows
 ```
 
-처음 실행하면 Crowfoot DB 접속 정보(호스트·포트·사용자·비밀번호)를 묻습니다. Crowfoot 화면에서 메인블로그 문서의 데이터베이스 탭에 있는 값을 넣으면 `.env`에 저장되고, 다음부터는 묻지 않습니다. 그다음 가짜 메일함을 띄우고 앱을 띄웁니다. 다 뜨면 http://localhost:8080 으로 들어갑니다.
+1. 처음 실행하면 Crowfoot DB 접속 정보(호스트·포트·사용자·비밀번호)를 묻습니다.
+2. Crowfoot 화면의 메인블로그 문서 → 데이터베이스 탭에 있는 값을 넣습니다. `.env`에 저장되어 다음부터는 묻지 않습니다.
+3. 가짜 메일함과 앱이 차례로 뜹니다.
+4. http://localhost:8080 으로 들어갑니다.
+
+#### 예시 계정
+아래 계정은 Crowfoot DB에 이미 들어 있습니다(`local/seed.sql`과 같은 내용, 번호 101부터).
 
 | 계정 | 비밀번호 | 들어 있는 것 |
 |---|---|---|
@@ -173,40 +187,83 @@ local\start.bat         # Windows
 | newbie@local.test | Passw0rd! | `travel-log`에 참여 신청한 회원 |
 | admin@local.test | Passw0rd! | 관리자 |
 
-이 계정들은 Crowfoot DB에 이미 들어 있습니다(`local/seed.sql`과 같은 내용, 번호 101부터).
-블로그는 `http://localhost:8080/blog/travel-log`, 운영 화면은 뒤에 `/manage`를 붙입니다.
-게시판(004): 블로그 홈에서 글 목록·카테고리·글쓰기, 글 상세에서 댓글·좋아요·링크 복사, 메인에서 피드 탭과 통합 검색(`/search`), 태그 글(`/tags/{이름}`), 공지사항(`/notices`, 관리자만 쓰기)을 씁니다.
-게시판 예시 글·댓글은 `local/seed.sql` 아래쪽에 있고 Crowfoot DB에는 아직 넣지 않았습니다.
-소셜·알림(003): 닉네임을 누르면 회원 프로필(`/profile/{번호}`)에서 팔로우·차단·신고·팔로워 목록을 보고, 상단 종 아이콘으로 알림 사이드바(탭·읽음·삭제, 30초마다 개수 확인)를 엽니다. 글·댓글·블로그 신고 버튼, 내 정보의 소개 고치기·알림 설정(`/me/notifications.html`)·차단 목록(`/me/blocks.html`)도 있습니다. 예시 팔로우·알림은 `local/seed.sql` 맨 아래에 있습니다.
-관리자(005): `admin@local.test`로 로그인하면 상단에 "관리자" 링크가 생기고 `/admin`에서 회원(가린 이메일·전화번호, "전체 보기")·블로그(숨김·강제 폐쇄·블로그장 경고·바로 강퇴)·신고함·글과 댓글(숨김·삭제·복구)·활동 기록·통계 탭을 씁니다. 관리자가 아닌 계정에는 `/admin`이 404입니다. 예시 관리자 신고·숨긴 글·경고는 `local/seed.sql` 맨 아래에 있습니다.
-회원가입 인증번호 메일은 실제로 나가지 않고 가짜 메일함 http://localhost:8025 (Mailpit)에 쌓입니다. 아무 이메일 주소로 가입해도 그 화면에서 인증번호를 볼 수 있습니다.
-실제 Gmail로 보내려면 `.env`의 `MAIL_HOST=smtp.gmail.com`, `MAIL_PORT=587`, `MAIL_SMTP_AUTH=true`, `MAIL_STARTTLS=true`로 바꾸고 `MAIL_USERNAME`, `MAIL_PASSWORD`(보내는 Gmail 계정의 앱 비밀번호)를 채웁니다.
-DB 구조를 바꿀 때는 Crowfoot 문서를 먼저 고치고 변경 계획(plan_migration)을 승인해 DB에 반영한 뒤, `db/schema.sql`을 export_ddl로 다시 만듭니다.
-멈출 때는 Ctrl+C, 가짜 메일함을 끄려면 `docker compose -f local/docker-compose.yml down`.
+#### 기능별로 써 보기
+| 기능 | 어디서 | 해 볼 것 |
+|---|---|---|
+| 블로그(002) | `/blog/travel-log` | 블로그 홈. 뒤에 `/manage`를 붙이면 운영 화면 |
+| 게시판(004) | 블로그 홈 | 글 목록·카테고리·글쓰기 |
+| | 글 상세 | 댓글·좋아요·링크 복사 |
+| | 메인 | 피드 탭, 통합 검색(`/search`), 태그 글(`/tags/{이름}`), 공지사항(`/notices`, 관리자만 쓰기) |
+| 소셜·알림(003) | 닉네임 → `/profile/{번호}` | 팔로우·차단·신고·팔로워 목록 |
+| | 상단 종 아이콘 | 알림 사이드바(탭·읽음·삭제, 30초마다 개수 확인) |
+| | 내 정보 | 소개 고치기, 알림 설정(`/me/notifications.html`), 차단 목록(`/me/blocks.html`) |
+| 관리자(005) | `admin@local.test` → `/admin` | 회원(가린 이메일·전화번호, "전체 보기"), 블로그(숨김·강제 폐쇄·경고·강퇴), 신고함, 글·댓글(숨김·삭제·복구), 활동 기록, 통계 |
+
+- 예시 글·댓글·팔로우·알림·관리자 신고는 `local/seed.sql` 아래쪽에 있습니다.
+
+주의: 게시판 예시 글·댓글은 Crowfoot DB에 아직 넣지 않았습니다. 관리자가 아닌 계정에는 `/admin`이 404입니다.
+
+#### 메일
+- 회원가입 인증번호 메일은 실제로 나가지 않고 가짜 메일함 http://localhost:8025 (Mailpit)에 쌓입니다.
+- 아무 이메일 주소로 가입해도 그 화면에서 인증번호를 볼 수 있습니다.
+- 실제 Gmail로 보내려면 `.env`를 이렇게 바꿉니다. `MAIL_PASSWORD`는 보내는 Gmail 계정의 앱 비밀번호입니다.
+
+```
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_SMTP_AUTH=true
+MAIL_STARTTLS=true
+MAIL_USERNAME=
+MAIL_PASSWORD=
+```
+
+#### DB 구조 바꾸기
+1. Crowfoot 문서를 먼저 고칩니다.
+2. 변경 계획(plan_migration)을 확인·승인해 DB에 반영합니다.
+3. `db/schema.sql`을 export_ddl로 다시 만듭니다.
+
+#### 멈추기
+- 앱: Ctrl+C
+- 가짜 메일함:
+
+```bash
+docker compose -f local/docker-compose.yml down
+```
 
 ## 실행
 
-준비물: JDK 21. DB는 Crowfoot DB를 쓰므로 MySQL을 따로 띄우지 않습니다.
+`local/start.sh` 없이 직접 띄우는 방법입니다.
+
+#### 준비물
+- JDK 21
+- DB는 Crowfoot DB를 쓰므로 MySQL을 따로 띄우지 않습니다.
+
+#### 1. 환경변수
+`.env.example`을 `.env`로 복사해 채웁니다. 실행할 때 자동으로 읽습니다.
 
 ```bash
-# 1. DB: Crowfoot 문서 654에 연결된 MySQL(cf_u33_d1). 구조는 Crowfoot에서 고치고 plan_migration → 승인 → apply_migration으로 반영한다.
-#    접속 정보는 Crowfoot 화면의 데이터베이스 탭에서 본다.
-
-# 2. 환경변수: .env.example을 .env로 복사해 채운다. 실행할 때 자동으로 읽는다.
 cp .env.example .env
-#   DB_URL=jdbc:mysql://{Crowfoot 호스트}:{포트}/cf_u33_d1?characterEncoding=UTF-8
-#   DB_USERNAME / DB_PASSWORD: Crowfoot 데이터베이스 탭의 값
-#   APP_BASE_URL=http://localhost:8080 (글 미리보기 og 주소)
-#   JWT_SECRET, CODE_HASH_SECRET, BLACKLIST_HASH_SECRET: 32바이트 이상 무작위 값 (예: openssl rand -base64 48)
-#   MAIL_*: Gmail 앱 비밀번호. 비워 두면 메일만 실패하고 화면 응답은 같다
-#   TURNSTILE_*: 로컬은 Cloudflare 테스트 키 1x00000000000000000000AA / 1x0000000000000000000000000000000AA
+```
 
-# 3. 실행 → http://localhost:8080
+| 값 | 넣을 것 |
+|---|---|
+| `DB_URL` | `jdbc:mysql://{Crowfoot 호스트}:{포트}/cf_u33_d1?characterEncoding=UTF-8` |
+| `DB_USERNAME`, `DB_PASSWORD` | Crowfoot 화면 데이터베이스 탭의 값 |
+| `APP_BASE_URL` | `http://localhost:8080` (글 미리보기 og 주소) |
+| `JWT_SECRET`, `CODE_HASH_SECRET`, `BLACKLIST_HASH_SECRET` | 32바이트 이상 무작위 값(예: `openssl rand -base64 48`) |
+| `MAIL_*` | Gmail 앱 비밀번호. 비워 두면 메일만 실패하고 화면 응답은 같음 |
+| `TURNSTILE_*` | 로컬은 Cloudflare 테스트 키 `1x00000000000000000000AA` / `1x0000000000000000000000000000000AA` |
+
+#### 2. 실행
+```bash
 ./gradlew bootRun
 ```
 
-로컬 실행은 http이므로 쿠키의 Secure 속성 때문에 `localhost`로 접속합니다(브라우저가 localhost는 예외로 둡니다).
-숫자 규칙(만료 시간, 제한 횟수 등)은 모두 `src/main/resources/application.yml`의 설정값이고 환경변수로 바꿀 수 있습니다(D-68).
+http://localhost:8080 으로 들어갑니다.
+
+- 숫자 규칙(만료 시간, 제한 횟수 등)은 모두 `src/main/resources/application.yml`의 설정값이고 환경변수로 바꿀 수 있습니다(D-68).
+
+주의: 로컬은 http라서 로그인 쿠키(Secure)가 `localhost`에서만 동작합니다. IP 주소로 들어가면 로그인이 안 됩니다.
 
 ## 테스트
 
@@ -214,7 +271,11 @@ cp .env.example .env
 ./gradlew test
 ```
 
-Testcontainers가 테스트 때만 쓰고 버리는 MySQL 8.0 컨테이너를 띄우고(`db/schema.sql`), 메일은 GreenMail(SMTP 3025)로 받습니다. 테스트가 데이터를 지우고 다시 넣기 때문에 Crowfoot DB에는 연결하지 않습니다. `develop`·`feature/*`·`release/*`·`hotfix/*`에 올리거나 PR을 만들면 GitHub Actions(`ci.yml`)가 같은 테스트를 자동으로 돌립니다(D-128). 내 컴퓨터에서 앱만 쓸 때는 필요 없습니다.
+- 테스트 때만 쓰고 버리는 MySQL 8.0 컨테이너(Testcontainers)를 띄우고 `db/schema.sql`로 표를 만듭니다.
+- 메일은 GreenMail(SMTP 3025)로 받습니다.
+- `develop`·`feature/*`·`release/*`·`hotfix/*`에 올리거나 PR을 만들면 GitHub Actions(`ci.yml`)가 같은 테스트를 자동으로 돌립니다(D-128).
+
+주의: 테스트가 데이터를 지우고 다시 넣기 때문에 Crowfoot DB에는 연결하지 않습니다. 내 컴퓨터에서 앱만 쓸 때는 테스트가 필요 없습니다.
 
 ## 문서
 
