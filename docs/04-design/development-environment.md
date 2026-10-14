@@ -18,7 +18,7 @@ flowchart LR
   end
   APP1 --> CF[(Crowfoot MySQL<br/>개발 DB)]
   CF -.ERD 문서 654.- ERD[Crowfoot ERD]
-  C -->|feature → develop → main| GH[GitHub<br/>p-minsu/b-bine-blog]
+  C -->|feature → develop → main| GH[GitHub<br/>b-bine-blog/b-bine-blog]
   GH -->|main push| GA[GitHub Actions<br/>jar 빌드]
   GA -->|SSH| S[운영 서버<br/>nginx → 도커 컨테이너<br/>Spring Boot :8370·8371]
   S --> PDB[(운영 MySQL)]
