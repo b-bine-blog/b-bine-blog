@@ -39,8 +39,10 @@ paths:
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/Size'
         - { name: categoryId, in: query, schema: { type: integer, format: int64 } }
+        - { name: q, in: query, description: "블로그 안 검색어(D-136). 제목·태그·작성자 닉네임. 규칙은 /api/search와 같다", schema: { type: string } }
       responses:
         '200': { description: 목록, content: { application/json: { schema: { $ref: '#/components/schemas/PostPage' } } } }
+        '400': { description: "SEARCH_KEYWORD_INVALID(q가 2~20자가 아니거나 글자·숫자가 없음)", content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
     post:
