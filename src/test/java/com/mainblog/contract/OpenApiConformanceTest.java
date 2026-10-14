@@ -89,10 +89,11 @@ class OpenApiConformanceTest extends IntegrationTestBase {
         assertThat(missing).isEmpty();
     }
 
+    // 작성글·작성댓글·스크랩 4개 경로 추가(D-134)
     @Test
-    void 게시판_계약의_16개_경로와_모든_메서드가_매핑돼_있다() throws Exception {
+    void 게시판_계약의_22개_경로와_모든_메서드가_매핑돼_있다() throws Exception {
         Set<String> contract = contractOperations(BOARD_CONTRACT);
-        assertThat(contract.stream().map(op -> op.substring(op.indexOf(' ') + 1)).distinct()).hasSize(16);
+        assertThat(contract.stream().map(op -> op.substring(op.indexOf(' ') + 1)).distinct()).hasSize(22);
         Set<String> missing = new TreeSet<>(contract);
         missing.removeAll(mappedOperations());
         assertThat(missing).isEmpty();

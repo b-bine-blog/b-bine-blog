@@ -26,8 +26,9 @@
   function render() {
     document.title = profile.nickname + ' - b-bine blog';
     api.setText($('nickname'), profile.nickname);
-    api.setText($('bio'), profile.bio || '');
-    $('bio').hidden = !profile.bio;
+    // 소개는 팔로워 아래에. 비어 있으면 안내 문구를 흐리게 보인다(SOC-03)
+    api.setText($('bio'), profile.bio || '아직 소개글이 없어요.');
+    $('bio').classList.toggle('profile-card__bio--empty', !profile.bio);
     if (profile.profileImageUrl) {
       $('avatar').src = profile.profileImageUrl;
       $('avatar').alt = profile.nickname + '의 프로필 사진';

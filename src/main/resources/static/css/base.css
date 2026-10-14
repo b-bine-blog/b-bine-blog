@@ -342,6 +342,7 @@ main.reading article > .row > * { margin-top: 0; }
 .profile-card__body { flex: 1; min-width: 0; }
 .profile-card__body h1 { margin: 0 0 6px; overflow-wrap: anywhere; }
 .profile-card__bio { margin: 0 0 8px; white-space: pre-line; overflow-wrap: anywhere; }
+.profile-card__bio--empty { color: var(--muted); font-size: 0.9rem; }
 .profile-card #actions button, .profile-card #actions a { margin-top: 0; }
 .profile-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 16px 0; }
 @media (max-width: 640px) { .profile-grid { grid-template-columns: minmax(0, 1fr); } }
@@ -775,3 +776,12 @@ button.social-button--naver:hover:not(:disabled) { background: #02b351; color: #
 .privacy-page table { width: 100%; border-collapse: collapse; margin: 8px 0 12px; font-size: 0.9rem; display: block; overflow-x: auto; }
 .privacy-page th, .privacy-page td { border-bottom: 1px solid var(--line); padding: 6px 8px; text-align: left; vertical-align: top; }
 .privacy-page h2 { margin-top: 28px; font-size: 1.05rem; }
+
+/* 메인 피드 태그 탭 (D-135): 팔로우 옆 + 로 더한 태그. × 로 지운다 */
+.feed-tag-tabs { display: contents; }
+.tab-group { display: inline-flex; align-items: center; }
+.tabs .tab-group button[role="tab"] { border-radius: 999px 0 0 999px; padding-right: 8px; }
+.tabs .tab-remove { border-radius: 0 999px 999px 0; padding: 6px 10px 6px 6px; font-weight: 700; }
+.tabs .tab-add { padding: 6px 12px; font-weight: 700; background: #fff; color: var(--green-700); border: 1px dashed var(--green-500); }
+.feed-tag-form { margin: 0 0 12px; }
+.feed-tag-form input { flex: 1; min-width: 160px; max-width: 280px; }
