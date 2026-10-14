@@ -3,9 +3,10 @@ package com.mainblog.board;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
-/** 블로그 글 목록 (004 T023, US2-1~6, FR-017~FR-021, D-100 #7). */
+/** 블로그 글 목록 (004 T023, US2-1~6, FR-017~FR-021, D-100 #7, D-133). */
 class PostListIntegrationTest extends BoardTestBase {
 
     @Test
@@ -48,6 +49,21 @@ class PostListIntegrationTest extends BoardTestBase {
         assertThat(none).hasSize(1);
         assertThat(none.get(0).get("title").asText()).isEqualTo("그냥");
         assertThat(none.get(0).get("thumbnailUrl").isNull()).isTrue();
+    }
+
+    @Test
+    void 고친_글만_수정됨_표시_조회수는_상관없음() throws Exception {
+        BlogFixture b = blog("list-edited", "PUBLIC");
+        long edited = writePost(b.owner(), b.blogId(), "고침", "처음");
+        writePost(b.owner(), b.blogId(), "그대로", "c");
+        assertThat(putAs(b.owner(), "/api/posts/" + edited, postJson("고침", "다시", null, List.of())).status())
+                .isEqualTo(200);
+        jdbc.update("UPDATE posts SET view_count = view_count + 1");  // 조회수가 늘어도 수정됨이 아니다(D-133)
+
+        JsonNode items = getAs(null, "/api/blogs/" + b.blogId() + "/posts").json().get("items");
+        assertThat(items.get(0).get("title").asText()).isEqualTo("그대로");
+        assertThat(items.get(0).get("edited").asBoolean()).isFalse();
+        assertThat(items.get(1).get("edited").asBoolean()).isTrue();
     }
 
     @Test

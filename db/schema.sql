@@ -2,6 +2,7 @@
 -- Crowfoot export_ddl로 다시 만든다(research R-02). 2026-10-08, 문서 버전 41, 36개 테이블(shedlock 포함).
 -- ADM-08(D-112): system_inquiries는 문서 버전 45에서 더하고 운영 DB에 만든 표를 그대로 옮겼다(2026-10-12).
 -- 005(D-103 #11·#12): comments.deleted_by, owner_warnings.reason과 admin_actions.action_type 설명은 개발 DB에 먼저 반영된 것을 손으로 맞췄다(005 T057).
+-- 글 수정됨(D-133): posts.edited_at은 문서 버전 56에서 더했다. 운영 DB에는 그 ALTER 한 문장만 실행한다(2026-10-14).
 
 -- 메인블로그 — MySQL DDL
 
@@ -327,6 +328,7 @@ CREATE TABLE posts (
     hidden_at DATETIME COMMENT '숨긴 시각',
     deleted_at DATETIME COMMENT '삭제 시각',
     deleted_by BIGINT COMMENT '삭제한 회원 번호-----users.id(FK 선 없음). 작성자가 아니면 "내 글 삭제됨" 알림',
+    edited_at DATETIME(6) COMMENT '고친 일시-----글을 수정하면 기록. NULL이면 고친 적 없음. 목록에 "수정됨" 표시(D-133)',
     created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) COMMENT '작성 일시',
     updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6) COMMENT '수정 일시',
     PRIMARY KEY (id),

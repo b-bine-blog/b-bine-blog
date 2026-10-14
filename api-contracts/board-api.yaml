@@ -446,6 +446,7 @@ components:
         viewCount: { type: integer }
         commentCount: { type: integer }
         createdAt: { type: string, format: date-time }
+        edited: { type: boolean, description: "글을 고친 적이 있으면 true. 목록에 \"수정됨\" 표시(D-133)" }
     PostDetail:
       allOf:
         - $ref: '#/components/schemas/PostSummary'
