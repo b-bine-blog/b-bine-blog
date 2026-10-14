@@ -820,3 +820,8 @@ label.inline:has(> select), label.inline > select { border-radius: var(--corner)
 .blog-post-search input { flex: 1; min-width: 0; margin: 0; padding: 6px 10px; border: 1px solid var(--line); border-radius: var(--corner); }
 .blog-post-search button { margin: 0; padding: 6px 14px; white-space: nowrap; }
 @media (max-width: 600px) { .blog-post-search { order: 3; flex-basis: 100%; max-width: none; } }
+
+/* 글쓰기 버튼(2026-10-14): 카테고리 탭과 같은 줄 오른쪽 끝, 탭과 같은 높이 */
+.blog-tabs-row { display: flex; align-items: flex-start; gap: 8px; margin: 12px 0; }
+.blog-tabs-row > .tabs { flex: 1; min-width: 0; margin: 0; }
+.blog-tabs-row > .blog-write { flex-shrink: 0; margin: 0 0 0 auto; padding: 4px 14px; font-size: 0.92rem; }
