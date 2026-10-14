@@ -771,3 +771,12 @@ button.social-button--naver:hover:not(:disabled) { background: #02b351; color: #
 .social-connections { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
 .social-connections li { display: flex; align-items: center; justify-content: space-between; gap: 12px;
   border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; background: var(--surface); }
+
+/* 메인 피드 태그 탭 (D-135): 팔로우 옆 + 로 더한 태그. × 로 지운다 */
+.feed-tag-tabs { display: contents; }
+.tab-group { display: inline-flex; align-items: center; }
+.tabs .tab-group button[role="tab"] { border-radius: 999px 0 0 999px; padding-right: 8px; }
+.tabs .tab-remove { border-radius: 0 999px 999px 0; padding: 6px 10px 6px 6px; font-weight: 700; }
+.tabs .tab-add { padding: 6px 12px; font-weight: 700; background: #fff; color: var(--green-700); border: 1px dashed var(--green-500); }
+.feed-tag-form { margin: 0 0 12px; }
+.feed-tag-form input { flex: 1; min-width: 160px; max-width: 280px; }

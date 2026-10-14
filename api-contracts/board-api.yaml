@@ -332,6 +332,44 @@ paths:
         '200': { description: 피드, content: { application/json: { schema: { $ref: '#/components/schemas/FeedResult' } } } }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
+  /api/me/feed-tags:
+    get:
+      tags: [feed]
+      summary: 내 피드 태그 탭 (D-135)
+      description: 팔로우 옆 + 로 추가한 태그. 추가한 순서대로. 탭 글은 /api/tags/{name}/posts로 받는다.
+      responses:
+        '200':
+          description: 태그 이름 목록
+          content:
+            application/json:
+              schema: { type: array, items: { type: string } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /api/me/feed-tags/{name}:
+    parameters:
+      - { name: name, in: path, required: true, schema: { type: string }, description: "태그 이름. 앞의 #과 공백은 글 태그 규칙대로 정리" }
+    put:
+      tags: [feed]
+      summary: 피드 태그 탭 추가 (D-135)
+      description: 이미 있으면 그대로. 회원당 최대 개수(board.feed.tag-max-count, 기본 5)를 넘으면 409.
+      responses:
+        '200':
+          description: 추가 뒤 태그 이름 목록
+          content:
+            application/json:
+              schema: { type: array, items: { type: string } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { description: FEED_TAG_LIMIT_EXCEEDED, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+    delete:
+      tags: [feed]
+      summary: 피드 태그 탭 지우기 (D-135)
+      description: 없으면 아무 일도 없다.
+      responses:
+        '204': { description: 지움 }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
   /api/notices:
     get:
       tags: [notice]
