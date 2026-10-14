@@ -71,7 +71,6 @@
               <button type="submit">검색</button>
             </form>
             <div class="row">
-              <a id="write" class="button" hidden>글쓰기</a>
               <label class="inline inline--bare" aria-label="한 페이지 글 수">
                 <select id="post-size">
                   <option value="10">10개</option>
@@ -81,7 +80,11 @@
               </label>
             </div>
           </div>
-          <div class="tabs" id="categories" role="tablist"></div>
+          <!-- 카테고리 탭 줄 오른쪽 끝에 글쓰기(2026-10-14): 위의 "10개" 바로 아래 -->
+          <div class="blog-tabs-row">
+            <div class="tabs" id="categories" role="tablist"></div>
+            <a id="write" class="button blog-write" hidden>글쓰기</a>
+          </div>
           <ul class="post-list" id="post-list"></ul>
           <nav class="pagination" id="post-pages" aria-label="글 페이지"></nav>
         </section>
