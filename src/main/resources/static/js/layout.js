@@ -292,7 +292,7 @@
     footer.appendChild(document.createTextNode(' · '));
     footer.appendChild(link('/inquiry.html', '시스템 문의')); // ADM-08, D-112
     // 변경사항: 저장소 README의 업데이트 표로 간다. 지금 버전을 옆에 적는다(2026-10-13 사용자 요청, D-108)
-    var source = link('https://github.com/p-minsu/b-bine-blog#업데이트', '변경사항 ' + SITE_VERSION);
+    var source = link('https://github.com/b-bine-blog/b-bine-blog#업데이트', '변경사항 ' + SITE_VERSION);
     source.target = '_blank';
     source.rel = 'noopener noreferrer';
     footer.appendChild(document.createTextNode(' · '));
