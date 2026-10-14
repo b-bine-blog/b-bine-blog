@@ -22,21 +22,21 @@ import org.yaml.snakeyaml.Yaml;
  */
 class OpenApiConformanceTest extends IntegrationTestBase {
 
-    static final Path CONTRACT = Path.of("specs/001-member-auth/contracts/member-auth-api.yaml");
+    static final Path CONTRACT = Path.of("api-contracts/member-auth-api.yaml");
     /** 002 블로그 관리 계약 (002 T072). */
-    static final Path BLOG_CONTRACT = Path.of("specs/002-blog-management/contracts/blog-api.yaml");
+    static final Path BLOG_CONTRACT = Path.of("api-contracts/blog-api.yaml");
     /** 004 게시판 계약 (004 T055). */
-    static final Path BOARD_CONTRACT = Path.of("specs/004-board/contracts/board-api.yaml");
+    static final Path BOARD_CONTRACT = Path.of("api-contracts/board-api.yaml");
     /** 003 소셜·알림 계약 (003 T046). */
-    static final Path SOCIAL_CONTRACT = Path.of("specs/003-social-notification/contracts/social-api.yaml");
+    static final Path SOCIAL_CONTRACT = Path.of("api-contracts/social-api.yaml");
     /** 005 관리자 계약 (005 T053). */
-    static final Path ADMIN_CONTRACT = Path.of("specs/005-admin-moderation/contracts/admin-api.yaml");
+    static final Path ADMIN_CONTRACT = Path.of("api-contracts/admin-api.yaml");
     /** 006 시스템 문의 계약 (ADM-08, D-112). */
-    static final Path INQUIRY_CONTRACT = Path.of("specs/006-system-inquiry/contracts/inquiry-api.yaml");
+    static final Path INQUIRY_CONTRACT = Path.of("api-contracts/inquiry-api.yaml");
     /** 운영 규칙 안내 (007, D-114). */
-    static final Path SITE_RULES_CONTRACT = Path.of("specs/007-site-rules/contracts/site-rules-api.yaml");
+    static final Path SITE_RULES_CONTRACT = Path.of("api-contracts/site-rules-api.yaml");
     /** 소셜 로그인 (008, D-125). */
-    static final Path SOCIAL_LOGIN_CONTRACT = Path.of("specs/008-social-login/contracts/social-login-api.yaml");
+    static final Path SOCIAL_LOGIN_CONTRACT = Path.of("api-contracts/social-login-api.yaml");
     static final Set<String> HTTP_METHODS = Set.of("get", "post", "put", "patch", "delete");
     /** 화면이 Turnstile 사이트 키를 읽는 설정 조회. 회원 기능 계약 밖이다(T040). */
     static final Set<String> OUTSIDE_CONTRACT = Set.of("GET /api/public-config");

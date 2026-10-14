@@ -10,7 +10,7 @@ import org.springframework.validation.annotation.Validated;
 
 /**
  * 로그인·인증 설정값 (T006). 숫자 규칙은 코드에 두지 않고 application.yml + 환경변수로 받는다(D-68).
- * 값의 근거는 specs/001-member-auth/data-model.md "설정값" 표(D-97, SEC-03, SEC-13, USR-02, USR-08).
+ * 값의 근거는 문서 저장소 specs/001-member-auth/data-model.md "설정값" 표(D-97, SEC-03, SEC-13, USR-02, USR-08).
  */
 @Validated
 @ConfigurationProperties("auth")

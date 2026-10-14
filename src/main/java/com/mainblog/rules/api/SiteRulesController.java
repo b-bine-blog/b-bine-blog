@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * 운영 규칙 화면이 보여 줄 숫자 (D-114, specs/007-site-rules/contracts/site-rules-api.yaml).
+ * 운영 규칙 화면이 보여 줄 숫자 (D-114, api-contracts/site-rules-api.yaml).
  * 화면에 숫자를 따로 적지 않고 실제 설정값(D-68)을 그대로 내려 주어, 설정을 바꾸면 안내도 같이 바뀐다.
  * 비밀 값과 내부 운영값(요청 제한 창, 관리자 조회 한도 등)은 넣지 않는다.
  */

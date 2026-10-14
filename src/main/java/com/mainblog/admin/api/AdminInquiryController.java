@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-/** 관리자 시스템 문의함·답변 (ADM-08, D-112, specs/006-system-inquiry/contracts/inquiry-api.yaml). */
+/** 관리자 시스템 문의함·답변 (ADM-08, D-112, api-contracts/inquiry-api.yaml). */
 @RestController
 public class AdminInquiryController {
 
