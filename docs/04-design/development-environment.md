@@ -74,12 +74,12 @@ Gradle Wrapper가 정해진 Gradle을 내려받으므로 Gradle은 따로 설치
 3. **브랜치**: Git Flow(D-123). `feature/*`에서 작업해 `develop`에 합치고, 배포할 때 `main`에 합칩니다. 자세한 순서는 [CONTRIBUTING.md](../../CONTRIBUTING.md).
 4. **테스트**: `develop`·`feature/*`·`release/*`·`hotfix/*`에 push하거나 PR을 만들면 GitHub Actions(`ci.yml`)가 `./gradlew test`(통합 테스트 전체, Testcontainers)를 자동으로 돌립니다(D-128). 초록색인 것만 `main`에 합칩니다.
 5. **배포**: `main`에 push되면 GitHub Actions가
-   - `deploy.yml`: jar를 만들어 `Dockerfile`과 함께 SSH로 서버에 올리고, `deploy/deploy.sh`가 서버에서 이미지를 만들어 컨테이너로 실행(D-127). 새 컨테이너를 쉬는 포트에 먼저 띄운 뒤 옛 것을 끈다(D-126)
+   - `deploy.yml`: jar를 만들어 `Dockerfile`과 함께 SSH로 서버에 올리고, `deploy/deploy.sh`가 서버에서 이미지를 만들어 컨테이너로 실행(D-127). 늘 떠 있는 앱 2개(8371, 8370)를 하나씩 차례로 새 버전으로 바꾼다(롤링, D-129)
    - `tag.yml`: 사이트 버전(`layout.js`의 `SITE_VERSION`)으로 태그를 단다(D-124)
    - `release-note.yml`: `release-notes/`의 노트를 사이트 공지로 올림(D-108)
 
 ## 운영 서버
 
-- 서버 폴더 `~/blogproject`: 업로드 이미지(`uploads/`, 재배포해도 남음), 비밀 값 파일(`secrets.env`, 나만 읽기), 지금 쓰는 포트(`active-port`). 실행 로그는 `docker logs mainttblog-<포트>`.
-- nginx가 https를 받아 앱(`127.0.0.1:8370`, 무중단 설정 후에는 8370·8371)으로 넘기고, 앱이 꺼져 있으면 점검 중 화면을 보여 줍니다.
+- 서버 폴더 `~/blogproject`: 업로드 이미지(`uploads/`, 재배포해도 남음), 비밀 값 파일(`secrets.env`, 나만 읽기). 실행 로그는 `docker logs mainttblog-<포트>`.
+- nginx가 https를 받아 앱(`127.0.0.1:8370`, nginx 설정을 바꾼 뒤에는 8370·8371 둘 다)으로 넘기고, 앱이 꺼져 있으면 점검 중 화면을 보여 줍니다.
 - 서버 접속은 `ssh -p 8822 <계정>@<주소>`입니다. 계정과 주소는 학원 공통 인프라 문서에 있고, 저장소에는 적지 않습니다.

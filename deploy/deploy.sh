@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# 서버에서 도커 컨테이너로 앱을 실행한다 (D-127). 무중단 블루-그린(D-126).
+# 서버에서 도커 컨테이너로 앱을 실행한다 (D-127). 롤링 배포(D-129).
 # GitHub Actions가 app.jar.new, Dockerfile, 이 스크립트를 ~/blogproject에 올린 뒤 SSH로 접속해 실행한다.
 # 서버에서 jar와 Dockerfile로 이미지를 만든다(Java 21 실행 환경이 이미지에 들어 있어 서버 Java와 상관없다).
-# 두 포트(APP_PORT, APP_PORT_B)를 번갈아 쓴다. 새 앱을 쉬는 포트에 먼저 켜고 응답을 확인한 뒤 옛 앱을 끈다.
-# nginx는 두 포트를 함께 upstream으로 두고, 꺼진 쪽은 건너뛴다(deploy/nginx 설정). 그래서 사용자는 끊기지 않는다.
+# 앱을 늘 두 개(APP_PORT, APP_PORT_B) 띄워 둔다. 배포할 때는 하나씩 차례로 새 버전으로 바꾼다(롤링, D-129).
+# nginx는 두 포트를 함께 upstream으로 두고, 꺼진 쪽은 건너뛴다(deploy/nginx 설정). 그래서 하나를 바꾸는 동안 다른 하나가 받는다.
 # 비밀 값은 Actions가 환경변수로 넘긴다. 이 파일에는 적지 않는다.
 # 같이 쓰는 서버라 docker inspect로 다른 사람에게 보이지 않게, 비밀 값은 -e로 넘기지 않고
 # 나만 읽을 수 있는 파일(secrets.env)을 컨테이너의 /app/.env로 붙인다.
@@ -11,10 +11,6 @@ set -euo pipefail
 
 APP_DIR="$HOME/blogproject"
 JAR_NEW="$APP_DIR/app.jar.new"
-ACTIVE_FILE="$APP_DIR/active-port"   # 지금 사용자를 받는 포트. release-note도 이 파일로 앱을 찾는다
-# nginx가 두 포트를 모두 보도록 바꾸고 reload한 뒤에 이 파일을 만든다(touch). 없으면 예전처럼 APP_PORT 하나만 쓴다.
-# nginx가 8371을 모르는 채로 그쪽에 앱을 띄우면 사이트가 내려가기 때문이다.
-BLUE_GREEN_FLAG="$APP_DIR/blue-green-on"
 APP_PORT_B="${APP_PORT_B:-8371}"
 IMAGE="mainttblog-app"                   # 같은 서버의 다른 팀과 겹치지 않는 이름
 SECRETS_FILE="$APP_DIR/secrets.env"
@@ -67,19 +63,6 @@ docker build -q -t "$IMAGE:$TAG" "$BUILD_DIR"
 rm -rf "$BUILD_DIR"
 
 
-# 지금 도는 포트와 새로 켤 포트 정하기
-ACTIVE_PORT="$(cat "$ACTIVE_FILE" 2>/dev/null || true)"
-if [ "$ACTIVE_PORT" != "$APP_PORT" ] && [ "$ACTIVE_PORT" != "$APP_PORT_B" ]; then
-  ACTIVE_PORT="$APP_PORT"   # 처음 바꿀 때: 예전 방식 앱은 APP_PORT에서 돈다
-fi
-if [ ! -f "$BLUE_GREEN_FLAG" ]; then
-  NEW_PORT="$APP_PORT"     # 무중단 준비 전: 같은 포트에서 껐다 켠다(그동안 점검 중 화면)
-elif [ "$ACTIVE_PORT" = "$APP_PORT" ]; then
-  NEW_PORT="$APP_PORT_B"
-else
-  NEW_PORT="$APP_PORT"
-fi
-
 container_of() { echo "mainttblog-$1"; }
 
 # 이 스크립트가 만든 컨테이너만 멈춘다. 처리 중인 요청은 끝내고 내려간다(graceful, 최대 40초)
@@ -118,57 +101,64 @@ is_up() {  # $1 포트. 설정 API가 200이면 요청을 받을 수 있다
   fi
 }
 
-# 쉬는 포트에 남아 있는 컨테이너(지난 배포가 실패했을 때 등)는 먼저 정리한다
-stop_container "$NEW_PORT"
-if [ "$NEW_PORT" = "$ACTIVE_PORT" ]; then
-  echo "무중단 준비 전($BLUE_GREEN_FLAG 없음): 옛 앱을 끄고 같은 포트에서 다시 켭니다."
-  stop_legacy_jar
-fi
-if is_up "$NEW_PORT"; then
-  echo "포트 $NEW_PORT를 다른 프로그램이 쓰고 있습니다. 배포를 멈춥니다." >&2
-  exit 1
-fi
+# 한 포트의 앱을 새 버전으로 바꾼다. 뜨지 않으면 로그를 보여 주고 실패로 끝낸다
+replace_app() {  # $1 포트
+  local port="$1" name ok i
+  name="$(container_of "$port")"
+  stop_container "$port"
+  if [ "$port" = "$APP_PORT" ]; then stop_legacy_jar; fi
+  if is_up "$port"; then
+    echo "포트 $port를 다른 프로그램이 쓰고 있습니다. 배포를 멈춥니다." >&2
+    return 1
+  fi
+  echo "새 컨테이너 실행 중: $name (포트 $port)..."
+  # --network host: 앱이 서버의 포트를 바로 쓴다(nginx 설정, DB 주소가 jar 때와 같다)
+  # --user: 업로드 파일이 내 계정 소유로 남게 한다
+  # --restart unless-stopped: 앱이 죽거나 서버가 다시 켜지면 컨테이너도 다시 뜬다
+  docker run -d \
+    --name "$name" \
+    --restart unless-stopped \
+    --network host \
+    --user "$(id -u):$(id -g)" \
+    --log-opt max-size=20m --log-opt max-file=3 \
+    -e SERVER_PORT="$port" \
+    -e AUTH_COOKIE_SECURE="${AUTH_COOKIE_SECURE:-true}" \
+    -e SERVER_FORWARDHEADERSSTRATEGY=native \
+    -v "$FILE_STORAGE_ROOT:/app/uploads" \
+    -v "$SECRETS_FILE:/app/.env:ro" \
+    "$IMAGE:$TAG" > /dev/null
 
-NAME="$(container_of "$NEW_PORT")"
-echo "새 컨테이너 실행 중: $NAME (포트 $NEW_PORT, 지금 사용자는 포트 $ACTIVE_PORT)..."
-# --network host: 앱이 서버의 포트를 바로 쓴다(nginx 설정, DB 주소가 jar 때와 같다)
-# --user: 업로드 파일이 내 계정 소유로 남게 한다
-# --restart unless-stopped: 서버가 다시 켜지면 컨테이너도 다시 뜬다
-docker run -d \
-  --name "$NAME" \
-  --restart unless-stopped \
-  --network host \
-  --user "$(id -u):$(id -g)" \
-  --log-opt max-size=20m --log-opt max-file=3 \
-  -e SERVER_PORT="$NEW_PORT" \
-  -e AUTH_COOKIE_SECURE="${AUTH_COOKIE_SECURE:-true}" \
-  -e SERVER_FORWARDHEADERSSTRATEGY=native \
-  -v "$FILE_STORAGE_ROOT:/app/uploads" \
-  -v "$SECRETS_FILE:/app/.env:ro" \
-  "$IMAGE:$TAG" > /dev/null
+  echo "포트 $port 앱이 뜨기를 기다리는 중..."
+  ok=0
+  for i in $(seq 1 60); do
+    if is_up "$port"; then ok=1; break; fi
+    [ "$(docker inspect -f '{{.State.Running}}' "$name" 2>/dev/null)" = "true" ] || break
+    sleep 3
+  done
+  if [ "$ok" != 1 ]; then
+    echo "포트 $port 앱이 응답하지 않습니다. 마지막 로그:" >&2
+    docker logs --tail 80 "$name" >&2 || true
+    stop_container "$port"
+    return 1
+  fi
+  echo "포트 $port 앱 준비 완료"
+}
 
-echo "새 앱이 뜨기를 기다리는 중..."
-ok=0
-for i in $(seq 1 60); do
-  if is_up "$NEW_PORT"; then ok=1; break; fi
-  [ "$(docker inspect -f '{{.State.Running}}' "$NAME" 2>/dev/null)" = "true" ] || break
-  sleep 3
-done
-if [ "$ok" != 1 ]; then
-  echo "새 앱이 응답하지 않습니다. 옛 앱(포트 $ACTIVE_PORT)이 돌고 있었다면 그대로 둡니다. 마지막 로그:" >&2
-  docker logs --tail 80 "$NAME" >&2 || true
-  stop_container "$NEW_PORT"
+# 롤링(D-129): APP_PORT_B를 먼저 바꾼다. nginx 설정 전에는 사용자가 APP_PORT만 쓰므로
+# 새 버전이 뜨지 않으면 여기서 멈추고, 사용자가 쓰는 APP_PORT의 옛 버전은 그대로 남는다.
+if ! replace_app "$APP_PORT_B"; then
+  echo "새 버전이 뜨지 않아 배포를 멈춥니다. 포트 $APP_PORT의 앱은 그대로 둡니다." >&2
   docker image rm "$IMAGE:$TAG" > /dev/null 2>&1 || true
   exit 1
 fi
-
-# 새 앱으로 넘기고 옛 앱을 내린다. nginx는 꺼진 포트를 건너뛰므로 따로 바꾸지 않는다
-echo "$NEW_PORT" > "$ACTIVE_FILE"
-if [ "$NEW_PORT" != "$ACTIVE_PORT" ]; then
-  stop_container "$ACTIVE_PORT"
-  stop_legacy_jar
+if ! replace_app "$APP_PORT"; then
+  echo "포트 $APP_PORT 앱이 뜨지 않았습니다. 포트 $APP_PORT_B 앱(새 버전)만 돌고 있습니다." >&2
+  exit 1
 fi
+
+# 예전 블루-그린(D-126) 때 쓰던 파일은 지운다. release-note는 APP_PORT로 앱을 찾는다
+rm -f "$APP_DIR/active-port" "$APP_DIR/blue-green-on"
 
 # 우리 이미지 중 지금 쓰는 것만 남기고 지운다(다른 팀 이미지는 건드리지 않는다)
 docker images --format '{{.Repository}}:{{.Tag}}' "$IMAGE" | grep -vx "$IMAGE:$TAG" | xargs -r docker image rm > /dev/null 2>&1 || true
-echo "배포 완료: $NAME (포트 $NEW_PORT, 로그는 docker logs $NAME)"
+echo "배포 완료: 포트 $APP_PORT_B, $APP_PORT 모두 새 버전 (로그는 docker logs mainttblog-<포트>)"
