@@ -30,10 +30,10 @@ public class SearchService {
     public enum Sort { RELEVANCE, LATEST, POPULAR }
 
     private static final Pattern HAS_WORD = Pattern.compile("[\\p{L}\\p{N}]");
-    private static final String TITLE_MATCH = "MATCH(p.title) AGAINST (? IN BOOLEAN MODE)";
-    private static final String TAG_MATCH = "EXISTS (SELECT 1 FROM post_tags pt JOIN tags t ON t.id = pt.tag_id "
+    static final String TITLE_MATCH = "MATCH(p.title) AGAINST (? IN BOOLEAN MODE)";
+    static final String TAG_MATCH = "EXISTS (SELECT 1 FROM post_tags pt JOIN tags t ON t.id = pt.tag_id "
             + "WHERE pt.post_id = p.id AND t.name = ?)";
-    private static final String NICKNAME_MATCH = "(u.nickname = ? AND u.status = 'ACTIVE' AND p.author_left = FALSE)";
+    static final String NICKNAME_MATCH = "(u.nickname = ? AND u.status = 'ACTIVE' AND p.author_left = FALSE)";
 
     private final PostSummaryReader reader;
     private final BlogQueryService blogQueryService;
@@ -71,8 +71,13 @@ public class SearchService {
         };
     }
 
+    /** 제목 FULLTEXT는 띄어쓰기를 포함한 구절 그대로 찾는다. */
+    static String phrase(String keyword) {
+        return "\"" + keyword.replace("\"", " ") + "\"";
+    }
+
     private PostPage posts(Type type, String keyword, Sort sort, int page, int size, Long viewerId) {
-        String phrase = "\"" + keyword.replace("\"", " ") + "\"";
+        String phrase = phrase(keyword);
         String tag = tagService.normalizeOne(keyword);
         List<Object> args = new ArrayList<>();
         StringBuilder where = new StringBuilder(PostVisibility.PUBLIC_BLOG_POST).append(" AND ");

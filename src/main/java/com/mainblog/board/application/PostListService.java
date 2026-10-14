@@ -20,18 +20,29 @@ public class PostListService {
     private final PostSummaryReader reader;
     private final BoardPaging paging;
     private final PostTagService tagService;
+    private final SearchService searchService;
 
     public PostListService(BlogPermissionService blogAuth, PostSummaryReader reader, BoardPaging paging,
-                           PostTagService tagService) {
+                           PostTagService tagService, SearchService searchService) {
         this.blogAuth = blogAuth;
         this.reader = reader;
         this.paging = paging;
         this.tagService = tagService;
+        this.searchService = searchService;
     }
 
     /** categoryId: null이면 전체, 0이면 미분류. */
     @Transactional(readOnly = true)
     public PostPage blogPosts(long blogId, Long categoryId, Integer page, Integer size) {
+        return blogPosts(blogId, categoryId, null, page, size);
+    }
+
+    /**
+     * q가 있으면 이 블로그 글 안에서 제목·태그·작성자 닉네임으로 찾는다(블로그 안 검색, D-136).
+     * 검색어 규칙은 통합 검색과 같다(BRD-08). 최근 검색어에는 남기지 않는다.
+     */
+    @Transactional(readOnly = true)
+    public PostPage blogPosts(long blogId, Long categoryId, String q, Integer page, Integer size) {
         int p = paging.page(page);
         int s = paging.size(size);
         blogAuth.context(blogId);
@@ -44,6 +55,15 @@ public class PostListService {
                 where += " AND p.category_id = ?";
                 args.add(categoryId);
             }
+        }
+        if (q != null && !q.isBlank()) {
+            String keyword = searchService.validKeyword(q);
+            String tag = tagService.normalizeOne(keyword);
+            where += " AND (" + SearchService.TITLE_MATCH + " OR " + SearchService.TAG_MATCH + " OR "
+                    + SearchService.NICKNAME_MATCH + ")";
+            args.add(SearchService.phrase(keyword));
+            args.add(tag == null ? "" : tag);
+            args.add(keyword);
         }
         // 내가 차단한 회원의 글은 빼고, 둘 다 이 블로그 멤버면 보인다(003 T043, FR-017, FR-018, D-102 #11)
         where += PostVisibility.notBlocked(BlogPermissionService.currentUserId(), args);

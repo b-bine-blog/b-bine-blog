@@ -43,8 +43,9 @@ public class PostController {
     @GetMapping("/api/blogs/{blogId}/posts")
     public PostPage list(@PathVariable long blogId, @RequestParam(required = false) Integer page,
                          @RequestParam(required = false) Integer size,
-                         @RequestParam(required = false) Long categoryId) {
-        return listService.blogPosts(blogId, categoryId, page, size);
+                         @RequestParam(required = false) Long categoryId,
+                         @RequestParam(required = false) String q) {
+        return listService.blogPosts(blogId, categoryId, q, page, size);
     }
 
     @PostMapping("/api/blogs/{blogId}/posts")

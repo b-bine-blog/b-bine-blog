@@ -65,6 +65,11 @@
         <section id="posts" class="panel">
           <div class="blog-toolbar">
             <h2>글</h2>
+            <!-- 블로그 안 검색(D-136): 이 블로그 글의 제목·태그·작성자 닉네임 -->
+            <form class="blog-post-search" id="post-search" role="search">
+              <input type="search" id="post-q" maxlength="20" placeholder="이 블로그에서 검색" aria-label="이 블로그에서 검색">
+              <button type="submit">검색</button>
+            </form>
             <div class="row">
               <a id="write" class="button" hidden>글쓰기</a>
               <label class="inline inline--bare" aria-label="한 페이지 글 수">

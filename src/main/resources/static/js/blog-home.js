@@ -91,13 +91,15 @@
   }
 
   // 글 목록과 카테고리 (004 T027). categoryId: '' 전체, '0' 잡담(카테고리 없음, D-132).
-  var postQuery = { categoryId: '', size: 10 };
+  var postQuery = { categoryId: '', size: 10, q: '' };
 
   function loadPosts(page) {
     var url = '/api/blogs/' + blog.id + '/posts?page=' + page + '&size=' + postQuery.size
-      + (postQuery.categoryId !== '' ? '&categoryId=' + postQuery.categoryId : '');
+      + (postQuery.categoryId !== '' ? '&categoryId=' + postQuery.categoryId : '')
+      + (postQuery.q ? '&q=' + encodeURIComponent(postQuery.q) : '');
     api.get(url).then(function (r) {
-      board.renderPosts($('post-list'), r.items, { empty: '아직 글이 없습니다.' });
+      $('message').textContent = '';
+      board.renderPosts($('post-list'), r.items, { empty: postQuery.q ? '검색 결과가 없습니다' : '아직 글이 없습니다.' });
       board.renderPager($('post-pages'), r.page, r.totalPages, loadPosts);
     }, function (err) { board.sayError($('message'), err, function () { loadPosts(page); }); });
   }
@@ -120,6 +122,16 @@
       tab('잡담 (' + r.uncategorizedCount + ')', '0');
     }, function () { /* 카테고리를 못 읽어도 글 목록은 보인다 */ });
   }
+
+  // 블로그 안 검색(D-136). 칸을 비우면 전체 목록으로 돌아간다. 고른 카테고리 안에서 찾는다.
+  $('post-search').addEventListener('submit', function (e) {
+    e.preventDefault();
+    postQuery.q = $('post-q').value.trim();
+    loadPosts(1);
+  });
+  $('post-q').addEventListener('search', function () {
+    if ($('post-q').value.trim() === '' && postQuery.q) { postQuery.q = ''; loadPosts(1); }
+  });
 
   $('post-size').addEventListener('change', function () {
     postQuery.size = Number($('post-size').value);
