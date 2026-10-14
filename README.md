@@ -141,6 +141,7 @@ Git Flow를 씁니다. 자세한 순서는 [CONTRIBUTING.md](CONTRIBUTING.md)에
 
 | 버전 | 날짜 | 바뀐 점 |
 |---|---|---|
+| [v1.18](release-notes/2026-10-14-scrap-icon/notice.md) | 2026-10-14 | 스크랩 책갈피 버튼·목록 표시, 작성글·작성댓글·스크랩 창, 글 개수 선택 정리 |
 | [v1.17](release-notes/2026-10-14-my-activity/notice.md) | 2026-10-14 | 스크랩·작성글·작성댓글, 메인 피드 태그 탭, 글 "수정됨" 표시, 개인정보 처리방침, 사이트 아이콘 |
 | [v1.16](release-notes/2026-10-14-post-category/notice.md) | 2026-10-14 | 글 목록 제목 위에 카테고리와 그림 표시, "미분류"를 "잡담"으로 변경 |
 | [v1.15](release-notes/2026-10-14-rolling/notice.md) | 2026-10-14 | 배포 중이나 앱 하나가 멈춰도 사이트가 끊기지 않음(롤링 배포), 문서를 별도 저장소로 분리, README 정리 |
