@@ -9,7 +9,7 @@ import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
-/** 관리자·제재 설정값 (005 T002, D-68). 값과 근거는 specs/005-admin-moderation/data-model.md "설정값". */
+/** 관리자·제재 설정값 (005 T002, D-68). 값과 근거는 문서 저장소 specs/005-admin-moderation/data-model.md "설정값". */
 @Validated
 @ConfigurationProperties("admin")
 public record AdminProperties(

@@ -1,14 +1,15 @@
 # CLAUDE.md
 
 메인블로그(티스토리형 블로그 플랫폼) 프로젝트에서 AI 코딩 에이전트가 따를 규칙입니다.
-코드 저장소 루트에 이 파일을 두고, `docs/` 폴더를 함께 둡니다.
+문서(요구사항·정책·결정·명세)는 문서 저장소 [b-bine-blog-docs](https://github.com/b-bine-blog/b-bine-blog-docs)에 따로 있습니다(D-130).
+이 저장소 옆에 `../b-bine-blog-docs`로 받아 두고 읽습니다. 아래 `docs/`, `specs/`, `.specify/`는 모두 문서 저장소 안의 경로입니다.
 
 ## 프로젝트 한 줄 요약
 
 회원이 메인블로그에서 가입·로그인하고, 개별 블로그를 만들거나 참여해 함께 운영하는 블로그 플랫폼.
 블로그장·멤버는 계정 종류가 아니라 블로그별 역할입니다.
 
-## 문서를 읽는 순서
+## 문서를 읽는 순서 (문서 저장소)
 
 1. `.specify/memory/constitution.md` — 반드시 지킬 원칙(보안, 블로그별 역할 확인, 개인정보, 이중화 대비)
 2. `specs/README.md` — 기능별 명세 목록. 기능을 만들 때는 해당 `specs/<번호>-<기능>/spec.md`를 기준으로 함
@@ -19,7 +20,8 @@
 
 ## Spec Kit 흐름
 
-이 저장소는 [Spec Kit](https://github.com/github/spec-kit)으로 명세 → 계획 → 작업 → 구현 순서로 개발합니다(`.claude/skills/speckit-*`).
+이 저장소는 [Spec Kit](https://github.com/github/spec-kit)으로 명세 → 계획 → 작업 → 구현 순서로 개발합니다(문서 저장소의 `.claude/skills/speckit-*`).
+명세·계획·작업 목록은 문서 저장소에, API 계약(OpenAPI)은 테스트가 읽기 때문에 이 저장소의 `api-contracts/`에, 테이블 정의는 `db/schema.sql`에 둡니다(D-130).
 `/speckit-specify` → `/speckit-clarify` → `/speckit-plan` → `/speckit-tasks` → `/speckit-implement`.
 명세의 `[NEEDS CLARIFICATION]` 항목은 임의로 정하지 않고 `/speckit-clarify`로 사용자에게 묻습니다.
 
@@ -42,6 +44,15 @@
 - 이미지: 1차 서버 디스크, FileStorage 인터페이스로 분리(이중화 때 S3) — D-75
 - 블로그 주소: 경로 방식 `/blog/{주소}` — D-70
 
+## 설명 글 쓰는 규칙 (README·문서 공통)
+
+- 한 문단에는 주제 하나만 씁니다. 주제가 바뀌면 소제목(`####`)을 붙입니다.
+- 나란히 있는 항목이 3개를 넘으면 표로 씁니다.
+- 한 줄에 한 가지만 씁니다. 문장을 "~고, ~고"로 길게 잇지 않습니다.
+- 명령어와 설정값은 문장 안에 넣지 않고 코드 블록으로 따로 뺍니다.
+- 순서가 있는 일은 번호 목록(1. 2. 3.)으로 씁니다.
+- 예외나 주의할 점은 그 소제목 맨 끝에 `주의:` 한 줄로 씁니다.
+
 ## 요구사항 ID 규칙
 
 `모듈-번호` 형식: USR(회원), BLG(블로그), SOC(소셜), BRD(게시판), ADM(관리자), SEC(보안), SCL(확장성).
@@ -49,9 +60,9 @@
 
 ## 일하는 규칙
 
-- 새 결정을 하거나 기존 결정을 바꾸면 `docs/03-decisions/`에 다음 번호로 파일을 추가하고 목차(README)를 갱신합니다.
+- 새 결정을 하거나 기존 결정을 바꾸면 문서 저장소의 `docs/03-decisions/`에 다음 번호로 파일을 추가하고 목차(README)를 갱신합니다.
   바꾼 경우 이전 결정 파일의 상태를 `변경됨 → D-xx`로 고칩니다.
-- 기능별 계획·데이터 모델·API 계약·작업 목록은 Spec Kit대로 `specs/<번호>-<기능>/`(plan.md, data-model.md, contracts/, tasks.md)에 둡니다.
+- 기능별 계획·데이터 모델·작업 목록은 Spec Kit대로 문서 저장소의 `specs/<번호>-<기능>/`(plan.md, data-model.md, tasks.md)에 두고, API 계약은 이 저장소 `api-contracts/`에 둡니다.
   여러 기능에 걸치는 설계(전체 ERD, 아키텍처)는 `docs/04-design/`, 전체 일정·로드맵은 `docs/05-plans/`에 둡니다.
 - 숫자 규칙(제한값, 만료 시간)은 하드코딩하지 않고 설정값으로 둡니다. 예: `blog.limit.public=${BLOG_LIMIT_PUBLIC:3}` — D-68
 - 개인정보(이메일·전화번호)는 서버에서 가려서 응답합니다(4.4). 화면에서만 가리지 않습니다 — D-22

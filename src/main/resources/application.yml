@@ -1,5 +1,5 @@
 # 메인블로그 설정 (T004)
-# 숫자 규칙은 모두 설정값으로 두고 환경변수로 바꿀 수 있게 한다(D-68). 값의 근거는 specs/001-member-auth/data-model.md "설정값".
+# 숫자 규칙은 모두 설정값으로 두고 환경변수로 바꿀 수 있게 한다(D-68). 값의 근거는 문서 저장소 specs/001-member-auth/data-model.md "설정값".
 # 비밀 값(DB 비밀번호, JWT_SECRET 등)은 기본값을 두지 않는다. 없으면 시작에 실패한다.
 
 server:
@@ -111,7 +111,7 @@ member:
     reserved: ${MEMBER_NICKNAME_RESERVED:관리자,admin,운영자,탈퇴한 회원}   # FR-011, D-97
 
 blog:
-  # 002 블로그 관리 설정값 (specs/002-blog-management/data-model.md "설정값", D-68)
+  # 002 블로그 관리 설정값 (문서 저장소 specs/002-blog-management/data-model.md "설정값", D-68)
   limit:
     public: ${BLOG_LIMIT_PUBLIC:3}                      # BLG-10, 일부 공개 포함, 1~5(D-52)
     private: ${BLOG_LIMIT_PRIVATE:5}                    # BLG-10
@@ -149,7 +149,7 @@ blog:
     kick-suggest-count: ${BLOG_SANCTION_KICK_SUGGEST_COUNT:3}   # BLG-13, D-46
 
 board:
-  # 004 게시판 설정값 (specs/004-board/data-model.md "설정값", D-68)
+  # 004 게시판 설정값 (문서 저장소 specs/004-board/data-model.md "설정값", D-68)
   post:
     title-max-length: ${BOARD_POST_TITLE_MAX_LENGTH:30}          # FR-003
     content-max-length: ${BOARD_POST_CONTENT_MAX_LENGTH:5000}    # FR-003, D-92(마크다운 원문 글자 수)
@@ -194,7 +194,7 @@ board:
     card-max-age: ${BOARD_OG_CARD_MAX_AGE:1h}                    # D-110, 미리보기 그림을 메신저·브라우저가 담아 두는 시간
 
 social:
-  # 003 소셜 설정값 (specs/003-social-notification/data-model.md "설정값", D-68)
+  # 003 소셜 설정값 (문서 저장소 specs/003-social-notification/data-model.md "설정값", D-68)
   follow:
     rate-limit: ${SOCIAL_FOLLOW_RATE_LIMIT:30}                  # D-102 #4, 회원당
     rate-window: ${SOCIAL_FOLLOW_RATE_WINDOW:1m}
@@ -222,7 +222,7 @@ notification:
     short-days: ${NOTIFICATION_RETENTION_SHORT_DAYS:7}          # 6.7, FR-057
 
 admin:
-  # 005 관리자·제재 설정값 (specs/005-admin-moderation/data-model.md "설정값", D-68)
+  # 005 관리자·제재 설정값 (문서 저장소 specs/005-admin-moderation/data-model.md "설정값", D-68)
   list:
     page-sizes: ${ADMIN_LIST_PAGE_SIZES:10,20,50}                # research 가정 13
     default-size: ${ADMIN_LIST_DEFAULT_SIZE:20}
