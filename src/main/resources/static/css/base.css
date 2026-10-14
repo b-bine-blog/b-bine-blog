@@ -825,3 +825,5 @@ label.inline:has(> select), label.inline > select { border-radius: var(--corner)
 .blog-tabs-row { display: flex; align-items: flex-start; gap: 8px; margin: 12px 0; }
 .blog-tabs-row > .tabs { flex: 1; min-width: 0; margin: 0; }
 .blog-tabs-row > .blog-write { flex-shrink: 0; margin: 0 0 0 auto; padding: 4px 14px; font-size: 0.92rem; }
+/* 블로그 "10개" 칸을 살짝 위로(2026-10-14): 아래 글쓰기 버튼이 더 내려가 보이는 착시를 줄인다 */
+#posts .blog-toolbar label.inline--bare { position: relative; top: -4px; }
