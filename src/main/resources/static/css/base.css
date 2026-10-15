@@ -866,3 +866,7 @@ label.inline:has(> select), label.inline > select { border-radius: var(--corner)
 .side-window__role { color: var(--muted); font-size: 12px; flex-shrink: 0; }
 .side-window--mini { margin: 0; color: var(--text); font-size: 14px; width: auto; display: inline-flex; align-items: center; gap: 8px; padding: 4px; border-radius: var(--corner, 6px); cursor: pointer; touch-action: none; user-select: none; font-weight: 700; min-height: 0; }
 .side-window--mini:hover { background: var(--surface); color: var(--text); }
+.side-window__avatar--guest { background: var(--line); color: var(--muted); }
+.side-window__guest { color: var(--muted); font-size: 13px; line-height: 1.5; }
+.side-window__auth { display: flex; gap: 8px; margin-top: 10px; }
+.side-window__auth .button { flex: 1; margin: 0; text-align: center; padding: 7px 0; }

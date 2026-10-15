@@ -99,7 +99,8 @@
     state.y = p.y;
   }
 
-  function build(me, profile, following, summary, unread) {
+  // 창 틀(끄는 제목 줄과 −). 내용은 회원·비회원에 따라 채운다
+  function frame() {
     win = el('aside', 'side-window');
     win.setAttribute('aria-label', '내 정보');
     var head = el('div', 'side-window__head');
@@ -111,6 +112,56 @@
     min.addEventListener('click', function () { show(true); });
     head.appendChild(min);
     win.appendChild(head);
+    mini = el('button', 'side-window side-window--mini');
+    mini.type = 'button';
+    mini.setAttribute('aria-label', '내 정보 펼치기');
+    return head;
+  }
+
+  function personIcon() {
+    var box = el('span', 'side-window__avatar side-window__avatar--guest');
+    var ns = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('width', '20');
+    svg.setAttribute('height', '20');
+    svg.setAttribute('aria-hidden', 'true');
+    var path = document.createElementNS(ns, 'path');
+    path.setAttribute('d', 'M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9zm0 2c-4.4 0-8 2.2-8 5v2h16v-2c0-2.8-3.6-5-8-5z');
+    path.setAttribute('fill', 'currentColor');
+    svg.appendChild(path);
+    box.appendChild(svg);
+    return box;
+  }
+
+  function authButton(href, text, cls) {
+    var a = el('a', 'button ' + cls, text);
+    a.href = href;
+    a.addEventListener('click', function (e) {
+      if (!window.siteLayout || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) { return; }
+      e.preventDefault();
+      window.siteLayout.openAuth(href);  // 머리 메뉴처럼 지금 화면 위 창으로(D-118)
+    });
+    return a;
+  }
+
+  // 로그인하지 않았으면 로그인·회원가입 버튼만
+  function buildGuest() {
+    var head = frame();
+    var s = section();
+    s.appendChild(el('div', 'side-window__guest', '로그인하고 블로그를 만들거나 참여해 보세요'));
+    var buttons = el('div', 'side-window__auth');
+    buttons.appendChild(authButton('/login.html', '로그인', 'button-outline'));
+    buttons.appendChild(authButton('/signup.html', '회원가입', ''));
+    s.appendChild(buttons);
+    win.appendChild(s);
+    mini.title = '로그인·회원가입';
+    mini.appendChild(personIcon());
+    mount(head);
+  }
+
+  function build(me, profile, following, summary, unread) {
+    var head = frame();
 
     var top = section();
     var who = el('a', 'side-window__who');
@@ -160,12 +211,12 @@
       if (badge) { notiRow.lastChild.textContent = badge.hidden ? '0' : badge.textContent; }
     }, 5000);
 
-    mini = el('button', 'side-window side-window--mini');
-    mini.type = 'button';
-    mini.setAttribute('aria-label', '내 정보 펼치기');
     mini.title = profile.nickname;
     mini.appendChild(avatar(profile));  // 접으면 프로필 사진만 남긴다
+    mount(head);
+  }
 
+  function mount(head) {
     win.hidden = true;
     mini.hidden = true;
     document.body.appendChild(win);
@@ -194,12 +245,15 @@
   }
 
   api.get('/api/auth/session').then(function (me) {
-    if (!me || !me.memberId || me.admin) { return; } // 메인 관리자는 블로그 활동을 하지 않는다
+    if (!me || !me.memberId) { buildGuest(); return; }
+    if (me.admin) { return; } // 메인 관리자는 블로그 활동을 하지 않는다
     return Promise.all([
       api.get('/api/users/' + me.memberId + '/profile'),
       count(api.get('/api/users/' + me.memberId + '/following'), function (r) { return r.totalElements; }),
       api.get('/api/me/summary'),
       count(api.get('/api/notifications/unread-count'), function (r) { return r.unreadCount; })
     ]).then(function (r) { build(me, r[0], r[1], r[2], r[3]); });
+  }, function (err) {
+    if (err && err.status === 401) { buildGuest(); }
   }).catch(function () { /* 창은 편의 기능이라 실패해도 화면은 그대로 */ });
 })();

@@ -285,7 +285,10 @@
 
   // 화면 어디서든(글 작성자, 댓글, 팔로워 목록 등) 회원 프로필 링크를 누르면 창으로 연다
   // 다른 화면 스크립트(메인 떠 있는 창, D-139)도 같은 창으로 열 수 있게 내보낸다
-  window.siteLayout = { openActivity: function (href) { authModal(href, 'activity'); } };
+  window.siteLayout = {
+    openActivity: function (href) { authModal(href, 'activity'); },
+    openAuth: function (href) { authModal(href); }
+  };
 
   function openProfilesInModal() {
     document.addEventListener('click', function (e) {
