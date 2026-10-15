@@ -67,7 +67,7 @@ public class FeedService {
     }
 
     /**
-     * 관심 탭(D-137): 최근 글(구독·팔로우 탭과 같은 기간) 가운데
+     * 관심 탭(D-137): 쓴 지 3일 안의 글 가운데(좋아요 100개마다 3일씩 더 남는다. 모두 설정값)
      * 1) 내가 좋아요를 많이 누른 구독 블로그의 글(누른 수가 많은 블로그부터, 같으면 최신순),
      * 2) 다른 구독 블로그의 글(최신순),
      * 3) 팔로우한 회원의 글(최신순),
@@ -79,9 +79,11 @@ public class FeedService {
         }
         List<Object> args = new ArrayList<>();
         String where = "((" + PostVisibility.PUBLIC_BLOG_POST + ") OR (" + PostVisibility.SUBSCRIBED + ") OR ("
-                + PostVisibility.FOLLOWING + ")) AND p.created_at >= ?";
+                + PostVisibility.FOLLOWING + ")) AND p.created_at >= DATE_SUB(?, INTERVAL (? * FLOOR(p.like_count / ?)) DAY)";
         args.addAll(List.of(viewerId, viewerId, viewerId, viewerId, viewerId));
-        args.add(LocalDateTime.now(clock).minusDays(props.feed().recentDays()));
+        args.add(LocalDateTime.now(clock).minusDays(props.feed().interestDays()));
+        args.add(props.feed().interestExtendDays());
+        args.add(props.feed().interestExtendLikes());
         where += PostVisibility.notBlocked(viewerId, args);
         String order = INTEREST_RANK + ", CASE WHEN " + INTEREST_RANK + " = 0 THEN " + MY_LIKES_IN_BLOG + " ELSE 0 END DESC, "
                 + "CASE WHEN " + INTEREST_RANK + " < 3 THEN p.created_at END DESC, " + POPULAR_ORDER;

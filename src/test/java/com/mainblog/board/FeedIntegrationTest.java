@@ -150,11 +150,15 @@ class FeedIntegrationTest extends BoardTestBase {
         long hot = insertPost(other.blogId(), other.owner().id(), "인기 글", "c", clock.now().minusHours(3));
         setLikes(hot, 9);
         setLikes(quiet, 1);
-        insertPost(other.blogId(), other.owner().id(), "오래된 글", "c", clock.now().minusDays(31));
+        insertPost(other.blogId(), other.owner().id(), "4일 지난 글", "c", clock.now().minusDays(4));
+        long saved = insertPost(other.blogId(), other.owner().id(), "좋아요로 남은 글", "c", clock.now().minusDays(4));
+        setLikes(saved, 100);  // 100개를 넘으면 3일 더 남는다(3+3=6일)
+        long expired = insertPost(other.blogId(), other.owner().id(), "연장도 지난 글", "c", clock.now().minusDays(7));
+        setLikes(expired, 150);
 
         JsonNode r = getAs(reader, "/api/feed?tab=INTEREST&size=20").json();
         assertThat(titles(r.get("items"))).containsExactly("좋아요한 블로그 새글", "좋아요한 블로그 옛글", "구독 글", "팔로우 글",
-                "인기 글", "조용한 글");
+                "좋아요로 남은 글", "인기 글", "조용한 글");
         assertThat(getAs(null, "/api/feed?tab=INTEREST").status()).isEqualTo(401);
     }
 }
