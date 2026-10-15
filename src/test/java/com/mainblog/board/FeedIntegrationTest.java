@@ -131,7 +131,7 @@ class FeedIntegrationTest extends BoardTestBase {
     }
 
     @Test
-    void 관심_탭은_좋아요한_구독_블로그_구독_팔로우_그_밖의_인기_순() throws Exception {
+    void 관심_탭은_좋아요한_구독_블로그_구독_블로그_팔로우_그_밖의_인기_순() throws Exception {
         BlogFixture liked = blog("int-liked", "PUBLIC");
         BlogFixture sub = blog("int-sub", "PUBLIC");
         BlogFixture other = blog("int-other", "PUBLIC");
@@ -145,7 +145,7 @@ class FeedIntegrationTest extends BoardTestBase {
         like(reader.id(), old);
         insertPost(liked.blogId(), liked.owner().id(), "좋아요한 블로그 새글", "c", clock.now().minusHours(5));
         insertPost(sub.blogId(), sub.owner().id(), "구독 글", "c", clock.now().minusHours(1));
-        insertPost(followedBlog.blogId(), followedBlog.owner().id(), "팔로우 글", "c", clock.now().minusHours(2));
+        insertPost(followedBlog.blogId(), followedBlog.owner().id(), "팔로우 글", "c", clock.now().minusMinutes(30));
         long quiet = insertPost(other.blogId(), other.owner().id(), "조용한 글", "c", clock.now());
         long hot = insertPost(other.blogId(), other.owner().id(), "인기 글", "c", clock.now().minusHours(3));
         setLikes(hot, 9);
