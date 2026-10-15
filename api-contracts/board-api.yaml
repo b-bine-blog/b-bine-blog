@@ -59,6 +59,18 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
 
+  /api/posts/{postId}/card:
+    parameters: [ { $ref: '#/components/parameters/PostId' } ]
+    get:
+      tags: [post]
+      summary: 본문 속 글 주소 카드 (D-138)
+      description: 본문에 붙여 넣은 우리 블로그 글 주소를 카드로 보여 줄 때 쓴다. 조회수를 세지 않는다. 그 글을 볼 수 있는 사람에게만 준다.
+      security: []
+      responses:
+        '200': { description: 글 요약, content: { application/json: { schema: { $ref: '#/components/schemas/PostSummary' } } } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
   /api/posts/{postId}:
     parameters: [ { $ref: '#/components/parameters/PostId' } ]
     get:
@@ -279,6 +291,18 @@ paths:
         '200': { description: 목록, content: { application/json: { schema: { $ref: '#/components/schemas/PostPage' } } } }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
+  /api/me/likes:
+    get:
+      tags: [scrap]
+      summary: 내가 좋아요한 글 (D-137)
+      description: 좋아요를 누른 순서 최신부터. 지워졌거나 이제 볼 수 없는 글은 빠진다.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200': { description: 목록, content: { application/json: { schema: { $ref: '#/components/schemas/PostPage' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
   /api/me/posts:
     get:
       tags: [scrap]
@@ -373,10 +397,11 @@ paths:
       summary: 메인 피드 (FR-061~FR-064)
       description: |
         LATEST·POPULAR는 공개 블로그 글의 번호 페이지(비회원 가능).
+        INTEREST는 쓴 지 3일 안의 글(좋아요 100개마다 3일 연장, 설정값)의 번호 페이지(D-137). 좋아요를 누른 구독 블로그 > 다른 구독 블로그 > 팔로우 > 그 밖의 공개 글(좋아요 많은 순). 비회원은 401.
         SUBSCRIBED·FOLLOWING은 최근 30일 글을 20개씩 cursor로 이어 받는다(D-100 #18). 비회원은 401.
       security: []
       parameters:
-        - { name: tab, in: query, schema: { type: string, enum: [LATEST, POPULAR, SUBSCRIBED, FOLLOWING], default: LATEST } }
+        - { name: tab, in: query, schema: { type: string, enum: [LATEST, POPULAR, INTEREST, SUBSCRIBED, FOLLOWING], default: LATEST } }
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/Size'
         - { name: cursor, in: query, schema: { type: string }, description: SUBSCRIBED·FOLLOWING에서 이전 응답의 nextCursor }

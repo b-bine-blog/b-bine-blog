@@ -22,10 +22,20 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class FeedService {
 
-    public enum Tab { LATEST, POPULAR, SUBSCRIBED, FOLLOWING }
+    public enum Tab { LATEST, POPULAR, INTEREST, SUBSCRIBED, FOLLOWING }
 
     private static final String LATEST_ORDER = "p.created_at DESC, p.id DESC";
     private static final String POPULAR_ORDER = "p.like_count DESC, p.created_at DESC, p.id DESC";
+
+    // 관심 탭(D-137) 순위: 0 = 좋아요를 누른 적 있는 구독 블로그, 1 = 다른 구독 블로그, 2 = 팔로우한 회원, 3 = 그 밖의 공개 글
+    private static final String SUBSCRIBED_BLOG = "EXISTS (SELECT 1 FROM blog_subscriptions s2 "
+            + "WHERE s2.blog_id = p.blog_id AND s2.user_id = ?)";
+    private static final String FOLLOWED_AUTHOR = "EXISTS (SELECT 1 FROM follows f2 "
+            + "WHERE f2.follower_id = ? AND f2.followee_id = p.author_id)";
+    private static final String MY_LIKES_IN_BLOG = "(SELECT COUNT(*) FROM post_likes pl JOIN posts lp ON lp.id = pl.post_id "
+            + "WHERE pl.user_id = ? AND lp.blog_id = p.blog_id)";
+    private static final String INTEREST_RANK = "(CASE WHEN " + SUBSCRIBED_BLOG + " AND " + MY_LIKES_IN_BLOG + " > 0 THEN 0 "
+            + "WHEN " + SUBSCRIBED_BLOG + " THEN 1 WHEN " + FOLLOWED_AUTHOR + " THEN 2 ELSE 3 END)";
 
     private final PostSummaryReader reader;
     private final BoardPaging paging;
@@ -51,8 +61,40 @@ public class FeedService {
                 yield new FeedResult(tab.name(), result.items(), result.page(), result.totalPages(), null,
                         tab == Tab.LATEST && result.page() == 1 ? pinnedNotices() : List.of());
             }
+            case INTEREST -> interest(viewerId, page, size);
             case SUBSCRIBED, FOLLOWING -> cursorFeed(tab, viewerId, cursor);
         };
+    }
+
+    /**
+     * 관심 탭(D-137): 쓴 지 3일 안의 글 가운데(좋아요 100개마다 3일씩 더 남는다. 모두 설정값)
+     * 1) 내가 좋아요를 많이 누른 구독 블로그의 글(누른 수가 많은 블로그부터, 같으면 최신순),
+     * 2) 다른 구독 블로그의 글(최신순),
+     * 3) 팔로우한 회원의 글(최신순),
+     * 4) 그 밖의 공개 글(좋아요 많은 순, 같으면 최신순).
+     */
+    private FeedResult interest(Long viewerId, Integer page, Integer size) {
+        if (viewerId == null) {
+            throw new BusinessException(ErrorCode.UNAUTHENTICATED);
+        }
+        List<Object> args = new ArrayList<>();
+        String where = "((" + PostVisibility.PUBLIC_BLOG_POST + ") OR (" + PostVisibility.SUBSCRIBED + ") OR ("
+                + PostVisibility.FOLLOWING + ")) AND p.created_at >= DATE_SUB(?, INTERVAL (? * FLOOR(p.like_count / ?)) DAY)";
+        args.addAll(List.of(viewerId, viewerId, viewerId, viewerId, viewerId));
+        args.add(LocalDateTime.now(clock).minusDays(props.feed().interestDays()));
+        args.add(props.feed().interestExtendDays());
+        args.add(props.feed().interestExtendLikes());
+        where += PostVisibility.notBlocked(viewerId, args);
+        String order = INTEREST_RANK + ", CASE WHEN " + INTEREST_RANK + " = 0 THEN " + MY_LIKES_IN_BLOG + " ELSE 0 END DESC, "
+                + "CASE WHEN " + INTEREST_RANK + " < 3 THEN p.created_at END DESC, " + POPULAR_ORDER;
+        List<Object> orderArgs = new ArrayList<>();
+        List<Object> rank = List.of(viewerId, viewerId, viewerId, viewerId);  // 구독·좋아요 수·구독·팔로우
+        orderArgs.addAll(rank);
+        orderArgs.addAll(rank);
+        orderArgs.add(viewerId);
+        orderArgs.addAll(rank);
+        PostPage result = reader.page(where, args, order, orderArgs, paging.page(page), paging.size(size));
+        return new FeedResult(Tab.INTEREST.name(), result.items(), result.page(), result.totalPages(), null, List.of());
     }
 
     private FeedResult cursorFeed(Tab tab, Long viewerId, String cursor) {

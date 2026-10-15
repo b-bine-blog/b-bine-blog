@@ -105,7 +105,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/blogs/share-access").permitAll()
                         // 비회원도 보는 게시판 API(004 FR-005, FR-017, FR-023, FR-052, FR-061, FR-065). 볼 수 있는지는 서비스가 본다.
                         .requestMatchers(HttpMethod.GET, "/api/blogs/*/posts", "/api/blogs/*/categories",
-                                "/api/posts/*", "/api/posts/*/comments", "/api/tags/*/posts", "/api/search",
+                                "/api/posts/*", "/api/posts/*/card", "/api/posts/*/comments", "/api/tags/*/posts", "/api/search",
                                 "/api/feed", "/api/notices").permitAll()
                         // 비회원도 보는 프로필·팔로워·팔로잉 목록(003 FR-005, D-102 #8·#9). 나머지 소셜·알림 API는 로그인 필요
                         .requestMatchers(HttpMethod.GET, "/api/users/*/profile", "/api/users/*/followers",

@@ -92,4 +92,22 @@ class MyActivityIntegrationTest extends BoardTestBase {
         assertThat(top.get("postTitle").asText()).isEqualTo("내 글");
         assertThat(top.get("blogAddress").asText()).isEqualTo("my-activity");
     }
+
+    @Test
+    void 좋아요한_글은_누른_순서_최신부터_본인_목록에만_보인다() throws Exception {
+        BlogFixture b = blog("likes-list", "PUBLIC");
+        long first = writePost(b.owner(), b.blogId(), "첫 글", "c");
+        long second = writePost(b.owner(), b.blogId(), "둘째 글", "c");
+        Member reader = member("좋아요독자");
+        jdbc.update("INSERT INTO post_likes (user_id, post_id) VALUES (?, ?)", reader.id(), second);
+        jdbc.update("INSERT INTO post_likes (user_id, post_id) VALUES (?, ?)", reader.id(), first);
+
+        JsonNode mine = getAs(reader, "/api/me/likes").json();
+        assertThat(mine.get("totalElements").asInt()).isEqualTo(2);
+        assertThat(mine.get("items").get(0).get("title").asText()).isEqualTo("첫 글");
+        assertThat(getAs(b.owner(), "/api/me/likes").json().get("totalElements").asInt()).isZero();
+        deleteAs(b.owner(), "/api/posts/" + first);
+        assertThat(getAs(reader, "/api/me/likes").json().get("totalElements").asInt()).isEqualTo(1);
+        assertThat(getAs(null, "/api/me/likes").status()).isEqualTo(401);
+    }
 }

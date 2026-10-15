@@ -23,7 +23,7 @@
 
   function load(page) {
     var tag = tab.indexOf(TAG) === 0 ? tab.substring(TAG.length) : null;
-    var paged = !!tag || tab === 'LATEST' || tab === 'POPULAR';
+    var paged = !!tag || tab === 'LATEST' || tab === 'POPULAR' || tab === 'INTEREST';
     $('feed-size-box').hidden = !paged;
     var url = tag ? '/api/tags/' + encodeURIComponent(tag) + '/posts?page=' + page + '&size=' + $('feed-size').value
       : '/api/feed?tab=' + tab + (paged ? '&page=' + page + '&size=' + $('feed-size').value
@@ -40,7 +40,8 @@
           board.renderPosts($('feed-list'), r.notices, { pinned: true });
           if (r.items.length) { board.renderPosts($('feed-list'), r.items, { showBlog: true, append: true }); }
         } else {
-          board.renderPosts($('feed-list'), r.items, { showBlog: true });
+          board.renderPosts($('feed-list'), r.items, { showBlog: true,
+            empty: tab === 'INTEREST' ? '최근 3일 안에 올라온 글이 없습니다.' : undefined });
         }
         board.renderPager($('feed-pages'), r.page, r.totalPages, load);
         $('feed-more').hidden = true;
