@@ -163,8 +163,8 @@
     mini = el('button', 'side-window side-window--mini');
     mini.type = 'button';
     mini.setAttribute('aria-label', '내 정보 펼치기');
-    mini.appendChild(avatar(profile, 'side-window__avatar--small'));
-    mini.appendChild(el('span', null, profile.nickname));
+    mini.title = profile.nickname;
+    mini.appendChild(avatar(profile));  // 접으면 프로필 사진만 남긴다
 
     win.hidden = true;
     mini.hidden = true;
