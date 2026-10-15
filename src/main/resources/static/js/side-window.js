@@ -1,20 +1,35 @@
-// 메인 화면 위에 떠 있는 내 창 (D-139). 제목 줄을 끌어 옮기고, − 로 접으면 프로필만 남고, 프로필을 누르면 다시 펼친다.
+// 우리 사이트 모든 화면 위에 떠 있는 내 창 (D-139). layout.js가 머리 메뉴를 그린 뒤 불러온다. 제목 줄을 끌어 옮기고, − 로 접으면 프로필만 남고, 프로필을 누르면 다시 펼친다.
 // 위치와 접힘 상태는 이 브라우저에만 기억한다(localStorage). 글자는 모두 textContent로 넣는다(D-64).
 (function () {
   'use strict';
 
   var KEY = 'sideWindow';
-  var MOBILE = window.matchMedia('(max-width: 720px)');
-  var el = board.el;
-  var state = load();
+  // 어느 화면에서나 뜨도록 board-common.js 없이 쓴다
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) { e.className = cls; }
+    if (text != null) { e.textContent = text; }
+    return e;
+  }
+  var key = KEY;  // 비회원과 회원마다 따로 기억한다. 계정으로 처음 들어오면 접힌 채 로고 왼쪽에서 시작
+  var state = {};
   var win, mini;
 
-  function load() {
-    try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; }
+  function load(suffix) {
+    key = KEY + ':' + suffix;
+    try { state = JSON.parse(localStorage.getItem(key)) || {}; } catch (e) { state = {}; }
   }
 
   function save() {
-    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* 저장 못 해도 창은 그대로 동작 */ }
+    try { localStorage.setItem(key, JSON.stringify(state)); } catch (e) { /* 저장 못 해도 창은 그대로 동작 */ }
+  }
+
+  // 처음 자리: 머리 메뉴 로고 왼쪽(2026-10-15 사용자 요청). 로고가 없으면 왼쪽 위
+  function homeSpot(box) {
+    var logo = document.querySelector('.site-logo');
+    if (!logo) { return { x: 8, y: 8 }; }
+    var r = logo.getBoundingClientRect();
+    return { x: Math.max(8, r.left - box.offsetWidth - 16), y: r.top + r.height / 2 - box.offsetHeight / 2 };
   }
 
   function avatar(profile, cls) {
@@ -228,13 +243,14 @@
       place(box, box.offsetLeft, box.offsetTop);
     });
 
-    // 처음에는 오른쪽 위. 휴대폰 화면에서는 접힌 채로 시작한다
-    var minimized = state.min != null ? state.min : MOBILE.matches;
+    // 처음에는 접힌 채로 로고 왼쪽에서 시작한다
+    var minimized = state.min != null ? state.min : true;
     var box = minimized ? mini : win;
     box.hidden = false;
     if (state.x == null) {
-      state.x = window.innerWidth - box.offsetWidth - 24;
-      state.y = 88;
+      var spot = homeSpot(box);
+      state.x = spot.x;
+      state.y = spot.y;
     }
     place(box, state.x, state.y);
     state.min = minimized;
@@ -244,16 +260,27 @@
     return promise.then(pick, function () { return 0; });
   }
 
+  // 머리 메뉴(로고)가 그려진 뒤에 띄워야 처음 자리를 잡을 수 있다
+  function whenHeader(fn) {
+    var tries = 0;
+    (function wait() {
+      if (document.querySelector('.site-logo') || tries++ > 40) { fn(); } else { setTimeout(wait, 50); }
+    })();
+  }
+
+  function guest() { load('guest'); whenHeader(buildGuest); }
+
   api.get('/api/auth/session').then(function (me) {
-    if (!me || !me.memberId) { buildGuest(); return; }
-    if (me.admin) { return; } // 메인 관리자는 블로그 활동을 하지 않는다
+    if (!me || !me.memberId) { guest(); return; }
+    if (me.admin) { return; }
+    load('member:' + me.memberId); // 메인 관리자는 블로그 활동을 하지 않는다
     return Promise.all([
       api.get('/api/users/' + me.memberId + '/profile'),
       count(api.get('/api/users/' + me.memberId + '/following'), function (r) { return r.totalElements; }),
       api.get('/api/me/summary'),
       count(api.get('/api/notifications/unread-count'), function (r) { return r.unreadCount; })
-    ]).then(function (r) { build(me, r[0], r[1], r[2], r[3]); });
+    ]).then(function (r) { whenHeader(function () { build(me, r[0], r[1], r[2], r[3]); }); });
   }, function (err) {
-    if (err && err.status === 401) { buildGuest(); }
+    if (err && err.status === 401) { guest(); }
   }).catch(function () { /* 창은 편의 기능이라 실패해도 화면은 그대로 */ });
 })();
