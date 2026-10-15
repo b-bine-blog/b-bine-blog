@@ -59,6 +59,18 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
 
+  /api/posts/{postId}/card:
+    parameters: [ { $ref: '#/components/parameters/PostId' } ]
+    get:
+      tags: [post]
+      summary: 본문 속 글 주소 카드 (D-138)
+      description: 본문에 붙여 넣은 우리 블로그 글 주소를 카드로 보여 줄 때 쓴다. 조회수를 세지 않는다. 그 글을 볼 수 있는 사람에게만 준다.
+      security: []
+      responses:
+        '200': { description: 글 요약, content: { application/json: { schema: { $ref: '#/components/schemas/PostSummary' } } } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
   /api/posts/{postId}:
     parameters: [ { $ref: '#/components/parameters/PostId' } ]
     get:

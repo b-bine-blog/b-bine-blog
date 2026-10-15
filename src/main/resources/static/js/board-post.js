@@ -37,6 +37,41 @@
     });
   }
 
+  // 우리 블로그 글 주소만 있는 줄은 그 글의 카드로 바꾼다(D-138). 글자는 textContent로만 넣는다(D-64).
+  // 볼 수 없는 글이면 주소를 누를 수 있는 링크로만 둔다.
+  var POST_URL = /^(?:https?:\/\/([^/\s]+))?\/blog\/[^/\s]+\/posts\/(\d+)\/?$/;
+  function linkCards(box) {
+    Array.prototype.forEach.call(box.querySelectorAll('p'), function (p) {
+      var only = p.children.length === 0 || (p.children.length === 1 && p.firstElementChild.tagName === 'A'
+        && p.firstElementChild.textContent.trim() === p.textContent.trim());
+      var text = p.textContent.trim();
+      var m = only && POST_URL.exec(text);
+      if (!m || (m[1] && m[1] !== location.host)) { return; }
+      var a = el('a', 'post-link-card');
+      a.href = text;
+      a.appendChild(el('span', 'post-link-card__url', text));
+      board.clear(p);
+      p.appendChild(a);
+      api.get('/api/posts/' + m[2] + '/card').then(function (c) {
+        board.clear(a);
+        if (c.blog) { a.href = '/blog/' + encodeURIComponent(c.blog.address) + '/posts/' + c.id; }
+        if (c.thumbnailUrl) {
+          var img = el('img', 'post-link-card__thumb');
+          img.src = c.thumbnailUrl;
+          img.alt = '';
+          a.appendChild(img);
+        }
+        var body = el('span', 'post-link-card__body');
+        body.appendChild(el('span', 'post-link-card__blog', c.blog ? c.blog.name : '공지'));
+        body.appendChild(el('span', 'post-link-card__title', c.title));
+        body.appendChild(el('span', 'post-link-card__meta',
+          (c.author && c.author.nickname ? c.author.nickname + ' · ' : '') + board.formatTime(c.createdAt)
+          + ' · 좋아요 ' + c.likeCount + ' · 댓글 ' + c.commentCount));
+        a.appendChild(body);
+      }, function () { /* 볼 수 없는 글: 주소 링크만 남긴다 */ });
+    });
+  }
+
   function render() {
     document.title = post.title + ' - b-bine blog';
     if (!isNotice && post.blog) {
@@ -51,6 +86,7 @@
     metaBox.appendChild(board.authorNode(post.author)); // 활동 중인 작성자는 프로필 링크(003 T021)
     metaBox.appendChild(document.createTextNode(' · ' + board.formatTime(post.createdAt) + ' · 조회 ' + post.viewCount));
     $('content').innerHTML = post.contentHtml; // 서버에서 걸러낸 HTML(R-01)
+    linkCards($('content'));
     var tags = $('tags');
     board.clear(tags);
     (post.tags || []).forEach(function (t) {

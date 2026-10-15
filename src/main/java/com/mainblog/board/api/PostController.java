@@ -55,6 +55,13 @@ public class PostController {
         return postService.create(blogId, member.id(), request);
     }
 
+    /** 본문 속 글 주소 카드(D-138). 조회수를 세지 않는다. */
+    @GetMapping("/api/posts/{postId}/card")
+    public com.mainblog.board.application.BoardViews.PostSummary card(@PathVariable long postId,
+                                                                      @AuthenticationPrincipal AuthenticatedMember member) {
+        return queryService.card(postId, member == null ? null : member.id());
+    }
+
     @GetMapping("/api/posts/{postId}")
     public PostDetail detail(@PathVariable long postId, @AuthenticationPrincipal AuthenticatedMember member,
                              HttpServletRequest request, HttpServletResponse response) {
