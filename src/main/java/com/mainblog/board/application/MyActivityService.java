@@ -33,6 +33,9 @@ public class MyActivityService {
 
     public record MyCommentPage(List<MyComment> items, int page, int size, long totalElements, int totalPages) {}
 
+    /** 메인 화면 떠 있는 창의 내 활동 개수(D-139). 각 목록 화면과 같은 조건으로 센다. */
+    public record MySummary(long posts, long comments, long scraps, long likes) {}
+
     private final PostStore store;
     private final PostPolicy policy;
     private final PostSummaryReader reader;
@@ -68,6 +71,13 @@ public class MyActivityService {
         jdbc.update("INSERT IGNORE INTO post_scraps (user_id, post_id, created_at, updated_at) VALUES (?, ?, ?, ?)",
                 userId, postId, now, now);
         return new ScrapResult(true);
+    }
+
+    /** 작성글·작성댓글·스크랩·좋아요 개수. 목록과 같은 조건이라 창의 숫자와 목록 개수가 어긋나지 않는다. */
+    @Transactional(readOnly = true)
+    public MySummary summary(long userId) {
+        return new MySummary(posts(userId, null, null).totalElements(), comments(userId, null, null).totalElements(),
+                scraps(userId, null, null).totalElements(), likes(userId, null, null).totalElements());
     }
 
     /** 스크랩한 글. 스크랩한 순서 최신부터. 지워졌거나 이제 볼 수 없는 글은 빠진다. */

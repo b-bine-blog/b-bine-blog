@@ -279,6 +279,15 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
 
+  /api/me/summary:
+    get:
+      tags: [scrap]
+      summary: 내 활동 개수 (D-139)
+      description: 메인 화면 떠 있는 창에 보이는 작성글·작성댓글·스크랩·좋아요 개수. 각 목록과 같은 조건으로 센다.
+      responses:
+        '200': { description: 개수, content: { application/json: { schema: { $ref: '#/components/schemas/MySummary' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
   /api/me/scraps:
     get:
       tags: [scrap]
@@ -643,6 +652,13 @@ components:
         page: { type: integer }
         totalPages: { type: integer }
         totalElements: { type: integer, format: int64 }
+    MySummary:
+      type: object
+      properties:
+        posts: { type: integer, format: int64 }
+        comments: { type: integer, format: int64 }
+        scraps: { type: integer, format: int64 }
+        likes: { type: integer, format: int64 }
     ScrapResult:
       type: object
       properties:
