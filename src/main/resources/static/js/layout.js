@@ -284,6 +284,15 @@
   }
 
   // 화면 어디서든(글 작성자, 댓글, 팔로워 목록 등) 회원 프로필 링크를 누르면 창으로 연다
+  // 떠 있는 내 창(D-139)은 우리 사이트 모든 화면에 띄운다(창 안 화면 제외). 화면마다 script 태그를 더하지 않게 여기서 부른다
+  function loadSideWindow() {
+    if (embedded || window.sideWindowLoaded || AUTH_PAGES.test(location.pathname)) { return; }
+    window.sideWindowLoaded = true;
+    var script = document.createElement('script');
+    script.src = '/js/side-window.js';
+    document.head.appendChild(script);
+  }
+
   // 다른 화면 스크립트(메인 떠 있는 창, D-139)도 같은 창으로 열 수 있게 내보낸다
   window.siteLayout = {
     openActivity: function (href) { authModal(href, 'activity'); },
@@ -354,6 +363,7 @@
         if (window.session) {
           window.session.start();
         }
-      }, function () { renderHeader(null); });
+        loadSideWindow();
+      }, function () { renderHeader(null); loadSideWindow(); });
   });
 })();
