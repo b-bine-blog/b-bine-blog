@@ -110,4 +110,26 @@ class MyActivityIntegrationTest extends BoardTestBase {
         assertThat(getAs(reader, "/api/me/likes").json().get("totalElements").asInt()).isEqualTo(1);
         assertThat(getAs(null, "/api/me/likes").status()).isEqualTo(401);
     }
+
+    @Test
+    void 내_활동_개수는_각_목록과_같은_조건으로_센다() throws Exception {
+        BlogFixture b = blog("summary-count", "PUBLIC");
+        long first = writePost(b.owner(), b.blogId(), "첫 글", "c");
+        long second = writePost(b.owner(), b.blogId(), "둘째 글", "c");
+        comment(b.owner(), first, "댓글");
+        putAs(b.owner(), "/api/posts/" + second + "/scrap", null);
+        jdbc.update("INSERT INTO post_likes (user_id, post_id) VALUES (?, ?)", b.owner().id(), first);
+
+        JsonNode s = getAs(b.owner(), "/api/me/summary").json();
+        assertThat(s.get("posts").asInt()).isEqualTo(2);
+        assertThat(s.get("comments").asInt()).isEqualTo(1);
+        assertThat(s.get("scraps").asInt()).isEqualTo(1);
+        assertThat(s.get("likes").asInt()).isEqualTo(1);
+        deleteAs(b.owner(), "/api/posts/" + first);
+        JsonNode after = getAs(b.owner(), "/api/me/summary").json();
+        assertThat(after.get("posts").asInt()).isEqualTo(1);
+        assertThat(after.get("comments").asInt()).isZero();
+        assertThat(after.get("likes").asInt()).isZero();
+        assertThat(getAs(null, "/api/me/summary").status()).isEqualTo(401);
+    }
 }

@@ -4,6 +4,7 @@ import com.mainblog.auth.security.AuthenticatedMember;
 import com.mainblog.board.application.BoardViews.PostPage;
 import com.mainblog.board.application.MyActivityService;
 import com.mainblog.board.application.MyActivityService.MyCommentPage;
+import com.mainblog.board.application.MyActivityService.MySummary;
 import com.mainblog.board.application.MyActivityService.ScrapResult;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,6 +26,11 @@ public class MyActivityController {
     @PutMapping("/api/posts/{postId}/scrap")
     public ScrapResult scrap(@PathVariable long postId, @AuthenticationPrincipal AuthenticatedMember member) {
         return service.toggleScrap(postId, member.id());
+    }
+
+    @GetMapping("/api/me/summary")
+    public MySummary summary(@AuthenticationPrincipal AuthenticatedMember member) {
+        return service.summary(member.id());
     }
 
     @GetMapping("/api/me/scraps")
