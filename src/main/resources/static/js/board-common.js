@@ -49,7 +49,7 @@
       }
       // 제목 위에 카테고리(없으면 "잡담")를 작게, 본문에 그림이 있으면 그림 표시(BRD-02, D-132)
       if (!options.pinned) {
-        var cat = el('div', 'post-item__cat', p.categoryName || UNCATEGORIZED);
+        var cat = el('div', 'post-item__cat', p.categoryName || (p.boardType === 'NOTICE' ? '공지' : UNCATEGORIZED));
         if (p.thumbnailUrl) { cat.appendChild(imageMark()); }
         if (p.edited) { cat.appendChild(el('span', 'post-item__edited', '수정됨')); }  // 고친 글(D-133)
         if (p.scrapped) { cat.appendChild(bookmarkIcon(true, 'post-item__scrap-mark', '스크랩한 글')); }  // D-134

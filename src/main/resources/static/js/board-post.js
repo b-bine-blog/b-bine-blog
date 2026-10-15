@@ -150,6 +150,7 @@
   // 글 카드 오른쪽 위의 책갈피 그림 버튼. 채워지면 스크랩한 상태.
   function renderScrap() {
     var b = $('scrap');
+    if (!b) { return; } // 공지 상세에는 스크랩 버튼이 없다
     b.hidden = isNotice || !me || !me.memberId || !!me.admin;
     b.setAttribute('aria-pressed', post.scrapped ? 'true' : 'false');
     b.setAttribute('aria-label', post.scrapped ? '스크랩 취소' : '스크랩');
@@ -158,7 +159,7 @@
     b.appendChild(board.bookmarkIcon(!!post.scrapped, 'scrap-button__icon'));
   }
 
-  $('scrap').addEventListener('click', function () {
+  if ($('scrap')) $('scrap').addEventListener('click', function () {
     api.put('/api/posts/' + post.id + '/scrap', null, { activity: true }).then(function (r) {
       post.scrapped = r.scrapped;
       renderScrap();
