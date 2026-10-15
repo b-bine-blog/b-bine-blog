@@ -190,6 +190,9 @@ board:
     page-size: ${BOARD_FEED_PAGE_SIZE:20}                        # D-100 #18
     pinned-notices: ${BOARD_FEED_PINNED_NOTICES:3}               # D-109, 최신 1페이지 위에 고정하는 메인 공지 수(0이면 안 보임)
     tag-max-count: ${BOARD_FEED_TAG_MAX_COUNT:5}                 # D-135, 팔로우 옆 + 로 추가하는 태그 탭 수(회원당)
+    interest-days: ${BOARD_FEED_INTEREST_DAYS:3}                 # D-137, 관심 탭에 남는 기간(일)
+    interest-extend-likes: ${BOARD_FEED_INTEREST_EXTEND_LIKES:100} # D-137, 좋아요가 이 수를 넘을 때마다
+    interest-extend-days: ${BOARD_FEED_INTEREST_EXTEND_DAYS:3}   # D-137, 이만큼(일) 더 남는다
   og:
     summary-length: ${BOARD_OG_SUMMARY_LENGTH:100}               # D-100 #14
     card-max-age: ${BOARD_OG_CARD_MAX_AGE:1h}                    # D-110, 미리보기 그림을 메신저·브라우저가 담아 두는 시간

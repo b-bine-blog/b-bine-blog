@@ -41,7 +41,7 @@
           if (r.items.length) { board.renderPosts($('feed-list'), r.items, { showBlog: true, append: true }); }
         } else {
           board.renderPosts($('feed-list'), r.items, { showBlog: true,
-            empty: tab === 'INTEREST' ? '최근 30일 글이 없습니다.' : undefined });
+            empty: tab === 'INTEREST' ? '최근 3일 안에 올라온 글이 없습니다.' : undefined });
         }
         board.renderPager($('feed-pages'), r.page, r.totalPages, load);
         $('feed-more').hidden = true;

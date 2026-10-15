@@ -56,7 +56,8 @@ public record BoardProperties(
                          @Positive int blogPreviewSize) {}
 
     public record Feed(@Positive int recentDays, @Positive int pageSize, @PositiveOrZero int pinnedNotices,
-                       @Positive int tagMaxCount) {}
+                       @Positive int tagMaxCount, @Positive int interestDays, @Positive int interestExtendLikes,
+                       @PositiveOrZero int interestExtendDays) {}
 
     public record Og(@Positive int summaryLength, @NotNull Duration cardMaxAge) {}
 }
