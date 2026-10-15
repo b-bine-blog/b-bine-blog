@@ -56,6 +56,24 @@ public class PostQueryService {
         return detail(post, policy.requireReadable(post, userId));
     }
 
+    /**
+     * 본문에 붙여 넣은 우리 블로그 글 주소를 카드로 보여 줄 때 쓰는 요약(D-138). 조회수는 세지 않는다.
+     * 그 글을 볼 수 있는 사람에게만 준다(못 보면 403·404, 화면은 주소를 그냥 링크로 둔다).
+     */
+    @Transactional(readOnly = true)
+    public PostSummary card(long postId, Long userId) {
+        PostRow post = store.find(postId).orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
+        policy.requireReadableForDetail(post, userId);
+        if (post.isHiddenByAdmin()) {
+            throw new BusinessException(ErrorCode.POST_NOT_FOUND);
+        }
+        List<PostSummary> rows = summaryReader.list("p.id = ?", List.of(post.id()), "p.id", 1, 0);
+        if (rows.isEmpty()) {
+            throw new BusinessException(ErrorCode.POST_NOT_FOUND);
+        }
+        return rows.get(0);
+    }
+
     PostDetail detail(PostRow post, Viewer viewer) {
         List<PostSummary> rows = summaryReader.list("p.id = ?", List.of(post.id()), "p.id", 1, 0);
         if (rows.isEmpty()) {
