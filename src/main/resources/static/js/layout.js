@@ -114,8 +114,8 @@
         create.hidden = res.owned.length > 0;
       }, function () { create.hidden = false; });
     }
-    if (!me.admin) { // 좋아요한 글(D-137): 로그아웃 바로 위. 작성글처럼 창으로 연다
-      likesLink = link('/me/activity.html#likes', '좋아요한 글');
+    if (!me.admin) { // 좋아요(D-137): 로그아웃 바로 위. 작성글처럼 창으로 연다
+      likesLink = link('/me/activity.html#likes', '좋아요');
       likesLink.addEventListener('click', function (e) {
         if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) { return; }
         e.preventDefault();
