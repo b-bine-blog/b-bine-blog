@@ -279,6 +279,18 @@ paths:
         '200': { description: 목록, content: { application/json: { schema: { $ref: '#/components/schemas/PostPage' } } } }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
+  /api/me/likes:
+    get:
+      tags: [scrap]
+      summary: 내가 좋아요한 글 (D-137)
+      description: 좋아요를 누른 순서 최신부터. 지워졌거나 이제 볼 수 없는 글은 빠진다.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200': { description: 목록, content: { application/json: { schema: { $ref: '#/components/schemas/PostPage' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
   /api/me/posts:
     get:
       tags: [scrap]
@@ -373,10 +385,11 @@ paths:
       summary: 메인 피드 (FR-061~FR-064)
       description: |
         LATEST·POPULAR는 공개 블로그 글의 번호 페이지(비회원 가능).
+        INTEREST는 최근 30일 글의 번호 페이지(D-137). 좋아요를 누른 구독 블로그 > 다른 구독 블로그·팔로우 > 그 밖의 공개 글(좋아요 많은 순). 비회원은 401.
         SUBSCRIBED·FOLLOWING은 최근 30일 글을 20개씩 cursor로 이어 받는다(D-100 #18). 비회원은 401.
       security: []
       parameters:
-        - { name: tab, in: query, schema: { type: string, enum: [LATEST, POPULAR, SUBSCRIBED, FOLLOWING], default: LATEST } }
+        - { name: tab, in: query, schema: { type: string, enum: [LATEST, POPULAR, INTEREST, SUBSCRIBED, FOLLOWING], default: LATEST } }
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/Size'
         - { name: cursor, in: query, schema: { type: string }, description: SUBSCRIBED·FOLLOWING에서 이전 응답의 nextCursor }

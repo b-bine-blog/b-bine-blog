@@ -80,6 +80,16 @@ public class MyActivityService {
         return reader.page(where, args, order, List.of(userId), paging.page(page), paging.size(size));
     }
 
+    /** 좋아요한 글(D-137). 좋아요를 누른 순서 최신부터. 지워졌거나 이제 볼 수 없는 글은 빠진다. */
+    @Transactional(readOnly = true)
+    public PostPage likes(long userId, Integer page, Integer size) {
+        List<Object> args = new ArrayList<>(List.of(userId, userId));
+        String where = READABLE_BLOG_POST
+                + " AND EXISTS (SELECT 1 FROM post_likes pl WHERE pl.post_id = p.id AND pl.user_id = ?)";
+        String order = "(SELECT pl.id FROM post_likes pl WHERE pl.post_id = p.id AND pl.user_id = ?) DESC";  // 누른 순서
+        return reader.page(where, args, order, List.of(userId), paging.page(page), paging.size(size));
+    }
+
     /** 내가 쓴 블로그 글. 최신순. 떠난 블로그에 남은 글("탈퇴한 계정")은 뺀다. */
     @Transactional(readOnly = true)
     public PostPage posts(long userId, Integer page, Integer size) {

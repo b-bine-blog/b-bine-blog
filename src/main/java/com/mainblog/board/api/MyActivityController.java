@@ -33,6 +33,12 @@ public class MyActivityController {
         return service.scraps(member.id(), page, size);
     }
 
+    @GetMapping("/api/me/likes")
+    public PostPage likes(@RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size,
+                          @AuthenticationPrincipal AuthenticatedMember member) {
+        return service.likes(member.id(), page, size);
+    }
+
     @GetMapping("/api/me/posts")
     public PostPage posts(@RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size,
                           @AuthenticationPrincipal AuthenticatedMember member) {

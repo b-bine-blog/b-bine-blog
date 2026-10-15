@@ -104,6 +104,7 @@
         list.appendChild(a);
       });
     }
+    var likesLink = null;
     if (!me.admin) {
       // 운영하는 블로그가 이미 있으면 메뉴에서는 뺀다. 더 만들 때는 내 정보의 내 블로그에 있는 링크를 쓴다(D-109, D-117)
       var create = link('/blogs/new.html', '블로그 만들기');
@@ -112,6 +113,17 @@
       api.get('/api/me/blogs').then(function (res) {
         create.hidden = res.owned.length > 0;
       }, function () { create.hidden = false; });
+    }
+    if (!me.admin) { // 좋아요한 글(D-137): 로그아웃 바로 위. 작성글처럼 창으로 연다
+      likesLink = link('/me/activity.html#likes', '좋아요한 글');
+      likesLink.addEventListener('click', function (e) {
+        if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) { return; }
+        e.preventDefault();
+        list.hidden = true;
+        toggle.setAttribute('aria-expanded', 'false');
+        authModal(likesLink.getAttribute('href'), 'activity');
+      });
+      list.appendChild(likesLink);
     }
     var logout = document.createElement('button');
     logout.type = 'button';
@@ -265,7 +277,7 @@
     var url = new URL(href, location.href);
     var frame = modal.querySelector('iframe');
     modal.classList.toggle('auth-modal--wide', wide);
-    frame.title = kind === 'activity' ? '작성글·작성댓글·스크랩' : (profile ? '회원 프로필' : '로그인·회원가입');
+    frame.title = kind === 'activity' ? '내 활동' : (profile ? '회원 프로필' : '로그인·회원가입');
     if (!wide) { url.searchParams.set('next', location.pathname + location.search); }
     frame.src = url.pathname + url.search + url.hash;
     if (!modal.open) { modal.showModal(); }
