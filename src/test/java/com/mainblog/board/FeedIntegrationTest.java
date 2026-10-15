@@ -125,4 +125,36 @@ class FeedIntegrationTest extends BoardTestBase {
         insertPost(priv.blogId(), priv.owner().id(), "안보임", "c", clock.now());
         assertThat(titles(getAs(reader, "/api/feed?tab=FOLLOWING").json().get("items"))).containsExactly("보임");
     }
+
+    private void like(long userId, long postId) {
+        jdbc.update("INSERT INTO post_likes (user_id, post_id) VALUES (?, ?)", userId, postId);
+    }
+
+    @Test
+    void 관심_탭은_좋아요한_구독_블로그_구독_팔로우_그_밖의_인기_순() throws Exception {
+        BlogFixture liked = blog("int-liked", "PUBLIC");
+        BlogFixture sub = blog("int-sub", "PUBLIC");
+        BlogFixture other = blog("int-other", "PUBLIC");
+        BlogFixture followedBlog = blog("int-follow", "PUBLIC");
+        Member reader = member("관심독자");
+        subscribe(liked.blogId(), reader.id());
+        subscribe(sub.blogId(), reader.id());
+        follow(reader.id(), followedBlog.owner().id());
+
+        long old = insertPost(liked.blogId(), liked.owner().id(), "좋아요한 블로그 옛글", "c", clock.now().minusDays(2));
+        like(reader.id(), old);
+        insertPost(liked.blogId(), liked.owner().id(), "좋아요한 블로그 새글", "c", clock.now().minusHours(5));
+        insertPost(sub.blogId(), sub.owner().id(), "구독 글", "c", clock.now().minusHours(1));
+        insertPost(followedBlog.blogId(), followedBlog.owner().id(), "팔로우 글", "c", clock.now().minusHours(2));
+        long quiet = insertPost(other.blogId(), other.owner().id(), "조용한 글", "c", clock.now());
+        long hot = insertPost(other.blogId(), other.owner().id(), "인기 글", "c", clock.now().minusHours(3));
+        setLikes(hot, 9);
+        setLikes(quiet, 1);
+        insertPost(other.blogId(), other.owner().id(), "오래된 글", "c", clock.now().minusDays(31));
+
+        JsonNode r = getAs(reader, "/api/feed?tab=INTEREST&size=20").json();
+        assertThat(titles(r.get("items"))).containsExactly("좋아요한 블로그 새글", "좋아요한 블로그 옛글", "구독 글", "팔로우 글",
+                "인기 글", "조용한 글");
+        assertThat(getAs(null, "/api/feed?tab=INTEREST").status()).isEqualTo(401);
+    }
 }

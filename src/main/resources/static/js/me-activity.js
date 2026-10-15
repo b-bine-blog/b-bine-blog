@@ -1,4 +1,4 @@
-// 내 활동: 작성글·작성댓글·스크랩 (D-134). 글자는 textContent로만 넣는다(D-64).
+// 내 활동: 작성글·작성댓글·스크랩 (D-134), 좋아요한 글 (D-137). 글자는 textContent로만 넣는다(D-64).
 (function () {
   'use strict';
 
@@ -7,7 +7,8 @@
   var TABS = {
     posts: { url: '/api/me/posts', empty: '아직 쓴 글이 없습니다.' },
     comments: { url: '/api/me/comments', empty: '아직 쓴 댓글이 없습니다.' },
-    scraps: { url: '/api/me/scraps', empty: '스크랩한 글이 없습니다. 글 아래 "스크랩" 버튼으로 모을 수 있어요.' }
+    scraps: { url: '/api/me/scraps', empty: '스크랩한 글이 없습니다. 글 아래 "스크랩" 버튼으로 모을 수 있어요.' },
+    likes: { url: '/api/me/likes', empty: '좋아요한 글이 없습니다.' }  // D-137
   };
   var tab = 'posts';
 
