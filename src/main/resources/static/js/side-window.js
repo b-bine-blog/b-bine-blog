@@ -90,7 +90,7 @@
   var BUILT_IN = [['blogs', '.blog-showcase', '블로그 둘러보기'], ['feed', '#feed', '글']];
   var home, addBox;
 
-  // 칸 순서는 order(칸 이름 목록)로 기억한다. 새로 추가한 칸이 맨 위에 온다(2026-10-16 사용자 요청)
+  // 칸 순서는 order(칸 이름 목록)로 기억한다. 추가한 순서대로 위에서부터 쌓인다(2026-10-16 사용자 요청)
   function urlKey(e) { return 'url:' + e.src; }
 
   function homeState() {
@@ -223,7 +223,7 @@
       b.addEventListener('click', function () {
         var h = homeState();
         h.hidden.splice(h.hidden.indexOf(w[0]), 1);
-        h.order.unshift(w[0]);  // 다시 넣은 칸도 맨 위로
+        h.order.push(w[0]);  // 다시 넣은 칸도 추가한 순서대로 아래에
         renderHome();
         save();
         refreshAdd();
@@ -249,7 +249,7 @@
       var h = homeState();
       if (h.order.indexOf(urlKey(entry)) >= 0) { msg.textContent = '이미 넣은 주소예요'; return; }
       h.urls.push(entry);
-      h.order.unshift(urlKey(entry));  // 새 칸은 맨 위로
+      h.order.push(urlKey(entry));  // 먼저 넣은 칸이 위, 나중에 넣은 칸이 아래
       save();
       renderHome();
       refreshAdd();
