@@ -159,13 +159,20 @@
       if (!m) { return null; }
       return { kind: 'telegram', label: '텔레그램', src: 'https://t.me/' + m[1] + '/' + m[2] + '?embed=1' };
     }
-    if ((host === 'google.com' && /^\/maps/.test(path)) || host === 'maps.google.com') {
+    // 구글 지도: google.com·google.co.kr 등 나라별 주소, 장소 주소, 지도 위치(@위도,경도) 주소, 퍼가기 코드, 지도 첫 화면 주소
+    if ((/^google\.[a-z.]{2,6}$/.test(host) && /^\/maps/.test(path)) || /^maps\.google\.[a-z.]{2,6}$/.test(host)) {
+      var gm = 'https://www.google.com/maps';
       if (path === '/maps/embed' && /^[\w!.%*-]+$/.test(q.get('pb') || '')) {
-        return { kind: 'map', label: '구글 지도', src: 'https://www.google.com/maps/embed?pb=' + q.get('pb') };
+        return { kind: 'map', label: '구글 지도', src: gm + '/embed?pb=' + q.get('pb') };
       }
-      var place = q.get('q') || ((m = path.match(/^\/maps\/(?:place|search)\/([^/]+)/)) && decodeURIComponent(m[1]).replace(/\+/g, ' '));
-      if (!place || place.length > 200) { return null; }
-      return { kind: 'map', label: '구글 지도', src: 'https://www.google.com/maps?q=' + encodeURIComponent(place) + '&output=embed' };
+      var place = q.get('q') || ((m = path.match(/^\/maps\/(?:place|search)\/([^/@]+)/)) && decodeURIComponent(m[1]).replace(/\+/g, ' '));
+      if (place && place.length <= 200) {
+        return { kind: 'map', label: '구글 지도', src: gm + '?q=' + encodeURIComponent(place) + '&output=embed' };
+      }
+      var at = path.match(/@(-?\d{1,3}(?:\.\d+)?),(-?\d{1,3}(?:\.\d+)?),(\d{1,2}(?:\.\d+)?)z/);
+      var ll = at ? at[1] + ',' + at[2] : '37.5665,126.9780';  // 장소·위치가 없는 첫 화면 주소면 서울시청 중심
+      var zoom = at ? Math.round(parseFloat(at[3])) : 11;
+      return { kind: 'map', label: '구글 지도', src: gm + '?ll=' + ll + '&z=' + zoom + '&output=embed' };
     }
     if (host === 'calendar.google.com') {
       var cal = q.get('src');
