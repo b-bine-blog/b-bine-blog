@@ -167,7 +167,7 @@
     frame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-presentation');
     frame.setAttribute('allow', 'fullscreen; encrypted-media; picture-in-picture');
     sec.appendChild(frame);
-    sec.appendChild(deleteButton(function () {
+    head.appendChild(deleteButton(function () {
       var h = homeState();
       h.urls.splice(h.urls.indexOf(entry), 1);
       dropKey(h.order, urlKey(entry));
@@ -215,7 +215,7 @@
       var sec = home.querySelector(w[1]);
       if (!sec) { return; }
       sec.setAttribute('data-widget', w[0]);
-      sec.appendChild(deleteButton(function () {
+      (sec.querySelector('.panel__head') || sec).appendChild(deleteButton(function () {  // 삭제 버튼은 제목줄에 붙여 스크롤해도 같이 보이게
         var h = homeState();
         h.hidden.push(w[0]);
         dropKey(h.order, w[0]);
@@ -299,6 +299,39 @@
     node.style.gridColumn = s && s.w && s.w < COLS ? 'span ' + s.w : '';
     node.style.height = s && s.h ? s.h + 'px' : '';
     node.classList.toggle('is-sized', !!(s && s.h));
+    watchClip(node);
+    clipItems(node);
+  }
+
+  // 높이를 줄인 칸에서는 위·아래에 걸쳐 일부만 보이는 글·카드를 숨긴다(2026-10-16 사용자 요청: 삐죽 나오지 않게)
+  var CLIP_ITEMS = '.post-list > li, .blog-grid > li';
+
+  function clipItems(sec) {
+    var items = sec.querySelectorAll(CLIP_ITEMS);
+    var sized = sec.classList.contains('is-sized');
+    var r = sec.getBoundingClientRect();
+    var head = sec.querySelector('.panel__head');
+    var top = head ? head.getBoundingClientRect().bottom : r.top;
+    var bottom = r.bottom - 16;  // 칸 아래 여백(::after)
+    Array.prototype.forEach.call(items, function (li) {
+      var b = li.getBoundingClientRect();
+      li.style.visibility = !sized || (b.top >= top - 1 && b.bottom <= bottom + 1) ? '' : 'hidden';
+    });
+  }
+
+  function watchClip(sec) {
+    if (sec.clipWatched) { return; }
+    sec.clipWatched = true;
+    var queued = false;
+    function later() {
+      if (queued) { return; }
+      queued = true;
+      requestAnimationFrame(function () { queued = false; clipItems(sec); });
+    }
+    sec.addEventListener('scroll', later, { passive: true });
+    window.addEventListener('resize', later);
+    if (window.ResizeObserver) { new ResizeObserver(later).observe(sec); }
+    new MutationObserver(later).observe(sec, { childList: true, subtree: true });  // 글 목록은 나중에 불러온다
   }
 
   function colWidth() {
