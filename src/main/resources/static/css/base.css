@@ -874,12 +874,13 @@ label.inline:has(> select), label.inline > select { border-radius: var(--corner)
 .site-header__dock.is-empty { box-shadow: inset 0 0 0 3px rgba(255, 255, 255, .28); }
 .side-window--mini.is-docked { padding: 0; border: 0; box-shadow: none; background: none; }
 
-/* 머리 메뉴 버튼 옮기기(2026-10-16 구성안). 프로필 칸 옆 편집 아이콘, 편집 중에만 보이는 "기본으로" */
-.site-header button.site-header__edit { flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; padding: 0; border: 0; border-radius: 50%; background: rgba(255,255,255,.14); color: #fff; box-shadow: none; }
-.site-header button.site-header__edit:hover { background: rgba(255,255,255,.28); }
-.site-header button.site-header__edit[aria-pressed="true"] { background: #fff; color: var(--green-800); }
-.site-header button.site-header__reset { flex-shrink: 0; padding: 5px 12px; border: 0; background: #fff; color: var(--green-800); font-weight: 700; box-shadow: none; }
-.site-header button.site-header__reset[hidden] { display: none; }
+/* 머리 메뉴 버튼 옮기기(2026-10-16 구성안). 닉네임 메뉴 "편집"으로 켜고, 편집 중에만 프로필 칸 옆에 "기본으로"·"완료" */
+.site-header__editbar { display: inline-flex; gap: 6px; flex-shrink: 0; }
+.site-header__editbar[hidden] { display: none; }
+.site-header .site-header__editbar button { padding: 5px 12px; border: 0; font-weight: 700; box-shadow: none; }
+.site-header button.site-header__reset { background: rgba(255,255,255,.14); color: #fff; }
+.site-header button.site-header__reset:hover { background: rgba(255,255,255,.28); }
+.site-header button.site-header__done { background: #fff; color: var(--green-800); }
 .site-header [data-move-id].is-floating { z-index: 41; box-shadow: 0 6px 18px rgba(0,0,0,.25); }
 .site-header button[data-move-id].is-floating, .site-header a[data-move-id].is-floating:not(.button-light) { background-color: var(--green-800); }
 .site-header a[data-move-id].is-floating:not(.button-light) { padding: 5px 12px; border-radius: var(--corner, 6px); }

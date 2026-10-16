@@ -37,13 +37,12 @@
 
   function docked() { return !!dock && state.docked !== false; }
 
-  // 머리 메뉴 버튼 옮기기(2026-10-16 사용자 요청). 프로필 칸 옆 편집 아이콘을 누르면 편집 모드가 되고,
-  // 그 옆에 "기본으로"가 생긴다. 편집 중에는 밝기·알림·닉네임(비회원은 로그인·회원가입) 버튼을 끌어 옮긴다.
+  // 머리 메뉴 버튼 옮기기(2026-10-16 사용자 요청). 닉네임 메뉴의 "내 정보" 아래 "편집"을 누르면 편집 모드가 되고,
+  // 프로필 칸 옆에 "기본으로"·"완료"가 생긴다. 편집 중에는 밝기·알림·닉네임(비회원은 로그인·회원가입) 버튼을 끌어 옮긴다.
   // 옮긴 자리는 프로필 자리와 함께 계정마다 기억한다
-  var EDIT_ICON = 'M3 17.25V21h3.75L17.8 9.94l-3.75-3.75L3 17.25zm17.7-10.2a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z';
   var MOVABLE = [['theme', '.site-header__theme'], ['bell', '.site-header__bell'], ['menu', '.profile-menu'],
     ['login', 'a[href="/login.html"]'], ['signup', 'a[href="/signup.html"]']];
-  var editing = false, editBtn, resetBtn;
+  var editing = false, editBar;
 
   function movables() {
     var right = document.querySelector('.site-header__right');
@@ -81,8 +80,7 @@
   function setEditing(on) {
     editing = on;
     document.body.classList.toggle('layout-editing', on);
-    editBtn.setAttribute('aria-pressed', String(on));
-    resetBtn.hidden = !on;
+    editBar.hidden = !on;
   }
 
   // 기본으로: 머리 메뉴 버튼은 제자리로, 프로필은 로고 왼쪽 칸으로
@@ -126,31 +124,31 @@
   }
 
   function makeEditor() {
-    if (!dock || editBtn) { return; }
-    editBtn = el('button', 'site-header__edit');
-    editBtn.type = 'button';
-    editBtn.setAttribute('aria-label', '버튼 위치 편집');
-    editBtn.setAttribute('aria-pressed', 'false');
-    editBtn.title = '버튼 위치 편집';
-    var ns = 'http://www.w3.org/2000/svg';
-    var svg = document.createElementNS(ns, 'svg');
-    svg.setAttribute('viewBox', '0 0 24 24');
-    svg.setAttribute('width', '18');
-    svg.setAttribute('height', '18');
-    svg.setAttribute('aria-hidden', 'true');
-    var path = document.createElementNS(ns, 'path');
-    path.setAttribute('d', EDIT_ICON);
-    path.setAttribute('fill', 'currentColor');
-    svg.appendChild(path);
-    editBtn.appendChild(svg);
-    editBtn.addEventListener('click', function () { setEditing(!editing); });
-    resetBtn = el('button', 'site-header__reset', '기본으로');
-    resetBtn.type = 'button';
-    resetBtn.title = '버튼과 프로필을 처음 자리로';
-    resetBtn.hidden = true;
-    resetBtn.addEventListener('click', resetLayout);
-    dock.parentNode.insertBefore(editBtn, dock.nextSibling);
-    dock.parentNode.insertBefore(resetBtn, editBtn.nextSibling);
+    var list = document.getElementById('profile-menu-list');
+    if (!dock || editBar || !list) { return; }  // 닉네임 메뉴가 있는 회원만 편집한다
+    var item = el('button', null, '편집');
+    item.type = 'button';
+    item.addEventListener('click', function () {
+      list.hidden = true;
+      var toggle = document.querySelector('.site-header__nickname');
+      if (toggle) { toggle.setAttribute('aria-expanded', 'false'); }
+      setEditing(true);
+    });
+    var first = list.firstElementChild;  // "내 정보" 바로 아래
+    list.insertBefore(item, first ? first.nextSibling : null);
+
+    editBar = el('span', 'site-header__editbar');
+    editBar.hidden = true;
+    var reset = el('button', 'site-header__reset', '기본으로');
+    reset.type = 'button';
+    reset.title = '버튼과 프로필을 처음 자리로';
+    reset.addEventListener('click', resetLayout);
+    var done = el('button', 'site-header__done', '완료');
+    done.type = 'button';
+    done.addEventListener('click', function () { setEditing(false); });
+    editBar.appendChild(reset);
+    editBar.appendChild(done);
+    dock.parentNode.insertBefore(editBar, dock.nextSibling);
 
     movables().forEach(movableDrag);
     applyLayout();
