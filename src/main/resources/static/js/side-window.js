@@ -293,7 +293,7 @@
 
   // 칸 크기·자리(2026-10-16 사용자 요청). 편집 중에 칸 머리를 끌면 자리가 바뀌고,
   // 오른쪽 아래 손잡이를 끌면 너비(한 줄을 12칸으로 나눈 칸 수)와 높이가 바뀐다. 좁은 화면에서는 한 줄을 다 쓴다
-  var COLS = 12, MIN_COLS = 3, MIN_HEIGHT = 160;
+  var COLS = 12, MIN_COLS = 2, MIN_HEIGHT = 160;  // 가장 좁게 줄이면 블로그 카드가 한 줄에 하나씩 놓인다
 
   function applySize(node, s) {
     node.style.gridColumn = s && s.w && s.w < COLS ? 'span ' + s.w : '';
@@ -316,6 +316,8 @@
       e.stopPropagation();
       var r = sec.getBoundingClientRect();
       start = { px: e.clientX, py: e.clientY, w: r.width, h: r.height, c: colWidth() };
+      var sel = window.getSelection && window.getSelection();
+      if (sel) { sel.removeAllRanges(); }
       grip.setPointerCapture(e.pointerId);
     });
     grip.addEventListener('pointermove', function (e) {
@@ -346,6 +348,7 @@
       var head = e.target.closest('.panel__head');
       var sec = head && head.parentNode;
       if (!sec || sec.parentNode !== home || !sec.hasAttribute('data-key') || e.target.closest('button, select, input, label, a')) { return; }
+      e.preventDefault();  // 끄는 동안 글자가 선택되지 않게
       drag = { node: sec, px: e.clientX, py: e.clientY, moved: false };
       head.setPointerCapture(e.pointerId);
     });
