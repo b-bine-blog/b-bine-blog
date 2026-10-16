@@ -90,9 +90,22 @@
   var BUILT_IN = [['blogs', '.blog-showcase', '블로그 둘러보기'], ['feed', '#feed', '글']];
   var home, addBox;
 
+  // 칸 순서는 order(칸 이름 목록)로 기억한다. 새로 추가한 칸이 맨 위에 온다(2026-10-16 사용자 요청)
+  function urlKey(e) { return 'url:' + e.src; }
+
   function homeState() {
-    state.home = state.home || { hidden: [], urls: [] };
-    return state.home;
+    var h = state.home = state.home || { hidden: [], urls: [] };
+    if (!h.order) {  // 순서를 기억하기 전 저장값: 처음 두 칸 다음에 추가한 순서대로
+      h.order = BUILT_IN.map(function (w) { return w[0]; })
+        .filter(function (k) { return h.hidden.indexOf(k) < 0; })
+        .concat(h.urls.map(urlKey));
+    }
+    return h;
+  }
+
+  function dropKey(list, k) {
+    var i = list.indexOf(k);
+    if (i >= 0) { list.splice(i, 1); }
   }
 
   function deleteButton(onClick) {
@@ -147,6 +160,7 @@
     sec.appendChild(deleteButton(function () {
       var h = homeState();
       h.urls.splice(h.urls.indexOf(entry), 1);
+      dropKey(h.order, urlKey(entry));
       sec.remove();
       save();
       refreshAdd();
@@ -162,7 +176,11 @@
     });
     Array.prototype.forEach.call(home.querySelectorAll('.url-widget'), function (n) { n.remove(); });
     h.urls = h.urls.filter(function (e) { return e && e.src && toEmbed(e.src); });
-    h.urls.forEach(function (e) { home.insertBefore(urlWidget(e), addBox); });
+    var nodes = {};
+    BUILT_IN.forEach(function (w) { nodes[w[0]] = home.querySelector(w[1]); });
+    h.urls.forEach(function (e) { nodes[urlKey(e)] = urlWidget(e); });
+    h.order = h.order.filter(function (k) { return nodes[k]; });
+    h.order.forEach(function (k) { home.insertBefore(nodes[k], addBox); });  // 기억한 순서대로, 추가 칸은 맨 아래
   }
 
   function refreshAdd() {
@@ -181,7 +199,9 @@
       if (!sec) { return; }
       sec.setAttribute('data-widget', w[0]);
       sec.appendChild(deleteButton(function () {
-        homeState().hidden.push(w[0]);
+        var h = homeState();
+        h.hidden.push(w[0]);
+        dropKey(h.order, w[0]);
         sec.hidden = true;
         save();
         refreshAdd();
@@ -203,6 +223,7 @@
       b.addEventListener('click', function () {
         var h = homeState();
         h.hidden.splice(h.hidden.indexOf(w[0]), 1);
+        h.order.unshift(w[0]);  // 다시 넣은 칸도 맨 위로
         renderHome();
         save();
         refreshAdd();
@@ -225,7 +246,10 @@
       e.preventDefault();
       var entry = toEmbed(input.value);
       if (!entry) { msg.textContent = '유튜브 영상, 디스코드 서버, 텔레그램 글 주소만 넣을 수 있어요'; return; }
-      homeState().urls.push(entry);
+      var h = homeState();
+      if (h.order.indexOf(urlKey(entry)) >= 0) { msg.textContent = '이미 넣은 주소예요'; return; }
+      h.urls.push(entry);
+      h.order.unshift(urlKey(entry));  // 새 칸은 맨 위로
       save();
       renderHome();
       refreshAdd();
@@ -251,7 +275,7 @@
   function resetLayout() {
     state.layout = {};
     applyLayout();
-    if (home) { state.home = { hidden: [], urls: [] }; renderHome(); refreshAdd(); }
+    if (home) { state.home = { hidden: [], urls: [], order: ['blogs', 'feed'] }; renderHome(); refreshAdd(); }
     state.x = state.y = null;
     if (mini) {
       if (win && !win.hidden) { show(true); }
