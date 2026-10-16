@@ -918,10 +918,13 @@ main.home > .url-widget.is-sized .url-widget__frame { flex: 1 1 auto; height: au
 main.home .widget-resize { display: none; position: absolute; right: 2px; bottom: 2px; width: 18px; height: 18px; cursor: nwse-resize; touch-action: none;
   background: linear-gradient(135deg, transparent 50%, rgba(127, 127, 127, .6) 50%, rgba(127, 127, 127, .6) 60%, transparent 60%, transparent 70%, rgba(127, 127, 127, .6) 70%, rgba(127, 127, 127, .6) 80%, transparent 80%); }
 main.home.is-editing .widget-resize { display: block; }
+/* 스크롤되는 칸에서는 손잡이가 글과 함께 올라가지 않고 보이는 영역 오른쪽 아래에 붙어 있게 한다 */
+main.home.is-editing > [data-key].is-sized:not(.url-widget) > .widget-resize { position: sticky; bottom: -16px; margin: -18px -16px 0 auto; z-index: 1; }
 main.home.is-editing > [data-key] > .panel__head { padding-right: 64px; cursor: grab; touch-action: none; user-select: none; }
 main.home.is-editing > [data-key].is-dragging { opacity: .55; }
 main.home.is-editing iframe { pointer-events: none; }
 .blog-showcase { container-type: inline-size; }
 @container (max-width: 720px) { .blog-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @container (max-width: 440px) { .blog-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@container (max-width: 300px) { .blog-grid { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 860px) { main.home > [data-key] { grid-column: 1 / -1 !important; } }
