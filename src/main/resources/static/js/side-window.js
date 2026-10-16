@@ -115,12 +115,11 @@
     return b;
   }
 
-  // 바깥 사이트는 정해 둔 서비스만 띄운다(2026-10-16 사용자 요청: 아무 URL이나 받으면 위험).
+  // 바깥 사이트는 유튜브만 띄운다(2026-10-16 사용자 요청: 아무 URL이나 받으면 위험, 이후 유튜브만 남김).
   // 붙여 넣은 주소를 각 서비스가 남의 화면에 띄우라고 내주는 주소(embed)로 바꾼다. 다른 주소는 받지 않는다
-  var SUPPORTED = '유튜브(영상·재생목록·채널 라이브), 디스코드 서버, 텔레그램 공개 채널 글, 구글 지도, 구글 캘린더(공개), 트위치';
-  var TWITCH_RESERVED = /^(directory|videos|settings|downloads|jobs|p|search|subscriptions|inventory|wallet|drops|turbo|friends|messages|login|signup)$/i;
+  var SUPPORTED = '유튜브(영상·재생목록·채널 라이브)';
 
-  // 지도·캘린더 "퍼가기"로 받은 <iframe src="..."> 코드를 통째로 붙여 넣어도 주소만 꺼낸다
+  // 유튜브 "퍼가기"로 받은 <iframe src="..."> 코드를 통째로 붙여 넣어도 주소만 꺼낸다
   function pickUrl(text) {
     var m = text.match(/src\s*=\s*["']([^"']+)["']/i);
     return (m ? m[1] : text).trim().replace(/&amp;/g, '&');
@@ -148,46 +147,6 @@
         : (q.get('v') || ((m = path.match(/^\/(?:shorts|embed|live)\/([\w-]+)/)) && m[1]));
       if (!id || !/^[\w-]{11}$/.test(id)) { return null; }
       return { kind: 'youtube', label: '유튜브', src: yt + id + (list ? '?list=' + list : '') };
-    }
-    if (host === 'discord.com') {
-      var server = q.get('id') || ((m = path.match(/^\/channels\/(\d+)/)) && m[1]);
-      if (!server || !/^\d{5,25}$/.test(server)) { return null; }
-      return { kind: 'discord', label: '디스코드', src: 'https://discord.com/widget?id=' + server + '&theme=dark' };
-    }
-    if (host === 't.me') {
-      m = path.match(/^\/(?:s\/)?([A-Za-z]\w{3,31})\/(\d+)\/?$/);
-      if (!m) { return null; }
-      return { kind: 'telegram', label: '텔레그램', src: 'https://t.me/' + m[1] + '/' + m[2] + '?embed=1' };
-    }
-    // 구글 지도: google.com·google.co.kr 등 나라별 주소, 장소 주소, 지도 위치(@위도,경도) 주소, 퍼가기 코드, 지도 첫 화면 주소
-    if ((/^google\.[a-z.]{2,6}$/.test(host) && /^\/maps/.test(path)) || /^maps\.google\.[a-z.]{2,6}$/.test(host)) {
-      var gm = 'https://www.google.com/maps';
-      if (path === '/maps/embed' && /^[\w!.%*-]+$/.test(q.get('pb') || '')) {
-        return { kind: 'map', label: '구글 지도', src: gm + '/embed?pb=' + q.get('pb') };
-      }
-      var place = q.get('q') || ((m = path.match(/^\/maps\/(?:place|search)\/([^/@]+)/)) && decodeURIComponent(m[1]).replace(/\+/g, ' '));
-      if (place && place.length <= 200) {
-        return { kind: 'map', label: '구글 지도', src: gm + '?q=' + encodeURIComponent(place) + '&output=embed' };
-      }
-      var at = path.match(/@(-?\d{1,3}(?:\.\d+)?),(-?\d{1,3}(?:\.\d+)?),(\d{1,2}(?:\.\d+)?)z/);
-      var ll = at ? at[1] + ',' + at[2] : '37.5665,126.9780';  // 장소·위치가 없는 첫 화면 주소면 서울시청 중심
-      var zoom = at ? Math.round(parseFloat(at[3])) : 11;
-      return { kind: 'map', label: '구글 지도', src: gm + '?ll=' + ll + '&z=' + zoom + '&output=embed' };
-    }
-    if (host === 'calendar.google.com') {
-      var cal = q.get('src');
-      if (!cal && q.get('cid')) { try { cal = atob(q.get('cid')); } catch (e) { cal = null; } }
-      if (!cal || !/^[\w.+#-]+@[\w.-]+$/.test(cal)) { return null; }  // 공개 캘린더 ID(메일 주소 모양)만
-      return { kind: 'calendar', label: '구글 캘린더', src: 'https://calendar.google.com/calendar/embed?src=' + encodeURIComponent(cal) + '&ctz=Asia%2FSeoul' };
-    }
-    if (host === 'twitch.tv' || host === 'player.twitch.tv') {
-      var tw = 'https://player.twitch.tv/?parent=' + encodeURIComponent(location.hostname) + '&';
-      if ((m = path.match(/^\/videos\/(\d{5,15})\/?$/)) || (q.get('video') && (m = [0, q.get('video').replace(/^v/, '')]) && /^\d{5,15}$/.test(m[1]))) {
-        return { kind: 'twitch', label: '트위치', src: tw + 'video=' + m[1] };
-      }
-      var ch = q.get('channel') || ((m = path.match(/^\/([A-Za-z0-9_]{3,25})\/?$/)) && m[1]);
-      if (!ch || !/^[A-Za-z0-9_]{3,25}$/.test(ch) || TWITCH_RESERVED.test(ch)) { return null; }
-      return { kind: 'twitch', label: '트위치', src: tw + 'channel=' + ch.toLowerCase() };
     }
     return null;
   }
