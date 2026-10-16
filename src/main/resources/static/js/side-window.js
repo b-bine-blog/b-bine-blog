@@ -32,9 +32,137 @@
     dock = el('span', 'site-header__dock');
     dock.setAttribute('aria-hidden', 'true');
     logo.parentNode.insertBefore(dock, logo);
+    makeEditor();
   }
 
   function docked() { return !!dock && state.docked !== false; }
+
+  // 머리 메뉴 버튼 옮기기(2026-10-16 사용자 요청). 프로필 칸 옆 편집 아이콘을 누르면 편집 모드가 되고,
+  // 그 옆에 "기본으로"가 생긴다. 편집 중에는 밝기·알림·닉네임(비회원은 로그인·회원가입) 버튼을 끌어 옮긴다.
+  // 옮긴 자리는 프로필 자리와 함께 계정마다 기억한다
+  var EDIT_ICON = 'M3 17.25V21h3.75L17.8 9.94l-3.75-3.75L3 17.25zm17.7-10.2a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z';
+  var MOVABLE = [['theme', '.site-header__theme'], ['bell', '.site-header__bell'], ['menu', '.profile-menu'],
+    ['login', 'a[href="/login.html"]'], ['signup', 'a[href="/signup.html"]']];
+  var editing = false, editBtn, resetBtn;
+
+  function movables() {
+    var right = document.querySelector('.site-header__right');
+    if (!right) { return []; }
+    var out = [];
+    MOVABLE.forEach(function (m) {
+      var n = right.querySelector(':scope > ' + m[1]);
+      if (n) { n.setAttribute('data-move-id', m[0]); out.push(n); }
+    });
+    return out;
+  }
+
+  function floatAt(node, x, y) {
+    node.classList.add('is-floating');
+    node.style.position = 'fixed';
+    var p = place(node, x, y);
+    // 화면 왼쪽에 두면 닉네임 메뉴가 오른쪽으로 펼쳐지게
+    node.classList.toggle('is-left', p.x + node.offsetWidth / 2 < window.innerWidth / 2);
+    return p;
+  }
+
+  function unfloat(node) {
+    node.classList.remove('is-floating', 'is-left');
+    node.style.position = node.style.left = node.style.top = '';
+  }
+
+  function applyLayout() {
+    var saved = state.layout || {};
+    movables().forEach(function (n) {
+      var at = saved[n.getAttribute('data-move-id')];
+      if (at) { floatAt(n, at.x, at.y); } else { unfloat(n); }
+    });
+  }
+
+  function setEditing(on) {
+    editing = on;
+    document.body.classList.toggle('layout-editing', on);
+    editBtn.setAttribute('aria-pressed', String(on));
+    resetBtn.hidden = !on;
+  }
+
+  // 기본으로: 머리 메뉴 버튼은 제자리로, 프로필은 로고 왼쪽 칸으로
+  function resetLayout() {
+    state.layout = {};
+    applyLayout();
+    state.x = state.y = null;
+    if (mini) {
+      if (win && !win.hidden) { show(true); }
+      setDocked(true);
+    }
+    state.docked = true;
+    save();
+  }
+
+  function movableDrag(node) {
+    var start = null;
+    node.addEventListener('pointerdown', function (e) {
+      if (!editing || e.button !== 0) { return; }
+      var r = node.getBoundingClientRect();
+      start = { px: e.clientX, py: e.clientY, x: r.left, y: r.top, moved: false };
+      node.setPointerCapture(e.pointerId);
+    });
+    node.addEventListener('pointermove', function (e) {
+      if (!start) { return; }
+      var dx = e.clientX - start.px, dy = e.clientY - start.py;
+      if (!start.moved && Math.abs(dx) + Math.abs(dy) < 5) { return; }
+      start.moved = true;
+      floatAt(node, start.x + dx, start.y + dy);
+    });
+    node.addEventListener('pointerup', function () {
+      if (!start) { return; }
+      if (start.moved) {
+        state.layout = state.layout || {};
+        state.layout[node.getAttribute('data-move-id')] = { x: node.offsetLeft, y: node.offsetTop };
+        save();
+      }
+      start = null;
+    });
+    node.addEventListener('pointercancel', function () { start = null; });
+  }
+
+  function makeEditor() {
+    if (!dock || editBtn) { return; }
+    editBtn = el('button', 'site-header__edit');
+    editBtn.type = 'button';
+    editBtn.setAttribute('aria-label', '버튼 위치 편집');
+    editBtn.setAttribute('aria-pressed', 'false');
+    editBtn.title = '버튼 위치 편집';
+    var ns = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('width', '18');
+    svg.setAttribute('height', '18');
+    svg.setAttribute('aria-hidden', 'true');
+    var path = document.createElementNS(ns, 'path');
+    path.setAttribute('d', EDIT_ICON);
+    path.setAttribute('fill', 'currentColor');
+    svg.appendChild(path);
+    editBtn.appendChild(svg);
+    editBtn.addEventListener('click', function () { setEditing(!editing); });
+    resetBtn = el('button', 'site-header__reset', '기본으로');
+    resetBtn.type = 'button';
+    resetBtn.title = '버튼과 프로필을 처음 자리로';
+    resetBtn.hidden = true;
+    resetBtn.addEventListener('click', resetLayout);
+    dock.parentNode.insertBefore(editBtn, dock.nextSibling);
+    dock.parentNode.insertBefore(resetBtn, editBtn.nextSibling);
+
+    movables().forEach(movableDrag);
+    applyLayout();
+    // 편집 중에는 버튼을 눌러도 메뉴·알림이 열리지 않고 옮기기만 한다
+    document.addEventListener('click', function (e) {
+      if (editing && e.target.closest('[data-move-id]')) { e.preventDefault(); e.stopPropagation(); }
+    }, true);
+    document.addEventListener('keydown', function (e) {
+      if (editing && e.key === 'Escape') { setEditing(false); }
+    });
+    window.addEventListener('resize', applyLayout);
+  }
 
   // 접힌 프로필을 칸 위에 맞춘다. 머리 메뉴가 줄바꿈되거나 창 크기가 바뀌면 다시 맞춘다
   function syncDock() {
