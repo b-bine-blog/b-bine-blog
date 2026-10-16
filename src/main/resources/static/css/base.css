@@ -848,7 +848,7 @@ label.inline:has(> select), label.inline > select { border-radius: var(--corner)
 /* 메인 화면 떠 있는 내 창 (D-139). 끌어서 옮기고 − 로 접으면 프로필만 남는다 */
 .side-window { position: fixed; z-index: 40; width: 240px; background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: var(--corner, 6px); box-shadow: 0 8px 24px rgba(0, 0, 0, .18); font-size: 14px; }
 .side-window[hidden] { display: none; }
-.side-window__head { display: flex; justify-content: center; align-items: center; padding: 2px 6px; border-bottom: 1px solid var(--line); cursor: move; touch-action: none; user-select: none; }
+.side-window__head { display: flex; justify-content: flex-start; align-items: center; padding: 2px 10px; border-bottom: 1px solid var(--line); cursor: move; touch-action: none; user-select: none; }
 .side-window__grip { color: var(--muted); font-size: 22px; font-weight: 700; line-height: 1; }
 .side-window__head:hover .side-window__grip { color: var(--text); }
 .side-window__sec { padding: 8px 12px; border-bottom: 1px solid var(--line); }
