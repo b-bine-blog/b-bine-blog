@@ -51,8 +51,9 @@ public class SecurityConfig {
     static final String CSP = "default-src 'self'; "
             + "script-src 'self' https://challenges.cloudflare.com; "
             // 로그인·회원가입 창은 같은 사이트 화면을 iframe으로 띄운다(D-118). 다른 사이트는 우리 화면을 품을 수 없다
-            // 메인 화면 칸에는 유튜브·디스코드·텔레그램만 띄울 수 있다(2026-10-16 사용자 요청, 구성안)
-            + "frame-src 'self' https://challenges.cloudflare.com https://www.youtube-nocookie.com https://discord.com https://t.me; "
+            // 메인 화면 칸에는 정해 둔 서비스만 띄울 수 있다(2026-10-16 사용자 요청): 유튜브·디스코드·텔레그램·구글 지도·구글 캘린더·트위치
+            + "frame-src 'self' https://challenges.cloudflare.com https://www.youtube-nocookie.com https://discord.com https://t.me "
+            + "https://www.google.com https://calendar.google.com https://player.twitch.tv; "
             + "frame-ancestors 'self'; "
             // 글 본문의 바깥 이미지(https)와 에디터 CSS의 data: 아이콘(004 R-01, R-02)
             + "img-src 'self' data: https:; "
