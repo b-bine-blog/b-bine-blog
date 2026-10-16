@@ -167,7 +167,7 @@
     frame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-presentation');
     frame.setAttribute('allow', 'fullscreen; encrypted-media; picture-in-picture');
     sec.appendChild(frame);
-    sec.appendChild(deleteButton(function () {
+    head.appendChild(deleteButton(function () {
       var h = homeState();
       h.urls.splice(h.urls.indexOf(entry), 1);
       dropKey(h.order, urlKey(entry));
@@ -215,7 +215,7 @@
       var sec = home.querySelector(w[1]);
       if (!sec) { return; }
       sec.setAttribute('data-widget', w[0]);
-      sec.appendChild(deleteButton(function () {
+      (sec.querySelector('.panel__head') || sec).appendChild(deleteButton(function () {  // 삭제 버튼은 제목줄에 붙여 스크롤해도 같이 보이게
         var h = homeState();
         h.hidden.push(w[0]);
         dropKey(h.order, w[0]);
