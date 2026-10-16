@@ -1,4 +1,4 @@
-// 우리 사이트 모든 화면 위에 떠 있는 내 창 (D-139). layout.js가 머리 메뉴를 그린 뒤 불러온다. 제목 줄을 끌어 옮기고, − 로 접으면 프로필만 남고, 프로필을 누르면 다시 펼친다.
+// 우리 사이트 모든 화면 위에 떠 있는 내 창 (D-139). layout.js가 머리 메뉴를 그린 뒤 불러온다. 제목 줄(−)을 끌어 옮기고, 누르면 접혀 프로필만 남고, 프로필을 누르면 다시 펼친다.
 // 위치와 접힘 상태는 이 브라우저에만 기억한다(localStorage). 글자는 모두 textContent로 넣는다(D-64).
 (function () {
   'use strict';
@@ -106,7 +106,7 @@
   function draggable(handle, box, onTap) {
     var start = null;
     handle.addEventListener('pointerdown', function (e) {
-      if (e.button !== 0 || e.target.closest('.side-window__min')) { return; }
+      if (e.button !== 0) { return; }
       var r = box.getBoundingClientRect();
       start = { px: e.clientX, py: e.clientY, x: r.left, y: r.top, moved: false };
       handle.setPointerCapture(e.pointerId);
@@ -154,14 +154,16 @@
   function frame() {
     win = el('aside', 'side-window');
     win.setAttribute('aria-label', '내 정보');
+    // 제목 줄 하나가 손잡이 겸 접기 버튼이다. 끌면 옮기고, 누르면 바로 접힌다(2026-10-16 사용자 요청)
     var head = el('div', 'side-window__head');
-    head.appendChild(el('span', 'side-window__grip', '⠿'));
-    var min = el('button', 'side-window__min', '−');
-    min.type = 'button';
-    min.setAttribute('aria-label', '접기');
-    min.title = '접기';
-    min.addEventListener('click', function () { show(true); });
-    head.appendChild(min);
+    head.title = '끌어서 옮기기 · 눌러서 접기';
+    head.setAttribute('role', 'button');
+    head.setAttribute('aria-label', '접기');
+    head.tabIndex = 0;
+    head.appendChild(el('span', 'side-window__grip', '−'));
+    head.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); show(true); }
+    });
     win.appendChild(head);
     mini = el('button', 'side-window side-window--mini');
     mini.type = 'button';
@@ -272,7 +274,7 @@
     mini.hidden = true;
     document.body.appendChild(win);
     document.body.appendChild(mini);
-    draggable(head, win);
+    draggable(head, win, function () { show(true); });
     draggable(mini, mini, function () { show(false); });
     window.addEventListener('resize', function () {
       var box = win.hidden ? mini : win;

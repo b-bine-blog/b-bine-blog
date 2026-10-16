@@ -848,10 +848,9 @@ label.inline:has(> select), label.inline > select { border-radius: var(--corner)
 /* 메인 화면 떠 있는 내 창 (D-139). 끌어서 옮기고 − 로 접으면 프로필만 남는다 */
 .side-window { position: fixed; z-index: 40; width: 240px; background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: var(--corner, 6px); box-shadow: 0 8px 24px rgba(0, 0, 0, .18); font-size: 14px; }
 .side-window[hidden] { display: none; }
-.side-window__head { display: flex; justify-content: space-between; align-items: center; padding: 4px 6px 4px 10px; border-bottom: 1px solid var(--line); cursor: move; touch-action: none; user-select: none; }
-.side-window__grip { color: var(--muted); font-size: 16px; line-height: 1; }
-.side-window__min { margin: 0; background: none; border: 0; border-radius: 0; box-shadow: none; color: var(--muted); font-size: 18px; line-height: 1; padding: 2px 8px; cursor: pointer; min-height: 0; }
-.side-window__min:hover { color: var(--text); background: none; }
+.side-window__head { display: flex; justify-content: center; align-items: center; padding: 2px 6px; border-bottom: 1px solid var(--line); cursor: move; touch-action: none; user-select: none; }
+.side-window__grip { color: var(--muted); font-size: 22px; font-weight: 700; line-height: 1; }
+.side-window__head:hover .side-window__grip { color: var(--text); }
 .side-window__sec { padding: 8px 12px; border-bottom: 1px solid var(--line); }
 .side-window__sec:last-child { border-bottom: 0; }
 .side-window__label { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
@@ -870,7 +869,7 @@ label.inline:has(> select), label.inline > select { border-radius: var(--corner)
 .side-window__guest { color: var(--muted); font-size: 13px; line-height: 1.5; }
 .side-window__auth { display: flex; gap: 8px; margin-top: 10px; }
 .side-window__auth .button { flex: 1; margin: 0; text-align: center; padding: 7px 0; }
-/* 로고 왼쪽 프로필 칸(D-139). 비어 있을 때만 점선으로 자리를 보여 준다 */
+/* 로고 왼쪽 프로필 칸(D-139). 비어 있을 때만 반투명 굵은 선으로 자리를 보여 준다 */
 .site-header__dock { flex-shrink: 0; width: 36px; height: 36px; border-radius: var(--corner, 6px); }
-.site-header__dock.is-empty { outline: 1px dashed rgba(255, 255, 255, .45); outline-offset: -1px; }
+.site-header__dock.is-empty { box-shadow: inset 0 0 0 3px rgba(255, 255, 255, .28); }
 .side-window--mini.is-docked { padding: 0; border: 0; box-shadow: none; background: none; }
