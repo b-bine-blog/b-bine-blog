@@ -32,9 +32,301 @@
     dock = el('span', 'site-header__dock');
     dock.setAttribute('aria-hidden', 'true');
     logo.parentNode.insertBefore(dock, logo);
+    makeEditor();
   }
 
   function docked() { return !!dock && state.docked !== false; }
+
+  // 머리 메뉴 버튼 옮기기(2026-10-16 사용자 요청). 닉네임 메뉴의 "내 정보" 아래 "편집"을 누르면 편집 모드가 되고,
+  // 프로필 칸 옆에 "기본으로"·"완료"가 생긴다. 편집 중에는 밝기·알림·닉네임(비회원은 로그인·회원가입) 버튼을 끌어 옮긴다.
+  // 옮긴 자리는 프로필 자리와 함께 계정마다 기억한다
+  var MOVABLE = [['theme', '.site-header__theme'], ['bell', '.site-header__bell'], ['menu', '.profile-menu'],
+    ['login', 'a[href="/login.html"]'], ['signup', 'a[href="/signup.html"]']];
+  var editing = false, editBar;
+
+  function movables() {
+    var right = document.querySelector('.site-header__right');
+    if (!right) { return []; }
+    var out = [];
+    MOVABLE.forEach(function (m) {
+      var n = right.querySelector(':scope > ' + m[1]);
+      if (n) { n.setAttribute('data-move-id', m[0]); out.push(n); }
+    });
+    return out;
+  }
+
+  function floatAt(node, x, y) {
+    node.classList.add('is-floating');
+    node.style.position = 'fixed';
+    var p = place(node, x, y);
+    // 화면 왼쪽에 두면 닉네임 메뉴가 오른쪽으로 펼쳐지게
+    node.classList.toggle('is-left', p.x + node.offsetWidth / 2 < window.innerWidth / 2);
+    return p;
+  }
+
+  function unfloat(node) {
+    node.classList.remove('is-floating', 'is-left');
+    node.style.position = node.style.left = node.style.top = '';
+  }
+
+  function applyLayout() {
+    var saved = state.layout || {};
+    movables().forEach(function (n) {
+      var at = saved[n.getAttribute('data-move-id')];
+      if (at) { floatAt(n, at.x, at.y); } else { unfloat(n); }
+    });
+  }
+
+  function setEditing(on) {
+    editing = on;
+    document.body.classList.toggle('layout-editing', on);
+    editBar.hidden = !on;
+    homeEditing(on);
+  }
+
+  // 메인 화면 칸 편집(2026-10-16 사용자 요청, 구성안). 편집 중에는 "블로그 둘러보기"·"글" 칸에 삭제 버튼이 붙고,
+  // 맨 아래 "추가"로 지운 칸을 되살리거나 유튜브·디스코드·텔레그램 주소를 칸으로 띄운다. 계정마다 브라우저에 기억한다
+  var URL_LIMIT = 5;
+  var BUILT_IN = [['blogs', '.blog-showcase', '블로그 둘러보기'], ['feed', '#feed', '글']];
+  var home, addBox;
+
+  function homeState() {
+    state.home = state.home || { hidden: [], urls: [] };
+    return state.home;
+  }
+
+  function deleteButton(onClick) {
+    var b = el('button', 'widget-delete', '삭제');
+    b.type = 'button';
+    b.addEventListener('click', onClick);
+    return b;
+  }
+
+  // 바깥 사이트는 유튜브·디스코드·텔레그램만 띄운다(2026-10-16 사용자 요청: 아무 URL이나 받으면 위험).
+  // 붙여 넣은 주소를 각 서비스가 남의 화면에 띄우라고 내주는 주소(embed)로 바꾼다. 다른 주소는 받지 않는다
+  function toEmbed(text) {
+    var u;
+    try { u = new URL(text.trim()); } catch (e) { return null; }
+    if (u.protocol !== 'https:') { return null; }
+    var host = u.hostname.replace(/^(www\.|m\.)/, '');
+    var m;
+    if (host === 'youtube.com' || host === 'youtu.be' || host === 'youtube-nocookie.com') {
+      var id = host === 'youtu.be' ? u.pathname.slice(1)
+        : (u.searchParams.get('v') || ((m = u.pathname.match(/^\/(?:shorts|embed|live)\/([\w-]+)/)) && m[1]));
+      if (!id || !/^[\w-]{11}$/.test(id)) { return null; }
+      return { kind: 'youtube', label: '유튜브', src: 'https://www.youtube-nocookie.com/embed/' + id };
+    }
+    if (host === 'discord.com') {
+      var server = u.searchParams.get('id') || ((m = u.pathname.match(/^\/channels\/(\d+)/)) && m[1]);
+      if (!server || !/^\d{5,25}$/.test(server)) { return null; }
+      return { kind: 'discord', label: '디스코드', src: 'https://discord.com/widget?id=' + server + '&theme=dark' };
+    }
+    if (host === 't.me') {
+      m = u.pathname.match(/^\/(?:s\/)?([A-Za-z]\w{3,31})\/(\d+)\/?$/);
+      if (!m) { return null; }
+      return { kind: 'telegram', label: '텔레그램', src: 'https://t.me/' + m[1] + '/' + m[2] + '?embed=1' };
+    }
+    return null;
+  }
+
+  function urlWidget(entry) {
+    var sec = el('section', 'panel url-widget url-widget--' + entry.kind);
+    sec.setAttribute('data-widget', 'url');
+    var head = el('div', 'panel__head');
+    head.appendChild(el('h2', null, entry.label));
+    sec.appendChild(head);
+    var frame = el('iframe', 'url-widget__frame');
+    frame.src = entry.src;
+    frame.title = entry.label;
+    frame.loading = 'lazy';
+    frame.referrerPolicy = 'strict-origin-when-cross-origin';
+    // 입력칸 제출은 막는다(가짜 로그인 화면 방지). 영상 전체 화면만 허락한다
+    frame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-presentation');
+    frame.setAttribute('allow', 'fullscreen; encrypted-media; picture-in-picture');
+    sec.appendChild(frame);
+    sec.appendChild(deleteButton(function () {
+      var h = homeState();
+      h.urls.splice(h.urls.indexOf(entry), 1);
+      sec.remove();
+      save();
+      refreshAdd();
+    }));
+    return sec;
+  }
+
+  function renderHome() {
+    var h = homeState();
+    BUILT_IN.forEach(function (w) {
+      var sec = home.querySelector(w[1]);
+      if (sec) { sec.hidden = h.hidden.indexOf(w[0]) >= 0; }
+    });
+    Array.prototype.forEach.call(home.querySelectorAll('.url-widget'), function (n) { n.remove(); });
+    h.urls = h.urls.filter(function (e) { return e && e.src && toEmbed(e.src); });
+    h.urls.forEach(function (e) { home.insertBefore(urlWidget(e), addBox); });
+  }
+
+  function refreshAdd() {
+    var h = homeState();
+    Array.prototype.forEach.call(addBox.querySelectorAll('[data-add]'), function (b) {
+      b.disabled = h.hidden.indexOf(b.getAttribute('data-add')) < 0;
+    });
+    addBox.querySelector('.widget-add__url').disabled = h.urls.length >= URL_LIMIT;
+  }
+
+  function makeHome() {
+    home = document.querySelector('main.home');
+    if (!home || addBox) { return; }
+    BUILT_IN.forEach(function (w) {
+      var sec = home.querySelector(w[1]);
+      if (!sec) { return; }
+      sec.setAttribute('data-widget', w[0]);
+      sec.appendChild(deleteButton(function () {
+        homeState().hidden.push(w[0]);
+        sec.hidden = true;
+        save();
+        refreshAdd();
+      }));
+    });
+
+    addBox = el('section', 'panel widget-add');
+    addBox.hidden = true;
+    var toggle = el('button', 'widget-add__toggle', '+ 추가');
+    toggle.type = 'button';
+    var menu = el('div', 'widget-add__menu');
+    menu.hidden = true;
+    toggle.addEventListener('click', function () { menu.hidden = !menu.hidden; });
+    BUILT_IN.forEach(function (w) {
+      var b = el('button', null, w[2]);
+      b.type = 'button';
+      b.setAttribute('data-add', w[0]);
+      b.title = '지운 칸만 다시 넣을 수 있어요';
+      b.addEventListener('click', function () {
+        var h = homeState();
+        h.hidden.splice(h.hidden.indexOf(w[0]), 1);
+        renderHome();
+        save();
+        refreshAdd();
+        menu.hidden = true;
+      });
+      menu.appendChild(b);
+    });
+    var form = el('form', 'widget-add__form');
+    var input = el('input');
+    input.type = 'url';
+    input.placeholder = '유튜브·디스코드·텔레그램 주소';
+    input.setAttribute('aria-label', '유튜브·디스코드·텔레그램 주소');
+    var go = el('button', 'widget-add__url', '추가');
+    go.type = 'submit';
+    var msg = el('span', 'widget-add__msg');
+    form.appendChild(input);
+    form.appendChild(go);
+    form.appendChild(msg);
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var entry = toEmbed(input.value);
+      if (!entry) { msg.textContent = '유튜브 영상, 디스코드 서버, 텔레그램 글 주소만 넣을 수 있어요'; return; }
+      homeState().urls.push(entry);
+      save();
+      renderHome();
+      refreshAdd();
+      input.value = '';
+      msg.textContent = '';
+      menu.hidden = true;
+    });
+    menu.appendChild(form);
+    addBox.appendChild(toggle);
+    addBox.appendChild(menu);
+    home.appendChild(addBox);
+    renderHome();
+    refreshAdd();
+  }
+
+  function homeEditing(on) {
+    if (!home) { return; }
+    home.classList.toggle('is-editing', on);
+    addBox.hidden = !on;
+  }
+
+  // 기본으로: 머리 메뉴 버튼은 제자리로, 프로필은 로고 왼쪽 칸으로, 메인 화면 칸은 처음 두 칸으로
+  function resetLayout() {
+    state.layout = {};
+    applyLayout();
+    if (home) { state.home = { hidden: [], urls: [] }; renderHome(); refreshAdd(); }
+    state.x = state.y = null;
+    if (mini) {
+      if (win && !win.hidden) { show(true); }
+      setDocked(true);
+    }
+    state.docked = true;
+    save();
+  }
+
+  function movableDrag(node) {
+    var start = null;
+    node.addEventListener('pointerdown', function (e) {
+      if (!editing || e.button !== 0) { return; }
+      var r = node.getBoundingClientRect();
+      start = { px: e.clientX, py: e.clientY, x: r.left, y: r.top, moved: false };
+      node.setPointerCapture(e.pointerId);
+    });
+    node.addEventListener('pointermove', function (e) {
+      if (!start) { return; }
+      var dx = e.clientX - start.px, dy = e.clientY - start.py;
+      if (!start.moved && Math.abs(dx) + Math.abs(dy) < 5) { return; }
+      start.moved = true;
+      floatAt(node, start.x + dx, start.y + dy);
+    });
+    node.addEventListener('pointerup', function () {
+      if (!start) { return; }
+      if (start.moved) {
+        state.layout = state.layout || {};
+        state.layout[node.getAttribute('data-move-id')] = { x: node.offsetLeft, y: node.offsetTop };
+        save();
+      }
+      start = null;
+    });
+    node.addEventListener('pointercancel', function () { start = null; });
+  }
+
+  function makeEditor() {
+    var list = document.getElementById('profile-menu-list');
+    if (!dock || editBar || !list) { return; }  // 닉네임 메뉴가 있는 회원만 편집한다
+    var item = el('button', null, '편집');
+    item.type = 'button';
+    item.addEventListener('click', function () {
+      list.hidden = true;
+      var toggle = document.querySelector('.site-header__nickname');
+      if (toggle) { toggle.setAttribute('aria-expanded', 'false'); }
+      setEditing(true);
+    });
+    var first = list.firstElementChild;  // "내 정보" 바로 아래
+    list.insertBefore(item, first ? first.nextSibling : null);
+
+    editBar = el('span', 'site-header__editbar');
+    editBar.hidden = true;
+    var reset = el('button', 'site-header__reset', '기본으로');
+    reset.type = 'button';
+    reset.title = '버튼과 프로필을 처음 자리로';
+    reset.addEventListener('click', resetLayout);
+    var done = el('button', 'site-header__done', '완료');
+    done.type = 'button';
+    done.addEventListener('click', function () { setEditing(false); });
+    editBar.appendChild(reset);
+    editBar.appendChild(done);
+    dock.parentNode.insertBefore(editBar, dock.nextSibling);
+    makeHome();
+
+    movables().forEach(movableDrag);
+    applyLayout();
+    // 편집 중에는 버튼을 눌러도 메뉴·알림이 열리지 않고 옮기기만 한다
+    document.addEventListener('click', function (e) {
+      if (editing && e.target.closest('[data-move-id]')) { e.preventDefault(); e.stopPropagation(); }
+    }, true);
+    document.addEventListener('keydown', function (e) {
+      if (editing && e.key === 'Escape') { setEditing(false); }
+    });
+    window.addEventListener('resize', applyLayout);
+  }
 
   // 접힌 프로필을 칸 위에 맞춘다. 머리 메뉴가 줄바꿈되거나 창 크기가 바뀌면 다시 맞춘다
   function syncDock() {
