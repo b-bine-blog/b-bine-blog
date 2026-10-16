@@ -870,3 +870,7 @@ label.inline:has(> select), label.inline > select { border-radius: var(--corner)
 .side-window__guest { color: var(--muted); font-size: 13px; line-height: 1.5; }
 .side-window__auth { display: flex; gap: 8px; margin-top: 10px; }
 .side-window__auth .button { flex: 1; margin: 0; text-align: center; padding: 7px 0; }
+/* 로고 왼쪽 프로필 칸(D-139). 비어 있을 때만 점선으로 자리를 보여 준다 */
+.site-header__dock { flex-shrink: 0; width: 36px; height: 36px; border-radius: var(--corner, 6px); }
+.site-header__dock.is-empty { outline: 1px dashed rgba(255, 255, 255, .45); outline-offset: -1px; }
+.side-window--mini.is-docked { padding: 0; border: 0; box-shadow: none; background: none; }
