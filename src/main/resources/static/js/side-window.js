@@ -55,7 +55,29 @@
     return out;
   }
 
+  // 옮긴 버튼의 제자리에는 프로필 칸처럼 반투명 빈 칸이 남고, 끌어서 그 칸에 놓으면 제자리로 돌아간다(2026-10-16 사용자 요청)
+  function slotOf(node) {
+    if (!node.moveSlot) {
+      var r = node.getBoundingClientRect();
+      var slot = node.moveSlot = el('span', 'site-header__slot');
+      slot.setAttribute('aria-hidden', 'true');
+      slot.style.width = Math.round(r.width) + 'px';
+      slot.style.height = Math.round(r.height) + 'px';
+      var round = getComputedStyle(node).borderRadius;
+      slot.style.borderRadius = parseFloat(round) ? round : 'var(--corner, 6px)';
+      node.parentNode.insertBefore(slot, node);
+    }
+    return node.moveSlot;
+  }
+
+  function overSlot(node) {
+    if (!node.moveSlot) { return false; }
+    var a = node.getBoundingClientRect(), b = node.moveSlot.getBoundingClientRect();
+    return a.left < b.right + 12 && a.right > b.left - 12 && a.top < b.bottom + 12 && a.bottom > b.top - 12;
+  }
+
   function floatAt(node, x, y) {
+    if (!node.classList.contains('is-floating') && node.offsetWidth) { slotOf(node).hidden = false; }
     node.classList.add('is-floating');
     node.style.position = 'fixed';
     var p = place(node, x, y);
@@ -66,6 +88,7 @@
 
   function unfloat(node) {
     node.classList.remove('is-floating', 'is-left');
+    if (node.moveSlot) { node.moveSlot.hidden = true; }
     node.style.position = node.style.left = node.style.top = '';
   }
 
@@ -421,7 +444,12 @@
       if (!start) { return; }
       if (start.moved) {
         state.layout = state.layout || {};
-        state.layout[node.getAttribute('data-move-id')] = { x: node.offsetLeft, y: node.offsetTop };
+        if (overSlot(node)) {
+          unfloat(node);
+          delete state.layout[node.getAttribute('data-move-id')];
+        } else {
+          state.layout[node.getAttribute('data-move-id')] = { x: node.offsetLeft, y: node.offsetTop };
+        }
         save();
       }
       start = null;
