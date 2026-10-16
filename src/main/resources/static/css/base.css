@@ -916,6 +916,8 @@ main.home > [data-key].is-sized { overflow: auto; }
 main.home > [data-key].is-sized:not(.url-widget) > .panel__head { position: sticky; top: -15px; z-index: 2; background: var(--surface);
   box-shadow: 0 -15px 0 var(--surface), -15px 0 0 var(--surface), 15px 0 0 var(--surface), -15px -15px 0 var(--surface), 15px -15px 0 var(--surface); }
 main.home > [data-key].is-sized:not(.url-widget) > .panel__head .widget-delete { top: 0; }
+/* 아래쪽도 테두리에 바로 잘리지 않고 여백을 두고 잘리게, 칸 아래 여백을 칸 바탕색으로 덮는다 */
+main.home > [data-key].is-sized:not(.url-widget)::after { content: ''; display: block; position: sticky; bottom: -15px; height: 15px; margin: 3px -15px -15px; background: var(--surface); }
 /* 편집 중 칸을 끌 때 글자가 선택되지 않게 한다(2026-10-16 사용자 요청) */
 main.home.is-editing > [data-key] { user-select: none; -webkit-user-select: none; }
 main.home > .url-widget.is-sized { display: flex; flex-direction: column; overflow: hidden; }
