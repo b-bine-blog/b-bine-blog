@@ -85,7 +85,7 @@
   }
 
   // 메인 화면 칸 편집(2026-10-16 사용자 요청, 구성안). 편집 중에는 "블로그 둘러보기"·"글" 칸에 삭제 버튼이 붙고,
-  // 맨 아래 "추가"로 지운 칸을 되살리거나 URL을 넣어 그 사이트를 칸으로 띄운다. 계정마다 브라우저에 기억한다
+  // 맨 아래 "추가"로 지운 칸을 되살리거나 유튜브·디스코드·텔레그램 주소를 칸으로 띄운다. 계정마다 브라우저에 기억한다
   var URL_LIMIT = 5;
   var BUILT_IN = [['blogs', '.blog-showcase', '블로그 둘러보기'], ['feed', '#feed', '글']];
   var home, addBox;
@@ -102,29 +102,51 @@
     return b;
   }
 
-  function urlWidget(url) {
-    var u = new URL(url);
-    var sec = el('section', 'panel url-widget');
+  // 바깥 사이트는 유튜브·디스코드·텔레그램만 띄운다(2026-10-16 사용자 요청: 아무 URL이나 받으면 위험).
+  // 붙여 넣은 주소를 각 서비스가 남의 화면에 띄우라고 내주는 주소(embed)로 바꾼다. 다른 주소는 받지 않는다
+  function toEmbed(text) {
+    var u;
+    try { u = new URL(text.trim()); } catch (e) { return null; }
+    if (u.protocol !== 'https:') { return null; }
+    var host = u.hostname.replace(/^(www\.|m\.)/, '');
+    var m;
+    if (host === 'youtube.com' || host === 'youtu.be' || host === 'youtube-nocookie.com') {
+      var id = host === 'youtu.be' ? u.pathname.slice(1)
+        : (u.searchParams.get('v') || ((m = u.pathname.match(/^\/(?:shorts|embed|live)\/([\w-]+)/)) && m[1]));
+      if (!id || !/^[\w-]{11}$/.test(id)) { return null; }
+      return { kind: 'youtube', label: '유튜브', src: 'https://www.youtube-nocookie.com/embed/' + id };
+    }
+    if (host === 'discord.com') {
+      var server = u.searchParams.get('id') || ((m = u.pathname.match(/^\/channels\/(\d+)/)) && m[1]);
+      if (!server || !/^\d{5,25}$/.test(server)) { return null; }
+      return { kind: 'discord', label: '디스코드', src: 'https://discord.com/widget?id=' + server + '&theme=dark' };
+    }
+    if (host === 't.me') {
+      m = u.pathname.match(/^\/(?:s\/)?([A-Za-z]\w{3,31})\/(\d+)\/?$/);
+      if (!m) { return null; }
+      return { kind: 'telegram', label: '텔레그램', src: 'https://t.me/' + m[1] + '/' + m[2] + '?embed=1' };
+    }
+    return null;
+  }
+
+  function urlWidget(entry) {
+    var sec = el('section', 'panel url-widget url-widget--' + entry.kind);
     sec.setAttribute('data-widget', 'url');
     var head = el('div', 'panel__head');
-    head.appendChild(el('h2', null, u.hostname));
-    var open = el('a', 'url-widget__open', '새 탭으로 열기');
-    open.href = u.href;
-    open.target = '_blank';
-    open.rel = 'noopener noreferrer';
-    head.appendChild(open);
+    head.appendChild(el('h2', null, entry.label));
     sec.appendChild(head);
     var frame = el('iframe', 'url-widget__frame');
-    frame.src = u.href;
-    frame.title = u.hostname;
+    frame.src = entry.src;
+    frame.title = entry.label;
     frame.loading = 'lazy';
-    frame.referrerPolicy = 'no-referrer';
-    frame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-forms');
+    frame.referrerPolicy = 'strict-origin-when-cross-origin';
+    // 입력칸 제출은 막는다(가짜 로그인 화면 방지). 영상 전체 화면만 허락한다
+    frame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-presentation');
+    frame.setAttribute('allow', 'fullscreen; encrypted-media; picture-in-picture');
     sec.appendChild(frame);
-    sec.appendChild(el('p', 'url-widget__note', '사이트가 다른 곳에 띄우는 걸 막아 두면 비어 보여요. 그때는 "새 탭으로 열기"를 눌러 주세요.'));
     sec.appendChild(deleteButton(function () {
       var h = homeState();
-      h.urls.splice(h.urls.indexOf(url), 1);
+      h.urls.splice(h.urls.indexOf(entry), 1);
       sec.remove();
       save();
       refreshAdd();
@@ -139,7 +161,8 @@
       if (sec) { sec.hidden = h.hidden.indexOf(w[0]) >= 0; }
     });
     Array.prototype.forEach.call(home.querySelectorAll('.url-widget'), function (n) { n.remove(); });
-    h.urls.forEach(function (url) { home.insertBefore(urlWidget(url), addBox); });
+    h.urls = h.urls.filter(function (e) { return e && e.src && toEmbed(e.src); });
+    h.urls.forEach(function (e) { home.insertBefore(urlWidget(e), addBox); });
   }
 
   function refreshAdd() {
@@ -190,9 +213,9 @@
     var form = el('form', 'widget-add__form');
     var input = el('input');
     input.type = 'url';
-    input.placeholder = 'https://';
-    input.setAttribute('aria-label', '띄울 사이트 주소');
-    var go = el('button', 'widget-add__url', 'URL 추가');
+    input.placeholder = '유튜브·디스코드·텔레그램 주소';
+    input.setAttribute('aria-label', '유튜브·디스코드·텔레그램 주소');
+    var go = el('button', 'widget-add__url', '추가');
     go.type = 'submit';
     var msg = el('span', 'widget-add__msg');
     form.appendChild(input);
@@ -200,10 +223,9 @@
     form.appendChild(msg);
     form.addEventListener('submit', function (e) {
       e.preventDefault();
-      var u;
-      try { u = new URL(input.value.trim()); } catch (err) { u = null; }
-      if (!u || (u.protocol !== 'https:' && u.protocol !== 'http:')) { msg.textContent = 'http나 https로 시작하는 주소를 넣어 주세요'; return; }
-      homeState().urls.push(u.href);
+      var entry = toEmbed(input.value);
+      if (!entry) { msg.textContent = '유튜브 영상, 디스코드 서버, 텔레그램 글 주소만 넣을 수 있어요'; return; }
+      homeState().urls.push(entry);
       save();
       renderHome();
       refreshAdd();
