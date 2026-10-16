@@ -115,29 +115,72 @@
     return b;
   }
 
-  // 바깥 사이트는 유튜브·디스코드·텔레그램만 띄운다(2026-10-16 사용자 요청: 아무 URL이나 받으면 위험).
+  // 바깥 사이트는 정해 둔 서비스만 띄운다(2026-10-16 사용자 요청: 아무 URL이나 받으면 위험).
   // 붙여 넣은 주소를 각 서비스가 남의 화면에 띄우라고 내주는 주소(embed)로 바꾼다. 다른 주소는 받지 않는다
+  var SUPPORTED = '유튜브(영상·재생목록·채널 라이브), 디스코드 서버, 텔레그램 공개 채널 글, 구글 지도, 구글 캘린더(공개), 트위치';
+  var TWITCH_RESERVED = /^(directory|videos|settings|downloads|jobs|p|search|subscriptions|inventory|wallet|drops|turbo|friends|messages|login|signup)$/i;
+
+  // 지도·캘린더 "퍼가기"로 받은 <iframe src="..."> 코드를 통째로 붙여 넣어도 주소만 꺼낸다
+  function pickUrl(text) {
+    var m = text.match(/src\s*=\s*["']([^"']+)["']/i);
+    return (m ? m[1] : text).trim().replace(/&amp;/g, '&');
+  }
+
   function toEmbed(text) {
     var u;
-    try { u = new URL(text.trim()); } catch (e) { return null; }
+    try { u = new URL(pickUrl(text)); } catch (e) { return null; }
     if (u.protocol !== 'https:') { return null; }
     var host = u.hostname.replace(/^(www\.|m\.)/, '');
-    var m;
+    var path = u.pathname;
+    var m, q = u.searchParams;
     if (host === 'youtube.com' || host === 'youtu.be' || host === 'youtube-nocookie.com') {
-      var id = host === 'youtu.be' ? u.pathname.slice(1)
-        : (u.searchParams.get('v') || ((m = u.pathname.match(/^\/(?:shorts|embed|live)\/([\w-]+)/)) && m[1]));
+      var yt = 'https://www.youtube-nocookie.com/embed/';
+      var list = q.get('list');
+      if (list && !/^[\w-]{10,64}$/.test(list)) { return null; }
+      if ((m = path.match(/^\/channel\/(UC[\w-]{22})\/live\/?$/)) || (path === '/embed/live_stream' && (m = [0, q.get('channel')]) && /^UC[\w-]{22}$/.test(m[1]))) {
+        return { kind: 'youtube', label: '유튜브 라이브', src: yt + 'live_stream?channel=' + m[1] };
+      }
+      if (path === '/playlist' || path === '/embed/videoseries') {
+        if (!list) { return null; }
+        return { kind: 'youtube', label: '유튜브 재생목록', src: yt + 'videoseries?list=' + list };
+      }
+      var id = host === 'youtu.be' ? path.slice(1)
+        : (q.get('v') || ((m = path.match(/^\/(?:shorts|embed|live)\/([\w-]+)/)) && m[1]));
       if (!id || !/^[\w-]{11}$/.test(id)) { return null; }
-      return { kind: 'youtube', label: '유튜브', src: 'https://www.youtube-nocookie.com/embed/' + id };
+      return { kind: 'youtube', label: '유튜브', src: yt + id + (list ? '?list=' + list : '') };
     }
     if (host === 'discord.com') {
-      var server = u.searchParams.get('id') || ((m = u.pathname.match(/^\/channels\/(\d+)/)) && m[1]);
+      var server = q.get('id') || ((m = path.match(/^\/channels\/(\d+)/)) && m[1]);
       if (!server || !/^\d{5,25}$/.test(server)) { return null; }
       return { kind: 'discord', label: '디스코드', src: 'https://discord.com/widget?id=' + server + '&theme=dark' };
     }
     if (host === 't.me') {
-      m = u.pathname.match(/^\/(?:s\/)?([A-Za-z]\w{3,31})\/(\d+)\/?$/);
+      m = path.match(/^\/(?:s\/)?([A-Za-z]\w{3,31})\/(\d+)\/?$/);
       if (!m) { return null; }
       return { kind: 'telegram', label: '텔레그램', src: 'https://t.me/' + m[1] + '/' + m[2] + '?embed=1' };
+    }
+    if ((host === 'google.com' && /^\/maps/.test(path)) || host === 'maps.google.com') {
+      if (path === '/maps/embed' && /^[\w!.%*-]+$/.test(q.get('pb') || '')) {
+        return { kind: 'map', label: '구글 지도', src: 'https://www.google.com/maps/embed?pb=' + q.get('pb') };
+      }
+      var place = q.get('q') || ((m = path.match(/^\/maps\/(?:place|search)\/([^/]+)/)) && decodeURIComponent(m[1]).replace(/\+/g, ' '));
+      if (!place || place.length > 200) { return null; }
+      return { kind: 'map', label: '구글 지도', src: 'https://www.google.com/maps?q=' + encodeURIComponent(place) + '&output=embed' };
+    }
+    if (host === 'calendar.google.com') {
+      var cal = q.get('src');
+      if (!cal && q.get('cid')) { try { cal = atob(q.get('cid')); } catch (e) { cal = null; } }
+      if (!cal || !/^[\w.+#-]+@[\w.-]+$/.test(cal)) { return null; }  // 공개 캘린더 ID(메일 주소 모양)만
+      return { kind: 'calendar', label: '구글 캘린더', src: 'https://calendar.google.com/calendar/embed?src=' + encodeURIComponent(cal) + '&ctz=Asia%2FSeoul' };
+    }
+    if (host === 'twitch.tv' || host === 'player.twitch.tv') {
+      var tw = 'https://player.twitch.tv/?parent=' + encodeURIComponent(location.hostname) + '&';
+      if ((m = path.match(/^\/videos\/(\d{5,15})\/?$/)) || (q.get('video') && (m = [0, q.get('video').replace(/^v/, '')]) && /^\d{5,15}$/.test(m[1]))) {
+        return { kind: 'twitch', label: '트위치', src: tw + 'video=' + m[1] };
+      }
+      var ch = q.get('channel') || ((m = path.match(/^\/([A-Za-z0-9_]{3,25})\/?$/)) && m[1]);
+      if (!ch || !/^[A-Za-z0-9_]{3,25}$/.test(ch) || TWITCH_RESERVED.test(ch)) { return null; }
+      return { kind: 'twitch', label: '트위치', src: tw + 'channel=' + ch.toLowerCase() };
     }
     return null;
   }
@@ -175,7 +218,7 @@
       if (sec) { sec.hidden = h.hidden.indexOf(w[0]) >= 0; }
     });
     Array.prototype.forEach.call(home.querySelectorAll('.url-widget'), function (n) { n.remove(); });
-    h.urls = h.urls.filter(function (e) { return e && e.src && toEmbed(e.src); });
+    h.urls = h.urls.filter(function (e) { return e && e.src && toEmbed(e.from || e.src); });
     var nodes = {};
     BUILT_IN.forEach(function (w) { nodes[w[0]] = home.querySelector(w[1]); });
     h.urls.forEach(function (e) { nodes[urlKey(e)] = urlWidget(e); });
@@ -233,9 +276,9 @@
     });
     var form = el('form', 'widget-add__form');
     var input = el('input');
-    input.type = 'url';
-    input.placeholder = '유튜브·디스코드·텔레그램 주소';
-    input.setAttribute('aria-label', '유튜브·디스코드·텔레그램 주소');
+    input.type = 'text';  // 지도·캘린더의 퍼가기 코드도 붙여 넣을 수 있게
+    input.placeholder = '주소를 넣어 주세요';
+    input.setAttribute('aria-label', '띄울 주소');
     var go = el('button', 'widget-add__url', '추가');
     go.type = 'submit';
     var msg = el('span', 'widget-add__msg');
@@ -245,7 +288,8 @@
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       var entry = toEmbed(input.value);
-      if (!entry) { msg.textContent = '유튜브 영상, 디스코드 서버, 텔레그램 글 주소만 넣을 수 있어요'; return; }
+      if (!entry) { msg.textContent = '이 주소는 넣을 수 없어요. 넣을 수 있는 것: ' + SUPPORTED; return; }  // 지원 목록은 실패했을 때만 보여 준다
+      entry.from = pickUrl(input.value);
       var h = homeState();
       if (h.order.indexOf(urlKey(entry)) >= 0) { msg.textContent = '이미 넣은 주소예요'; return; }
       h.urls.push(entry);
