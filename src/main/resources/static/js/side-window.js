@@ -85,7 +85,7 @@
   }
 
   // 메인 화면 칸 편집(2026-10-16 사용자 요청, 구성안). 편집 중에는 "블로그 둘러보기"·"글" 칸에 삭제 버튼이 붙고,
-  // 맨 아래 "추가"로 지운 칸을 되살리거나 유튜브·디스코드·텔레그램 주소를 칸으로 띄운다. 계정마다 브라우저에 기억한다
+  // 맨 아래 "추가"로 지운 칸을 되살리거나 유튜브 주소를 칸으로 띄운다. 계정마다 브라우저에 기억한다
   var URL_LIMIT = 5;
   var BUILT_IN = [['blogs', '.blog-showcase', '블로그 둘러보기'], ['feed', '#feed', '글']];
   var home, addBox;
@@ -95,6 +95,7 @@
 
   function homeState() {
     var h = state.home = state.home || { hidden: [], urls: [] };
+    h.size = h.size || {};
     if (!h.order) {  // 순서를 기억하기 전 저장값: 처음 두 칸 다음에 추가한 순서대로
       h.order = BUILT_IN.map(function (w) { return w[0]; })
         .filter(function (k) { return h.hidden.indexOf(k) < 0; })
@@ -174,6 +175,7 @@
       save();
       refreshAdd();
     }));
+    sec.appendChild(resizeHandle(sec));
     return sec;
   }
 
@@ -189,6 +191,12 @@
     BUILT_IN.forEach(function (w) { nodes[w[0]] = home.querySelector(w[1]); });
     h.urls.forEach(function (e) { nodes[urlKey(e)] = urlWidget(e); });
     h.order = h.order.filter(function (k) { return nodes[k]; });
+    h.size = h.size || {};
+    Object.keys(nodes).forEach(function (k) {
+      if (!nodes[k]) { return; }
+      nodes[k].setAttribute('data-key', k);
+      applySize(nodes[k], h.size[k]);
+    });
     h.order.forEach(function (k) { home.insertBefore(nodes[k], addBox); });  // 기억한 순서대로, 추가 칸은 맨 아래
   }
 
@@ -215,7 +223,9 @@
         save();
         refreshAdd();
       }));
+      sec.appendChild(resizeHandle(sec));
     });
+    widgetDrag();
 
     addBox = el('section', 'panel widget-add');
     addBox.hidden = true;
@@ -281,11 +291,101 @@
     addBox.hidden = !on;
   }
 
+  // 칸 크기·자리(2026-10-16 사용자 요청). 편집 중에 칸 머리를 끌면 자리가 바뀌고,
+  // 오른쪽 아래 손잡이를 끌면 너비(한 줄을 12칸으로 나눈 칸 수)와 높이가 바뀐다. 좁은 화면에서는 한 줄을 다 쓴다
+  var COLS = 12, MIN_COLS = 3, MIN_HEIGHT = 160;
+
+  function applySize(node, s) {
+    node.style.gridColumn = s && s.w && s.w < COLS ? 'span ' + s.w : '';
+    node.style.height = s && s.h ? s.h + 'px' : '';
+    node.classList.toggle('is-sized', !!(s && s.h));
+  }
+
+  function colWidth() {
+    var gap = parseFloat(getComputedStyle(home).columnGap) || 0;
+    return { col: (home.clientWidth - gap * (COLS - 1)) / COLS, gap: gap };
+  }
+
+  function resizeHandle(sec) {
+    var grip = el('span', 'widget-resize');
+    grip.title = '끌어서 크기 바꾸기';
+    var start = null;
+    grip.addEventListener('pointerdown', function (e) {
+      if (!editing || e.button !== 0) { return; }
+      e.preventDefault();
+      e.stopPropagation();
+      var r = sec.getBoundingClientRect();
+      start = { px: e.clientX, py: e.clientY, w: r.width, h: r.height, c: colWidth() };
+      grip.setPointerCapture(e.pointerId);
+    });
+    grip.addEventListener('pointermove', function (e) {
+      if (!start) { return; }
+      var c = start.c;
+      var cols = Math.round((start.w + e.clientX - start.px + c.gap) / (c.col + c.gap));
+      start.size = {
+        w: Math.max(MIN_COLS, Math.min(COLS, cols)),
+        h: Math.max(MIN_HEIGHT, Math.round(start.h + e.clientY - start.py))
+      };
+      applySize(sec, start.size);
+    });
+    grip.addEventListener('pointerup', function () {
+      if (start && start.size) {
+        homeState().size[sec.getAttribute('data-key')] = start.size;
+        save();
+      }
+      start = null;
+    });
+    grip.addEventListener('pointercancel', function () { start = null; });
+    return grip;
+  }
+
+  function widgetDrag() {
+    var drag = null;
+    home.addEventListener('pointerdown', function (e) {
+      if (!editing || e.button !== 0) { return; }
+      var head = e.target.closest('.panel__head');
+      var sec = head && head.parentNode;
+      if (!sec || sec.parentNode !== home || !sec.hasAttribute('data-key') || e.target.closest('button, select, input, label, a')) { return; }
+      drag = { node: sec, px: e.clientX, py: e.clientY, moved: false };
+      head.setPointerCapture(e.pointerId);
+    });
+    home.addEventListener('pointermove', function (e) {
+      if (!drag) { return; }
+      if (!drag.moved && Math.abs(e.clientX - drag.px) + Math.abs(e.clientY - drag.py) < 5) { return; }
+      drag.moved = true;
+      drag.node.classList.add('is-dragging');
+      var hit = document.elementFromPoint(e.clientX, e.clientY);
+      var target = hit && hit.closest('main.home > [data-key]');
+      if (!target || target === drag.node) { return; }
+      var r = target.getBoundingClientRect();
+      // 줄을 거의 다 차지하는 칸은 위·아래 절반, 나란히 놓인 칸은 왼쪽·오른쪽 절반으로 앞뒤를 정한다
+      var before = r.width > home.clientWidth * 0.6 ? e.clientY < r.top + r.height / 2 : e.clientX < r.left + r.width / 2;
+      home.insertBefore(drag.node, before ? target : target.nextSibling);
+    });
+    function end() {
+      if (!drag) { return; }
+      drag.node.classList.remove('is-dragging');
+      if (drag.moved) {
+        homeState().order = Array.prototype.map.call(home.querySelectorAll('main.home > [data-key]:not([hidden])'), function (n) {
+          return n.getAttribute('data-key');
+        });
+        save();
+      }
+      drag = null;
+    }
+    home.addEventListener('pointerup', end);
+    home.addEventListener('pointercancel', end);
+    // 편집 중에는 칸 안의 링크로 넘어가지 않는다
+    home.addEventListener('click', function (e) {
+      if (editing && e.target.closest('a')) { e.preventDefault(); }
+    }, true);
+  }
+
   // 기본으로: 머리 메뉴 버튼은 제자리로, 프로필은 로고 왼쪽 칸으로, 메인 화면 칸은 처음 두 칸으로
   function resetLayout() {
     state.layout = {};
     applyLayout();
-    if (home) { state.home = { hidden: [], urls: [], order: ['blogs', 'feed'] }; renderHome(); refreshAdd(); }
+    if (home) { state.home = { hidden: [], urls: [], order: ['blogs', 'feed'], size: {} }; renderHome(); refreshAdd(); }
     state.x = state.y = null;
     if (mini) {
       if (win && !win.hidden) { show(true); }
