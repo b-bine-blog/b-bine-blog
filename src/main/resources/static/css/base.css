@@ -938,7 +938,11 @@ main.home.is-editing > [data-key] > .panel__head { padding-right: 64px; cursor: 
 main.home.is-editing > [data-key].is-dragging { opacity: .55; }
 main.home.is-editing iframe { pointer-events: none; }
 .blog-showcase { container-type: inline-size; }
-@container (max-width: 720px) { .blog-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-@container (max-width: 440px) { .blog-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@container (max-width: 300px) { .blog-grid { grid-template-columns: minmax(0, 1fr); } }
+/* 칸을 줄이면 카드 수를 칸 너비에 맞춘다. 좁은 화면(860px 이하)은 원래처럼 옆으로 넘기는 한 줄을 쓰므로 여기서 건드리지 않는다
+   (둘이 섞이면 칸이 줄어든 채로 옆으로 넘기기가 남아 카드가 찌그러졌다, 2026-10-16) */
+@media (min-width: 861px) {
+  @container (max-width: 720px) { .blog-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @container (max-width: 440px) { .blog-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @container (max-width: 300px) { .blog-grid { grid-template-columns: minmax(0, 1fr); } }
+}
 @media (max-width: 860px) { main.home > [data-key] { grid-column: 1 / -1 !important; } }
