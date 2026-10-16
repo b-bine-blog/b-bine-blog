@@ -116,9 +116,8 @@
   }
 
   // 바깥 사이트는 정해 둔 서비스만 띄운다(2026-10-16 사용자 요청: 아무 URL이나 받으면 위험).
-  // 붙여 넣은 주소를 각 서비스가 남의 화면에 띄우라고 내주는 주소(embed)로 바꾼다. 다른 주소는 받지 않는다.
-  // 치지직은 공식으로 띄우는 주소를 확인하지 못해 "치지직에서 보기" 버튼 칸으로만 둔다
-  var SUPPORTED = '유튜브(영상·재생목록·채널 라이브), 디스코드 서버, 텔레그램 공개 채널 글, 구글 지도, 구글 캘린더(공개), 트위치, 치지직';
+  // 붙여 넣은 주소를 각 서비스가 남의 화면에 띄우라고 내주는 주소(embed)로 바꾼다. 다른 주소는 받지 않는다
+  var SUPPORTED = '유튜브(영상·재생목록·채널 라이브), 디스코드 서버, 텔레그램 공개 채널 글, 구글 지도, 구글 캘린더(공개), 트위치';
   var TWITCH_RESERVED = /^(directory|videos|settings|downloads|jobs|p|search|subscriptions|inventory|wallet|drops|turbo|friends|messages|login|signup)$/i;
 
   // 지도·캘린더 "퍼가기"로 받은 <iframe src="..."> 코드를 통째로 붙여 넣어도 주소만 꺼낸다
@@ -183,24 +182,7 @@
       if (!ch || !/^[A-Za-z0-9_]{3,25}$/.test(ch) || TWITCH_RESERVED.test(ch)) { return null; }
       return { kind: 'twitch', label: '트위치', src: tw + 'channel=' + ch.toLowerCase() };
     }
-    if (host === 'chzzk.naver.com') {
-      m = path.match(/^\/(?:live\/)?([0-9a-f]{32})\/?$/);
-      if (!m) { return null; }
-      return { kind: 'chzzk', label: '치지직', src: 'https://chzzk.naver.com/live/' + m[1], link: true };
-    }
     return null;
-  }
-
-  // 띄울 수 없는 서비스는 새 탭으로 여는 버튼만 둔다
-  function linkBody(entry) {
-    var box = el('div', 'url-widget__link');
-    box.appendChild(el('p', null, '이 방송은 이곳에 띄울 수 없어 새 탭으로 열어요.'));
-    var a = el('a', 'button', entry.label + '에서 보기');
-    a.href = entry.src;
-    a.target = '_blank';
-    a.rel = 'noopener noreferrer';
-    box.appendChild(a);
-    return box;
   }
 
   function urlWidget(entry) {
@@ -209,9 +191,7 @@
     var head = el('div', 'panel__head');
     head.appendChild(el('h2', null, entry.label));
     sec.appendChild(head);
-    if (entry.link) { sec.appendChild(linkBody(entry)); }
-    var frame = entry.link ? null : el('iframe', 'url-widget__frame');
-    if (frame) {
+    var frame = el('iframe', 'url-widget__frame');
     frame.src = entry.src;
     frame.title = entry.label;
     frame.loading = 'lazy';
@@ -220,7 +200,6 @@
     frame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-presentation');
     frame.setAttribute('allow', 'fullscreen; encrypted-media; picture-in-picture');
     sec.appendChild(frame);
-    }
     sec.appendChild(deleteButton(function () {
       var h = homeState();
       h.urls.splice(h.urls.indexOf(entry), 1);

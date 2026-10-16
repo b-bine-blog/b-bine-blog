@@ -910,6 +910,3 @@ main.home.is-editing .widget-delete { display: inline-block; }
 .url-widget--twitch .url-widget__frame { height: auto; aspect-ratio: 16 / 9; }
 .url-widget--map .url-widget__frame { height: 360px; }
 .url-widget--calendar .url-widget__frame { height: 600px; }
-.url-widget__link { margin-top: 10px; padding: 24px 12px; text-align: center; border: 1px solid var(--line); border-radius: var(--corner, 6px); }
-.url-widget__link p { margin: 0 0 12px; color: var(--muted); }
-.url-widget__link .button { margin: 0; }
