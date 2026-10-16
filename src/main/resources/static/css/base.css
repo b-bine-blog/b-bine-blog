@@ -230,7 +230,8 @@ table.data th, table.data td { white-space: nowrap; } /* 좁은 폭에서는 표
 .hero__actions a { display: inline-block; padding: 6px 14px; border-radius: 999px; background: rgba(255,255,255,.16); color: #fff; text-decoration: none; font-size: 0.9rem; }
 .hero__actions a:hover { background: rgba(255,255,255,.28); }
 main.home { max-width: 1120px; display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 24px; align-items: start; }
-@media (max-width: 860px) { main.home { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 860px) { main.home { grid-template-columns: repeat(12, minmax(0, 1fr)); align-content: start; }
+main.home > * { grid-column: 1 / -1; } }
 .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px; }
 .panel > h2:first-child { margin-top: 0; }
 .panel__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
@@ -569,7 +570,8 @@ button.button-danger, button.button-danger:hover:not(:disabled) { color: #fff; }
 [data-theme="dark"] .editor-box { background: #fff; color: #1d2a23; border-radius: 8px; }
 
 /* 메인 블로그 둘러보기 (2026-10-13): 글 위에 한 줄, 블로그마다 표지 카드 5개 */
-main.home { grid-template-columns: minmax(0, 1fr); }
+main.home { grid-template-columns: repeat(12, minmax(0, 1fr)); align-content: start; }
+main.home > * { grid-column: 1 / -1; }
 .blog-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
 .blog-list.blog-grid li.blog-tile { padding: 0; margin: 0; overflow: hidden; }
 .blog-grid .blog-list__empty { grid-column: 1 / -1; }
@@ -906,3 +908,18 @@ main.home.is-editing .widget-delete { display: inline-block; }
 .url-widget .panel__head { padding-right: 64px; }
 .url-widget__frame { display: block; width: 100%; height: 480px; margin-top: 10px; border: 0; border-radius: var(--corner, 6px); background: var(--surface); }
 .url-widget--youtube .url-widget__frame { height: auto; aspect-ratio: 16 / 9; }
+
+/* 메인 화면 칸 크기·자리 바꾸기(2026-10-16 사용자 요청): 편집 중 머리를 끌어 옮기고, 오른쪽 아래 손잡이로 크기를 바꾼다 */
+main.home > [data-key].is-sized { overflow: auto; }
+main.home > .url-widget.is-sized { display: flex; flex-direction: column; overflow: hidden; }
+main.home > .url-widget.is-sized .url-widget__frame { flex: 1 1 auto; height: auto; min-height: 0; aspect-ratio: auto; }
+main.home .widget-resize { display: none; position: absolute; right: 2px; bottom: 2px; width: 18px; height: 18px; cursor: nwse-resize; touch-action: none;
+  background: linear-gradient(135deg, transparent 50%, rgba(127, 127, 127, .6) 50%, rgba(127, 127, 127, .6) 60%, transparent 60%, transparent 70%, rgba(127, 127, 127, .6) 70%, rgba(127, 127, 127, .6) 80%, transparent 80%); }
+main.home.is-editing .widget-resize { display: block; }
+main.home.is-editing > [data-key] > .panel__head { padding-right: 64px; cursor: grab; touch-action: none; user-select: none; }
+main.home.is-editing > [data-key].is-dragging { opacity: .55; }
+main.home.is-editing iframe { pointer-events: none; }
+.blog-showcase { container-type: inline-size; }
+@container (max-width: 720px) { .blog-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@container (max-width: 440px) { .blog-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 860px) { main.home > [data-key] { grid-column: 1 / -1 !important; } }
