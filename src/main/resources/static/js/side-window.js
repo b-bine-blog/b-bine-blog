@@ -316,6 +316,8 @@
       e.stopPropagation();
       var r = sec.getBoundingClientRect();
       start = { px: e.clientX, py: e.clientY, w: r.width, h: r.height, c: colWidth() };
+      var sel = window.getSelection && window.getSelection();
+      if (sel) { sel.removeAllRanges(); }
       grip.setPointerCapture(e.pointerId);
     });
     grip.addEventListener('pointermove', function (e) {
@@ -346,6 +348,7 @@
       var head = e.target.closest('.panel__head');
       var sec = head && head.parentNode;
       if (!sec || sec.parentNode !== home || !sec.hasAttribute('data-key') || e.target.closest('button, select, input, label, a')) { return; }
+      e.preventDefault();  // 끄는 동안 글자가 선택되지 않게
       drag = { node: sec, px: e.clientX, py: e.clientY, moved: false };
       head.setPointerCapture(e.pointerId);
     });

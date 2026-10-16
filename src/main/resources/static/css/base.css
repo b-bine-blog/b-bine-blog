@@ -911,6 +911,8 @@ main.home.is-editing .widget-delete { display: inline-block; }
 
 /* 메인 화면 칸 크기·자리 바꾸기(2026-10-16 사용자 요청): 편집 중 머리를 끌어 옮기고, 오른쪽 아래 손잡이로 크기를 바꾼다 */
 main.home > [data-key].is-sized { overflow: auto; }
+/* 편집 중 칸을 끌 때 글자가 선택되지 않게 한다(2026-10-16 사용자 요청) */
+main.home.is-editing > [data-key] { user-select: none; -webkit-user-select: none; }
 main.home > .url-widget.is-sized { display: flex; flex-direction: column; overflow: hidden; }
 main.home > .url-widget.is-sized .url-widget__frame { flex: 1 1 auto; height: auto; min-height: 0; aspect-ratio: auto; }
 main.home .widget-resize { display: none; position: absolute; right: 2px; bottom: 2px; width: 18px; height: 18px; cursor: nwse-resize; touch-action: none;
