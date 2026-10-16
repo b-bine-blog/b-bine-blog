@@ -81,12 +81,155 @@
     editing = on;
     document.body.classList.toggle('layout-editing', on);
     editBar.hidden = !on;
+    homeEditing(on);
   }
 
-  // 기본으로: 머리 메뉴 버튼은 제자리로, 프로필은 로고 왼쪽 칸으로
+  // 메인 화면 칸 편집(2026-10-16 사용자 요청, 구성안). 편집 중에는 "블로그 둘러보기"·"글" 칸에 삭제 버튼이 붙고,
+  // 맨 아래 "추가"로 지운 칸을 되살리거나 URL을 넣어 그 사이트를 칸으로 띄운다. 계정마다 브라우저에 기억한다
+  var URL_LIMIT = 5;
+  var BUILT_IN = [['blogs', '.blog-showcase', '블로그 둘러보기'], ['feed', '#feed', '글']];
+  var home, addBox;
+
+  function homeState() {
+    state.home = state.home || { hidden: [], urls: [] };
+    return state.home;
+  }
+
+  function deleteButton(onClick) {
+    var b = el('button', 'widget-delete', '삭제');
+    b.type = 'button';
+    b.addEventListener('click', onClick);
+    return b;
+  }
+
+  function urlWidget(url) {
+    var u = new URL(url);
+    var sec = el('section', 'panel url-widget');
+    sec.setAttribute('data-widget', 'url');
+    var head = el('div', 'panel__head');
+    head.appendChild(el('h2', null, u.hostname));
+    var open = el('a', 'url-widget__open', '새 탭으로 열기');
+    open.href = u.href;
+    open.target = '_blank';
+    open.rel = 'noopener noreferrer';
+    head.appendChild(open);
+    sec.appendChild(head);
+    var frame = el('iframe', 'url-widget__frame');
+    frame.src = u.href;
+    frame.title = u.hostname;
+    frame.loading = 'lazy';
+    frame.referrerPolicy = 'no-referrer';
+    frame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-forms');
+    sec.appendChild(frame);
+    sec.appendChild(el('p', 'url-widget__note', '사이트가 다른 곳에 띄우는 걸 막아 두면 비어 보여요. 그때는 "새 탭으로 열기"를 눌러 주세요.'));
+    sec.appendChild(deleteButton(function () {
+      var h = homeState();
+      h.urls.splice(h.urls.indexOf(url), 1);
+      sec.remove();
+      save();
+      refreshAdd();
+    }));
+    return sec;
+  }
+
+  function renderHome() {
+    var h = homeState();
+    BUILT_IN.forEach(function (w) {
+      var sec = home.querySelector(w[1]);
+      if (sec) { sec.hidden = h.hidden.indexOf(w[0]) >= 0; }
+    });
+    Array.prototype.forEach.call(home.querySelectorAll('.url-widget'), function (n) { n.remove(); });
+    h.urls.forEach(function (url) { home.insertBefore(urlWidget(url), addBox); });
+  }
+
+  function refreshAdd() {
+    var h = homeState();
+    Array.prototype.forEach.call(addBox.querySelectorAll('[data-add]'), function (b) {
+      b.disabled = h.hidden.indexOf(b.getAttribute('data-add')) < 0;
+    });
+    addBox.querySelector('.widget-add__url').disabled = h.urls.length >= URL_LIMIT;
+  }
+
+  function makeHome() {
+    home = document.querySelector('main.home');
+    if (!home || addBox) { return; }
+    BUILT_IN.forEach(function (w) {
+      var sec = home.querySelector(w[1]);
+      if (!sec) { return; }
+      sec.setAttribute('data-widget', w[0]);
+      sec.appendChild(deleteButton(function () {
+        homeState().hidden.push(w[0]);
+        sec.hidden = true;
+        save();
+        refreshAdd();
+      }));
+    });
+
+    addBox = el('section', 'panel widget-add');
+    addBox.hidden = true;
+    var toggle = el('button', 'widget-add__toggle', '+ 추가');
+    toggle.type = 'button';
+    var menu = el('div', 'widget-add__menu');
+    menu.hidden = true;
+    toggle.addEventListener('click', function () { menu.hidden = !menu.hidden; });
+    BUILT_IN.forEach(function (w) {
+      var b = el('button', null, w[2]);
+      b.type = 'button';
+      b.setAttribute('data-add', w[0]);
+      b.title = '지운 칸만 다시 넣을 수 있어요';
+      b.addEventListener('click', function () {
+        var h = homeState();
+        h.hidden.splice(h.hidden.indexOf(w[0]), 1);
+        renderHome();
+        save();
+        refreshAdd();
+        menu.hidden = true;
+      });
+      menu.appendChild(b);
+    });
+    var form = el('form', 'widget-add__form');
+    var input = el('input');
+    input.type = 'url';
+    input.placeholder = 'https://';
+    input.setAttribute('aria-label', '띄울 사이트 주소');
+    var go = el('button', 'widget-add__url', 'URL 추가');
+    go.type = 'submit';
+    var msg = el('span', 'widget-add__msg');
+    form.appendChild(input);
+    form.appendChild(go);
+    form.appendChild(msg);
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var u;
+      try { u = new URL(input.value.trim()); } catch (err) { u = null; }
+      if (!u || (u.protocol !== 'https:' && u.protocol !== 'http:')) { msg.textContent = 'http나 https로 시작하는 주소를 넣어 주세요'; return; }
+      homeState().urls.push(u.href);
+      save();
+      renderHome();
+      refreshAdd();
+      input.value = '';
+      msg.textContent = '';
+      menu.hidden = true;
+    });
+    menu.appendChild(form);
+    addBox.appendChild(toggle);
+    addBox.appendChild(menu);
+    home.appendChild(addBox);
+    renderHome();
+    refreshAdd();
+  }
+
+  function homeEditing(on) {
+    if (!home) { return; }
+    home.classList.toggle('is-editing', on);
+    addBox.hidden = !on;
+  }
+
+  // 기본으로: 머리 메뉴 버튼은 제자리로, 프로필은 로고 왼쪽 칸으로, 메인 화면 칸은 처음 두 칸으로
   function resetLayout() {
     state.layout = {};
     applyLayout();
+    if (home) { state.home = { hidden: [], urls: [] }; renderHome(); refreshAdd(); }
     state.x = state.y = null;
     if (mini) {
       if (win && !win.hidden) { show(true); }
@@ -149,6 +292,7 @@
     editBar.appendChild(reset);
     editBar.appendChild(done);
     dock.parentNode.insertBefore(editBar, dock.nextSibling);
+    makeHome();
 
     movables().forEach(movableDrag);
     applyLayout();
