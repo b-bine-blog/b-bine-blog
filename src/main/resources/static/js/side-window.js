@@ -13,7 +13,7 @@
   }
   var key = KEY;  // 비회원과 회원마다 따로 기억한다. 계정으로 처음 들어오면 접힌 채 로고 왼쪽에서 시작
   var state = {};
-  var win, mini;
+  var win, mini, dock;
 
   function load(suffix) {
     key = KEY + ':' + suffix;
@@ -24,12 +24,38 @@
     try { localStorage.setItem(key, JSON.stringify(state)); } catch (e) { /* 저장 못 해도 창은 그대로 동작 */ }
   }
 
-  // 처음 자리: 머리 메뉴 로고 왼쪽(2026-10-15 사용자 요청). 로고가 없으면 왼쪽 위
-  function homeSpot(box) {
+  // 프로필 자리: 머리 메뉴 로고 왼쪽에 칸을 하나 잡아 둔다(2026-10-16 사용자 요청).
+  // 칸이 메뉴 안에 있으니 창이 좁아도 다른 메뉴에 밀리거나 겹치지 않는다. 접힌 프로필은 처음에 이 칸에 들어 있다
+  function makeDock() {
     var logo = document.querySelector('.site-logo');
-    if (!logo) { return { x: 8, y: 8 }; }
-    var r = logo.getBoundingClientRect();
-    return { x: Math.max(8, r.left - box.offsetWidth - 16), y: r.top + r.height / 2 - box.offsetHeight / 2 };
+    if (dock || !logo) { return; }
+    dock = el('span', 'site-header__dock');
+    dock.setAttribute('aria-hidden', 'true');
+    logo.parentNode.insertBefore(dock, logo);
+  }
+
+  function docked() { return !!dock && state.docked !== false; }
+
+  // 접힌 프로필을 칸 위에 맞춘다. 머리 메뉴가 줄바꿈되거나 창 크기가 바뀌면 다시 맞춘다
+  function syncDock() {
+    if (!mini || mini.hidden || !docked()) { return; }
+    var r = dock.getBoundingClientRect();
+    mini.style.left = r.left + 'px';
+    mini.style.top = r.top + 'px';
+  }
+
+  function setDocked(on) {
+    state.docked = on;
+    mini.classList.toggle('is-docked', on);
+    if (dock) { dock.classList.toggle('is-empty', !on || mini.hidden); }
+    if (on) { syncDock(); }
+  }
+
+  // 끌어 온 프로필이 칸에 닿으면 다시 칸에 넣는다
+  function overDock(box) {
+    if (!dock) { return false; }
+    var a = box.getBoundingClientRect(), b = dock.getBoundingClientRect();
+    return a.left < b.right + 12 && a.right > b.left - 12 && a.top < b.bottom + 12 && a.bottom > b.top - 12;
   }
 
   function avatar(profile, cls) {
@@ -81,13 +107,15 @@
     var start = null;
     handle.addEventListener('pointerdown', function (e) {
       if (e.button !== 0 || e.target.closest('.side-window__min')) { return; }
-      start = { px: e.clientX, py: e.clientY, x: box.offsetLeft, y: box.offsetTop, moved: false };
+      var r = box.getBoundingClientRect();
+      start = { px: e.clientX, py: e.clientY, x: r.left, y: r.top, moved: false };
       handle.setPointerCapture(e.pointerId);
     });
     handle.addEventListener('pointermove', function (e) {
       if (!start) { return; }
       var dx = e.clientX - start.px, dy = e.clientY - start.py;
       if (!start.moved && Math.abs(dx) + Math.abs(dy) < 5) { return; }
+      if (!start.moved && box === mini && docked()) { setDocked(false); }  // 칸에서 꺼낸다
       start.moved = true;
       var p = place(box, start.x + dx, start.y + dy);
       state.x = p.x;
@@ -97,21 +125,29 @@
       if (!start) { return; }
       var moved = start.moved;
       start = null;
+      if (moved && box === mini && overDock(mini)) { setDocked(true); }
       if (moved) { save(); } else if (onTap) { onTap(); }
     });
     handle.addEventListener('pointercancel', function () { start = null; });
   }
 
+  // 칸에 있던 프로필을 펼치면 창은 칸 바로 아래에 열리고, 접으면 칸으로 돌아간다
   function show(minimized) {
     state.min = minimized;
-    save();
     var from = minimized ? win : mini;
     var to = minimized ? mini : win;
+    var r = from.getBoundingClientRect();
     from.hidden = true;
     to.hidden = false;
-    var p = place(to, state.x != null ? state.x : from.offsetLeft, state.y != null ? state.y : from.offsetTop);
-    state.x = p.x;
-    state.y = p.y;
+    if (docked()) {
+      if (minimized) { syncDock(); } else { place(win, r.left, r.bottom + 6); }
+    } else {
+      var p = place(to, state.x != null ? state.x : r.left, state.y != null ? state.y : r.top);
+      state.x = p.x;
+      state.y = p.y;
+    }
+    if (dock) { dock.classList.toggle('is-empty', !docked() || !minimized); }
+    save();
   }
 
   // 창 틀(끄는 제목 줄과 −). 내용은 회원·비회원에 따라 채운다
@@ -240,20 +276,27 @@
     draggable(mini, mini, function () { show(false); });
     window.addEventListener('resize', function () {
       var box = win.hidden ? mini : win;
+      if (box === mini && docked()) { syncDock(); return; }
       place(box, box.offsetLeft, box.offsetTop);
     });
+    window.addEventListener('scroll', syncDock, { passive: true });
+    if (window.ResizeObserver) { new ResizeObserver(syncDock).observe(document.querySelector('.site-header') || document.body); }
 
-    // 처음에는 접힌 채로 로고 왼쪽에서 시작한다
+    // 처음에는 접힌 채로 로고 왼쪽 칸에서 시작한다
     var minimized = state.min != null ? state.min : true;
+    state.min = minimized;
     var box = minimized ? mini : win;
     box.hidden = false;
-    if (state.x == null) {
-      var spot = homeSpot(box);
-      state.x = spot.x;
-      state.y = spot.y;
+    setDocked(docked());
+    if (minimized && docked()) {
+      syncDock();
+    } else if (state.x != null) {
+      place(box, state.x, state.y);
+    } else {
+      var r = dock ? dock.getBoundingClientRect() : { left: 8, bottom: 8 };
+      place(box, r.left, r.bottom + 6);
     }
-    place(box, state.x, state.y);
-    state.min = minimized;
+    if (dock) { dock.classList.toggle('is-empty', !docked() || !minimized); }
   }
 
   function count(promise, pick) {
@@ -268,12 +311,13 @@
     })();
   }
 
-  function guest() { load('guest'); whenHeader(buildGuest); }
+  function guest() { load('guest'); whenHeader(function () { makeDock(); buildGuest(); }); }
 
   api.get('/api/auth/session').then(function (me) {
     if (!me || !me.memberId) { guest(); return; }
-    if (me.admin) { return; }
-    load('member:' + me.memberId); // 메인 관리자는 블로그 활동을 하지 않는다
+    if (me.admin) { return; } // 메인 관리자는 블로그 활동을 하지 않는다
+    load('member:' + me.memberId);
+    whenHeader(makeDock); // 내용을 불러오는 동안에도 칸부터 잡아 머리 메뉴가 나중에 밀리지 않게
     return Promise.all([
       api.get('/api/users/' + me.memberId + '/profile'),
       count(api.get('/api/users/' + me.memberId + '/following'), function (r) { return r.totalElements; }),
