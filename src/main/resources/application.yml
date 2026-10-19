@@ -259,6 +259,10 @@ inquiry:
 app:
   base-url: ${APP_BASE_URL:http://localhost:8080}                # og 절대 주소(004 research R-12)
 
+share:
+  # 카카오톡 공유 JavaScript 키(BRD-07, D-141). 카카오 개발자 콘솔에 사이트 도메인을 등록한 키. 비어 있으면 카카오톡 항목을 숨김
+  kakao-js-key: ${KAKAO_JS_KEY:}
+
 blacklist:
   # 블랙리스트 HMAC 키(research R-09). 기본값 없음. 한 번 정하면 바꾸지 않는다.
   hash-secret: ${BLACKLIST_HASH_SECRET}

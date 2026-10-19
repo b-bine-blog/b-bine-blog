@@ -98,7 +98,7 @@
     });
     renderLike();
     renderScrap();
-    $('share').hidden = isNotice || !post.shareable;
+    $('share-wrap').hidden = isNotice || !post.shareable;
     $('edit').hidden = !post.canEdit;
     if (post.canEdit) {
       $('edit').href = isNotice ? '/notices/' + post.id + '/edit'
@@ -184,17 +184,88 @@
     });
   }
 
+  // 공유 메뉴(BRD-07, D-141). 메뉴를 열 때 주소를 먼저 받아 두어야 새 창이 팝업 차단에 걸리지 않는다
+  var shareTarget = null;
+  var kakaoKey = '';
+  var kakaoLoading = null;
+  api.get('/api/public-config').then(function (config) {
+    kakaoKey = config.kakaoJsKey || '';
+  }, function () { /* 키를 못 받으면 카카오톡 항목만 숨긴다 */ });
+
+  function shareItem(name) { return $('share-list').querySelector('[data-share="' + name + '"]'); }
+
+  function openShareMenu(open) {
+    $('share-list').hidden = !open;
+    $('share').setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+
   $('share').addEventListener('click', function () {
-    shareUrl().then(function (url) {
-      if (!url) { postSay('공유할 수 있는 링크가 없습니다.', true); return; }
-      var done = function () { postSay('링크를 복사했습니다.'); };
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(url).then(done, function () { fallbackCopy(url); });
-      } else {
-        fallbackCopy(url);
-      }
-    });
+    if (!$('share-list').hidden) { openShareMenu(false); return; }
+    shareItem('kakao').hidden = !kakaoKey;
+    shareItem('device').hidden = !navigator.share;
+    shareTarget = null;
+    openShareMenu(true);
+    shareUrl().then(function (url) { shareTarget = url; });
   });
+
+  document.addEventListener('click', function (e) {
+    if (!$('share-wrap').contains(e.target)) { openShareMenu(false); }
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !$('share-list').hidden) { openShareMenu(false); $('share').focus(); }
+  });
+
+  $('share-list').addEventListener('click', function (e) {
+    var item = e.target.closest('[data-share]');
+    if (!item) { return; }
+    var url = shareTarget;
+    openShareMenu(false);
+    if (!url) { postSay('공유할 수 있는 링크가 없습니다. 잠시 뒤 다시 눌러 주세요.', true); return; }
+    var title = post.title || '';
+    var target = item.getAttribute('data-share');
+    if (target === 'copy') { copyLink(url); return; }
+    if (target === 'kakao') { shareKakao(url); return; }
+    if (target === 'device') {
+      navigator.share({ title: title, url: url }).catch(function () { /* 사용자가 닫음 */ });
+      return;
+    }
+    var pages = {
+      x: 'https://twitter.com/intent/tweet?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent(title),
+      facebook: 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(url),
+      telegram: 'https://t.me/share/url?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent(title)
+    };
+    window.open(pages[target], '_blank', 'noopener,width=600,height=640');
+  });
+
+  function copyLink(url) {
+    var done = function () { postSay('링크를 복사했습니다.'); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(done, function () { fallbackCopy(url); });
+    } else {
+      fallbackCopy(url);
+    }
+  }
+
+  // 카카오 SDK는 처음 고를 때만 불러온다. 미리보기는 서버가 채운 og 태그로 만든다(D-66)
+  function shareKakao(url) {
+    if (!kakaoLoading) {
+      kakaoLoading = new Promise(function (resolve, reject) {
+        if (window.Kakao) { resolve(); return; }
+        var script = document.createElement('script');
+        script.src = 'https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js';
+        script.crossOrigin = 'anonymous';
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+      }).then(function () {
+        if (!window.Kakao.isInitialized()) { window.Kakao.init(kakaoKey); }
+      });
+      kakaoLoading.catch(function () { kakaoLoading = null; });
+    }
+    kakaoLoading.then(function () {
+      window.Kakao.Share.sendScrap({ requestUrl: url });
+    }).catch(function () { postSay('카카오톡 공유를 불러오지 못했습니다. 링크 복사를 이용해 주세요.', true); });
+  }
 
   function fallbackCopy(url) {
     var input = $('share-url');

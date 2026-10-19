@@ -5,6 +5,7 @@ import com.mainblog.auth.domain.LoginFailureRepository;
 import com.mainblog.auth.domain.RefreshTokenRepository;
 import com.mainblog.common.config.AuthProperties;
 import com.mainblog.common.config.MemberProperties;
+import com.mainblog.common.ratelimit.JdbcRateLimiter;
 import com.mainblog.common.storage.FileStorage;
 import java.io.IOException;
 import java.time.Clock;
@@ -44,6 +45,7 @@ public class DailyCleanupJob {
     private final BoardDailyTasks boardDailyTasks;
     private final NotificationDailyTasks notificationDailyTasks;
     private final AdminDailyTasks adminDailyTasks;
+    private final JdbcRateLimiter rateLimiter;
     private final TransactionTemplate transaction;
     private final Clock clock;
 
@@ -52,6 +54,7 @@ public class DailyCleanupJob {
                            AuthProperties authProperties, MemberProperties memberProperties,
                            BlogDailyTasks blogDailyTasks, BoardDailyTasks boardDailyTasks,
                            NotificationDailyTasks notificationDailyTasks, AdminDailyTasks adminDailyTasks,
+                           JdbcRateLimiter rateLimiter,
                            PlatformTransactionManager transactionManager, Clock clock) {
         this.jdbc = jdbc;
         this.refreshTokenRepository = refreshTokenRepository;
@@ -63,6 +66,7 @@ public class DailyCleanupJob {
         this.boardDailyTasks = boardDailyTasks;
         this.notificationDailyTasks = notificationDailyTasks;
         this.adminDailyTasks = adminDailyTasks;
+        this.rateLimiter = rateLimiter;
         this.transaction = new TransactionTemplate(transactionManager);
         this.clock = clock;
     }
@@ -74,14 +78,14 @@ public class DailyCleanupJob {
         log.info("04:00 정리: 탈퇴 개인정보 {}명, RT {}건, 로그인 실패 기록 {}건, 인증번호 {}건, 지운 프로필 사진 {}건, "
                         + "위임 만료 {}건, 폐쇄 알림 {}건, 폐쇄 {}개, 30일 정리 {}개, 지운 대표 이미지 {}건, "
                         + "글 {}개, 댓글 {}개, 연결 안 된 글 이미지 {}건, 지운 글 이미지 {}건, 조회 기록 {}건, 보관 기간 지난 알림 {}건, "
-                        + "1년 지난 관리자 활동 {}건·블로그장 경고 {}건·권한 박탈 {}건·멤버 제재 {}건·신고 {}건, 보관 기간 지난 시스템 문의 {}건",
+                        + "1년 지난 관리자 활동 {}건·블로그장 경고 {}건·권한 박탈 {}건·멤버 제재 {}건·신고 {}건, 보관 기간 지난 시스템 문의 {}건, 만료된 요청 제한 {}건",
                 result.purgedMembers(), result.refreshTokens(), result.loginFailures(), result.codes(),
                 result.profileImages(), result.blog().expiredDelegations(), result.blog().closingNotices(), result.blog().closedBlogs(),
                 result.blog().purgedBlogs(), result.blog().coverImages(), result.board().purgedPosts(),
                 result.board().purgedComments(), result.board().orphanImages(), result.board().purgedImages(),
                 result.board().purgedViews(), result.notifications(), result.admin().actions(),
                 result.admin().warnings(), result.admin().revocations(), result.admin().sanctions(),
-                result.admin().reports(), result.admin().inquiries());
+                result.admin().reports(), result.admin().inquiries(), result.rateLimits());
     }
 
     /** 회원 정리는 한 트랜잭션, 블로그·게시판 단계는 BlogDailyTasks·BoardDailyTasks가 단계마다 따로 트랜잭션을 쓴다. */
@@ -95,14 +99,15 @@ public class DailyCleanupJob {
             int codes = deleteExpiredCodes(now);
             int images = purgeDeletedProfileImages(now);
             return new Result(purged, tokens, failures, codes, images, BlogDailyTasks.Result.EMPTY,
-                    BoardDailyTasks.Result.EMPTY, 0, AdminDailyTasks.Result.EMPTY);
+                    BoardDailyTasks.Result.EMPTY, 0, AdminDailyTasks.Result.EMPTY, 0);
         });
         BlogDailyTasks.Result blog = blogDailyTasks.run(now);
         BoardDailyTasks.Result board = boardDailyTasks.run(now);
         int notifications = notificationDailyTasks.run(now); // 003 T031: 보관 기간(30일, 설정 7일) 지난 알림
         AdminDailyTasks.Result admin = adminDailyTasks.run(now); // 005 T048: 1년 지난 운영 기록(D-103 #19)
+        int rateLimits = rateLimiter.deleteExpired(now); // D-140: 창이 끝난 요청 제한 장부
         return new Result(members.purgedMembers(), members.refreshTokens(), members.loginFailures(),
-                members.codes(), members.profileImages(), blog, board, notifications, admin);
+                members.codes(), members.profileImages(), blog, board, notifications, admin, rateLimits);
     }
 
     /** 탈퇴 30일 뒤 개인정보 삭제(4.5, USR-05 인수 시나리오 6). 행은 남겨 예전 글이 "탈퇴한 회원"을 가리키게 한다. */
@@ -160,5 +165,5 @@ public class DailyCleanupJob {
 
     public record Result(int purgedMembers, int refreshTokens, int loginFailures, int codes, int profileImages,
                          BlogDailyTasks.Result blog, BoardDailyTasks.Result board, int notifications,
-                         AdminDailyTasks.Result admin) {}
+                         AdminDailyTasks.Result admin, int rateLimits) {}
 }

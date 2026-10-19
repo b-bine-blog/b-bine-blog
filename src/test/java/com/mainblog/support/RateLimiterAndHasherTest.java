@@ -4,28 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.mainblog.auth.security.CodeHasher;
 import com.mainblog.common.config.AuthProperties;
-import com.mainblog.common.ratelimit.InMemoryRateLimiter;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.ZoneId;
 import org.junit.jupiter.api.Test;
 
-/** 2단계 기반 부품(T014, T019) 단위 확인. */
+/** 2단계 기반 부품(T014) 단위 확인. 요청 제한(T019)은 DB 장부라 JdbcRateLimiterTest에서 본다(D-140). */
 class RateLimiterAndHasherTest {
-
-    @Test
-    void 고정_창_요청_제한() {
-        MutableClock clock = new MutableClock(Instant.parse("2026-10-08T00:00:00Z"), ZoneId.of("Asia/Seoul"));
-        InMemoryRateLimiter limiter = new InMemoryRateLimiter(clock);
-        Duration window = Duration.ofMinutes(10);
-        for (int i = 0; i < 20; i++) {
-            assertThat(limiter.tryAcquire("login:1.2.3.4", 20, window)).isTrue();
-        }
-        assertThat(limiter.tryAcquire("login:1.2.3.4", 20, window)).isFalse();
-        assertThat(limiter.tryAcquire("login:5.6.7.8", 20, window)).isTrue();
-        clock.advance(window);
-        assertThat(limiter.tryAcquire("login:1.2.3.4", 20, window)).isTrue();
-    }
 
     @Test
     void 인증번호는_6자리이고_해시로_비교한다() {

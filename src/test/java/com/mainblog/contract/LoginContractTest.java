@@ -88,10 +88,11 @@ class LoginContractTest extends IntegrationTestBase {
     }
 
     @Test
-    void 공개_설정은_turnstile_site_key만() throws Exception {
+    void 공개_설정은_turnstile_site_key와_카카오_공유_키만() throws Exception {
         mvc.perform(get("/api/public-config"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.turnstileSiteKey").value("1x00000000000000000000AA"))
-                .andExpect(jsonPath("$.length()").value(1));
+                .andExpect(jsonPath("$.kakaoJsKey").value(""))
+                .andExpect(jsonPath("$.length()").value(2));
     }
 }
