@@ -946,3 +946,12 @@ main.home.is-editing iframe { pointer-events: none; }
   @container (max-width: 300px) { .blog-grid { grid-template-columns: minmax(0, 1fr); } }
 }
 @media (max-width: 860px) { main.home > [data-key] { grid-column: 1 / -1 !important; } }
+
+/* 글 공유 메뉴(BRD-07, D-141) */
+.share-menu { position: relative; display: inline-block; }
+.share-menu[hidden] { display: none; }
+.share-menu__list { position: absolute; left: 0; bottom: calc(100% + 6px); min-width: 150px; display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 6px 0; z-index: 20; }
+.share-menu__list[hidden] { display: none; }
+.share-menu__list button { display: block; width: 100%; margin: 0; text-align: left; padding: 8px 16px; color: var(--text); background: transparent; border: 0; border-radius: 0; box-shadow: none; font-size: 0.95rem; font-weight: 400; font-family: inherit; }
+.share-menu__list button[hidden] { display: none; }
+.share-menu__list button:hover, .share-menu__list button:focus-visible { background: var(--green-50); }

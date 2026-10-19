@@ -5,6 +5,7 @@
 -- 글 수정됨(D-133): posts.edited_at은 문서 버전 56에서 더했다. 운영 DB에는 그 ALTER 한 문장만 실행한다(2026-10-14).
 -- 스크랩(D-134): post_scraps는 문서 버전 58~60에서 더했다. 운영 DB에는 CREATE TABLE과 FK 두 문장만 실행했다(2026-10-14).
 -- 피드 태그 탭(D-135): feed_tags는 문서 버전 58~60에서 더했다. 운영 DB에는 CREATE TABLE과 FK 두 문장만 실행했다(2026-10-14).
+-- 요청 제한 장부(D-140): rate_limits는 문서 버전 62~63에서 더했다. 운영 DB에는 CREATE TABLE과 INDEX 두 문장만 실행한다(2026-10-19).
 
 -- 메인블로그 — MySQL DDL
 
@@ -488,6 +489,17 @@ CREATE TABLE login_failures (
     PRIMARY KEY (id),
     CONSTRAINT uk_login_failures_email UNIQUE (email)
 ) COMMENT='로그인 실패 기록-----입력한 이메일(소문자) 기준 연속 로그인 실패. 가입 여부와 무관하게 세어 가입 여부를 드러내지 않음(D-97). 성공·잠금 해제·재설정 때 삭제, 1일 지난 행은 04:00 배치가 삭제';
+CREATE TABLE rate_limits (
+    id BIGINT NOT NULL AUTO_INCREMENT COMMENT '번호',
+    key_hash CHAR(64) NOT NULL COMMENT '제한 키 해시-----IP·회원 번호와 기능 이름을 합친 키의 SHA-256. 원문은 저장하지 않음',
+    window_start DATETIME(3) NOT NULL COMMENT '창 시작 시각-----이 시각부터 창 길이 동안 센다',
+    request_count INT NOT NULL DEFAULT 0 COMMENT '요청 횟수-----창 안에서 받은 요청 수',
+    expires_at DATETIME(3) NOT NULL COMMENT '만료 시각-----창이 끝나는 시각. 지나면 04:00 배치가 삭제',
+    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) COMMENT '생성 일시',
+    updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6) COMMENT '수정 일시',
+    PRIMARY KEY (id),
+    CONSTRAINT uk_rate_limits_key_hash UNIQUE (key_hash)
+) COMMENT='요청 제한 장부-----IP·회원별 요청 횟수(SCL-01, D-140). 앱이 여러 대여도 같은 장부로 센다. 만료된 행은 04:00 배치가 삭제';
 CREATE TABLE shedlock (
     name VARCHAR(64) NOT NULL COMMENT '작업 이름',
     lock_until TIMESTAMP(3) NOT NULL COMMENT '잠금 끝 시각',
@@ -627,6 +639,7 @@ CREATE INDEX idx_admin_actions_created_at ON admin_actions (created_at DESC);
 CREATE INDEX idx_admin_actions_target_type_target_id ON admin_actions (target_type ASC, target_id ASC);
 CREATE INDEX idx_owner_warnings_blog_id_created_at ON owner_warnings (blog_id ASC, created_at ASC);
 CREATE INDEX idx_login_failures_last_failed_at ON login_failures (last_failed_at ASC);
+CREATE INDEX idx_rate_limits_expires_at ON rate_limits (expires_at ASC);
 CREATE INDEX idx_system_inquiries_status_created_at ON system_inquiries (status ASC, created_at ASC);
 CREATE INDEX idx_system_inquiries_user_id ON system_inquiries (user_id ASC);
 CREATE INDEX idx_social_pendings_expires_at ON social_pendings (expires_at ASC);

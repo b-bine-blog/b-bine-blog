@@ -84,4 +84,14 @@ class DailyCleanupJobTest extends IntegrationTestBase {
         assertThat(job.runOnce().loginFailures()).isEqualTo(1);
         assertThat(jdbc.queryForList("SELECT email FROM login_failures", String.class)).containsExactly("new@x.com");
     }
+
+    @Test
+    void 창이_끝난_요청_제한_장부를_지운다() {
+        String sql = "INSERT INTO rate_limits (key_hash, window_start, request_count, expires_at) VALUES (?, ?, 1, ?)";
+        jdbc.update(sql, "a".repeat(64), BASE_TIME.minusMinutes(2), BASE_TIME.minusSeconds(1));
+        jdbc.update(sql, "b".repeat(64), BASE_TIME.minusSeconds(30), BASE_TIME.plusSeconds(30));
+
+        assertThat(job.runOnce().rateLimits()).isEqualTo(1);
+        assertThat(jdbc.queryForList("SELECT key_hash FROM rate_limits", String.class)).containsExactly("b".repeat(64));
+    }
 }

@@ -3,7 +3,7 @@ package com.mainblog.common.ratelimit;
 import java.time.Duration;
 
 /**
- * IP별 요청 제한 (T019, SCL-01, R-06). 1차는 메모리 구현, 이중화 때 Redis 구현으로 바꾼다(4.3).
+ * IP·회원별 요청 제한 (T019, SCL-01, R-06). 구현은 DB 장부(JdbcRateLimiter, D-140)라 앱이 여러 대여도 함께 센다.
  */
 public interface RateLimiter {
 
