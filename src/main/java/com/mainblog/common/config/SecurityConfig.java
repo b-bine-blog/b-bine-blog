@@ -49,7 +49,8 @@ import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWrite
 public class SecurityConfig {
 
     static final String CSP = "default-src 'self'; "
-            + "script-src 'self' https://challenges.cloudflare.com; "
+            // 카카오톡 공유 SDK는 키가 있을 때만 글 상세에서 불러온다(BRD-07, D-141)
+            + "script-src 'self' https://challenges.cloudflare.com https://t1.kakaocdn.net; "
             // 로그인·회원가입 창은 같은 사이트 화면을 iframe으로 띄운다(D-118). 다른 사이트는 우리 화면을 품을 수 없다
             // 메인 화면 칸에는 정해 둔 서비스만 띄울 수 있다(2026-10-16 사용자 요청): 유튜브만
             + "frame-src 'self' https://challenges.cloudflare.com https://www.youtube-nocookie.com; "

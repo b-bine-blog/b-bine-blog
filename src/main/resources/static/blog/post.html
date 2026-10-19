@@ -25,7 +25,18 @@
       <div class="row post-card__actions">
         <button type="button" id="like" class="like-button" hidden>좋아요 <span id="like-count">0</span></button>
         <span class="hint" id="like-static" hidden></span>
-        <button type="button" id="share" class="button-outline" hidden>링크 복사</button>
+        <!-- 공유 메뉴(BRD-07, D-141): 누르면 공유할 곳을 고른다. 카카오톡은 키가 있을 때만, 다른 앱은 기기가 지원할 때만 -->
+        <span class="share-menu" id="share-wrap" hidden>
+          <button type="button" id="share" class="button-outline" aria-haspopup="true" aria-expanded="false" aria-controls="share-list">공유</button>
+          <span class="share-menu__list" id="share-list" role="menu" hidden>
+            <button type="button" role="menuitem" data-share="copy">링크 복사</button>
+            <button type="button" role="menuitem" data-share="kakao" hidden>카카오톡</button>
+            <button type="button" role="menuitem" data-share="x">X(트위터)</button>
+            <button type="button" role="menuitem" data-share="facebook">페이스북</button>
+            <button type="button" role="menuitem" data-share="telegram">텔레그램</button>
+            <button type="button" role="menuitem" data-share="device" hidden>다른 앱</button>
+          </span>
+        </span>
         <span class="post-card__spacer"></span>
         <a id="edit" class="button button-outline" hidden>수정</a>
         <button type="button" id="delete" class="button-quiet" hidden>삭제</button>
