@@ -950,6 +950,8 @@ main.home.is-editing iframe { pointer-events: none; }
 /* 글 공유 메뉴(BRD-07, D-141) */
 .share-menu { position: relative; display: inline-block; }
 .share-menu[hidden] { display: none; }
+/* 기본 button의 margin-top(16px) 때문에 좋아요 버튼보다 내려가던 것을 맞추고, 좋아요 버튼과 같은 크기·모양으로 */
+.share-menu > button { display: inline-flex; align-items: center; margin: 0; padding: 7px 16px; border-radius: var(--corner, 6px); border-width: 1px; line-height: normal; }
 .share-menu__list { position: absolute; left: 0; bottom: calc(100% + 6px); min-width: 150px; display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 6px 0; z-index: 20; }
 .share-menu__list[hidden] { display: none; }
 .share-menu__list button { display: block; width: 100%; margin: 0; text-align: left; padding: 8px 16px; color: var(--text); background: transparent; border: 0; border-radius: 0; box-shadow: none; font-size: 0.95rem; font-weight: 400; font-family: inherit; }
