@@ -6,6 +6,7 @@
 -- 스크랩(D-134): post_scraps는 문서 버전 58~60에서 더했다. 운영 DB에는 CREATE TABLE과 FK 두 문장만 실행했다(2026-10-14).
 -- 피드 태그 탭(D-135): feed_tags는 문서 버전 58~60에서 더했다. 운영 DB에는 CREATE TABLE과 FK 두 문장만 실행했다(2026-10-14).
 -- 요청 제한 장부(D-140): rate_limits는 문서 버전 62~63에서 더했다. 운영 DB에는 CREATE TABLE과 INDEX 두 문장만 실행한다(2026-10-19).
+-- 메인 목록 인덱스(D-142): posts 인덱스 2개는 저장소에 먼저 더했고 Crowfoot 문서에는 아직 반영하지 않았다. 운영 DB에는 CREATE INDEX 두 문장만 실행한다.
 
 -- 메인블로그 — MySQL DDL
 
@@ -631,6 +632,8 @@ CREATE FULLTEXT INDEX idx_posts_title ON posts (title) WITH PARSER ngram;
 CREATE INDEX idx_posts_blog_id_status_created_at ON posts (blog_id ASC, status ASC, created_at DESC);
 CREATE INDEX idx_posts_status_created_at ON posts (status ASC, created_at DESC);
 CREATE INDEX idx_posts_status_like_count_created_at ON posts (status ASC, like_count DESC, created_at DESC);
+CREATE INDEX idx_posts_status_board_type_created_at_blog_id ON posts (status ASC, board_type ASC, created_at DESC, blog_id ASC);
+CREATE INDEX idx_posts_status_board_type_like_count_created_at_blog_id ON posts (status ASC, board_type ASC, like_count DESC, created_at DESC, blog_id ASC);
 CREATE INDEX idx_posts_deleted_at ON posts (deleted_at ASC);
 CREATE INDEX idx_images_owner_type_owner_id ON images (owner_type ASC, owner_id ASC);
 CREATE INDEX idx_comments_post_id_created_at ON comments (post_id ASC, created_at ASC);
