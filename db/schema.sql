@@ -6,7 +6,7 @@
 -- 스크랩(D-134): post_scraps는 문서 버전 58~60에서 더했다. 운영 DB에는 CREATE TABLE과 FK 두 문장만 실행했다(2026-10-14).
 -- 피드 태그 탭(D-135): feed_tags는 문서 버전 58~60에서 더했다. 운영 DB에는 CREATE TABLE과 FK 두 문장만 실행했다(2026-10-14).
 -- 요청 제한 장부(D-140): rate_limits는 문서 버전 62~63에서 더했다. 운영 DB에는 CREATE TABLE과 INDEX 두 문장만 실행한다(2026-10-19).
--- 메인 목록 인덱스(D-142): posts 인덱스 2개는 저장소에 먼저 더했고 Crowfoot 문서에는 아직 반영하지 않았다. 운영 DB에는 CREATE INDEX 두 문장만 실행한다.
+-- 메인 목록 인덱스(D-142): posts 인덱스 2개는 Crowfoot 문서 654(버전 64)에도 반영했다. 운영 DB에는 CREATE INDEX 두 문장만 실행한다.
 
 -- 메인블로그 — MySQL DDL
 
