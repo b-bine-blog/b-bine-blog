@@ -33,7 +33,9 @@ public class SearchService {
     static final String TITLE_MATCH = "MATCH(p.title) AGAINST (? IN BOOLEAN MODE)";
     static final String TAG_MATCH = "EXISTS (SELECT 1 FROM post_tags pt JOIN tags t ON t.id = pt.tag_id "
             + "WHERE pt.post_id = p.id AND t.name = ?)";
-    static final String NICKNAME_MATCH = "(u.nickname = ? AND u.status = 'ACTIVE' AND p.author_left = FALSE)";
+    // 번호를 찾을 때는 작성자를 잇지 않아서(D-142) 작성자 닉네임은 하위 쿼리로 본다
+    static final String NICKNAME_MATCH = "(EXISTS (SELECT 1 FROM users nu WHERE nu.id = p.author_id AND nu.nickname = ? "
+            + "AND nu.status = 'ACTIVE') AND p.author_left = FALSE)";
 
     private final PostSummaryReader reader;
     private final BlogQueryService blogQueryService;
