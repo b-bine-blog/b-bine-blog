@@ -37,6 +37,17 @@ public class SearchService {
     static final String NICKNAME_MATCH = "(EXISTS (SELECT 1 FROM users nu WHERE nu.id = p.author_id AND nu.nickname = ? "
             + "AND nu.status = 'ACTIVE') AND p.author_left = FALSE)";
 
+    /**
+     * 검색 "전체"의 후보 글 번호와 맞은 조건 수(hit). 제목·태그·닉네임을 OR로 이으면 FULLTEXT 인덱스를 못 써서
+     * 글 전체를 훑으므로, 각각 인덱스로 번호를 찾아 합친다(D-143). 한 글은 갈래마다 한 번만 나온다.
+     */
+    static final String ALL_CANDIDATES = "(SELECT u.id, COUNT(*) AS hit FROM ("
+            + "SELECT tp.id FROM posts tp WHERE MATCH(tp.title) AGAINST (? IN BOOLEAN MODE) "
+            + "UNION ALL SELECT pt.post_id FROM post_tags pt JOIN tags t ON t.id = pt.tag_id WHERE t.name = ? "
+            + "UNION ALL SELECT np.id FROM posts np JOIN users nu ON nu.id = np.author_id "
+            + "WHERE nu.nickname = ? AND nu.status = 'ACTIVE' AND np.author_left = FALSE"
+            + ") u GROUP BY u.id) m";
+
     private final PostSummaryReader reader;
     private final BlogQueryService blogQueryService;
     private final RecentSearchService recentSearches;
@@ -81,6 +92,9 @@ public class SearchService {
     private PostPage posts(Type type, String keyword, Sort sort, int page, int size, Long viewerId) {
         String phrase = phrase(keyword);
         String tag = tagService.normalizeOne(keyword);
+        if (type == Type.ALL) {
+            return allPosts(phrase, tag == null ? "" : tag, keyword, sort, page, size, viewerId);
+        }
         List<Object> args = new ArrayList<>();
         StringBuilder where = new StringBuilder(PostVisibility.PUBLIC_BLOG_POST).append(" AND ");
         switch (type) {
@@ -92,15 +106,8 @@ public class SearchService {
                 where.append(TAG_MATCH);
                 args.add(tag == null ? "" : tag);
             }
-            case NICKNAME -> {
-                where.append(NICKNAME_MATCH);
-                args.add(keyword);
-            }
             default -> {
-                where.append("(").append(TITLE_MATCH).append(" OR ").append(TAG_MATCH).append(" OR ")
-                        .append(NICKNAME_MATCH).append(")");
-                args.add(phrase);
-                args.add(tag == null ? "" : tag);
+                where.append(NICKNAME_MATCH);
                 args.add(keyword);
             }
         }
@@ -121,6 +128,19 @@ public class SearchService {
             }
         }
         return reader.page(where.toString(), args, orderBy, orderArgs, page, size);
+    }
+
+    /** 검색 "전체": 후보 번호부터 모으고, 관련도는 맞은 조건 수(제목·태그·닉네임) 많은 순, 같으면 최신순. */
+    private PostPage allPosts(String phrase, String tag, String keyword, Sort sort, int page, int size,
+                              Long viewerId) {
+        List<Object> args = new ArrayList<>();
+        String where = PostVisibility.PUBLIC_BLOG_POST + PostVisibility.notBlocked(viewerId, args);
+        String orderBy = switch (sort) {
+            case LATEST -> "p.created_at DESC, p.id DESC";
+            case POPULAR -> "p.like_count DESC, p.created_at DESC, p.id DESC";
+            default -> "m.hit DESC, p.created_at DESC, p.id DESC";
+        };
+        return reader.pageOf(ALL_CANDIDATES, List.of(phrase, tag, keyword), where, args, orderBy, page, size);
     }
 
     /** 블로그 검색은 002와 같은 규칙(이름·소개 ngram, 블로그 태그). 관련도는 최신순으로 둔다. */
