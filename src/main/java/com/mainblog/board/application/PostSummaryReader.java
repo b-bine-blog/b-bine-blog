@@ -60,9 +60,27 @@ public class PostSummaryReader {
 
     /** orderArgs는 정렬식(관련도 점수 등)에 쓰는 바인딩 값. */
     public PostPage page(String where, List<Object> args, String orderBy, List<Object> orderArgs, int page, int size) {
-        Long total = jdbc.queryForObject(ID_SELECT + "COUNT(*)" + ID_FROM + "WHERE " + where, Long.class,
-                args.toArray());
-        List<PostSummary> items = list(where, args, orderBy, orderArgs, size, (long) (page - 1) * size);
+        return page(ID_SELECT, ID_FROM, List.of(), where, args, orderBy, orderArgs, page, size);
+    }
+
+    /**
+     * 후보 글 번호를 먼저 모으는 하위 쿼리(별칭 m, 컬럼 id)부터 읽는다. 조건을 OR로 이으면 MySQL이 글 전체를 훑어서
+     * 검색 "전체"가 글 30만 건에서 10초 걸렸다(D-143). 정렬식에서 m의 다른 컬럼(맞은 수 등)을 쓸 수 있다.
+     */
+    public PostPage pageOf(String candidates, List<Object> candidateArgs, String where, List<Object> args,
+                           String orderBy, int page, int size) {
+        String from = " FROM " + candidates + " JOIN posts p ON p.id = m.id LEFT JOIN blogs b ON b.id = p.blog_id ";
+        return page("SELECT ", from, candidateArgs, where, args, orderBy, List.of(), page, size);
+    }
+
+    private PostPage page(String select, String from, List<Object> fromArgs, String where, List<Object> args,
+                          String orderBy, List<Object> orderArgs, int page, int size) {
+        List<Object> countArgs = new ArrayList<>(fromArgs);
+        countArgs.addAll(args);
+        Long total = jdbc.queryForObject(select + "COUNT(*)" + from + "WHERE " + where, Long.class,
+                countArgs.toArray());
+        List<PostSummary> items = ids(select, from, fromArgs, where, args, orderBy, orderArgs, size,
+                (long) (page - 1) * size);
         return PostPage.of(items, page, size, total == null ? 0 : total);
     }
 
@@ -72,11 +90,17 @@ public class PostSummaryReader {
 
     public List<PostSummary> list(String where, List<Object> args, String orderBy, List<Object> orderArgs, int limit,
                                   long offset) {
-        List<Object> all = new ArrayList<>(args);
+        return ids(ID_SELECT, ID_FROM, List.of(), where, args, orderBy, orderArgs, limit, offset);
+    }
+
+    private List<PostSummary> ids(String select, String from, List<Object> fromArgs, String where, List<Object> args,
+                                  String orderBy, List<Object> orderArgs, int limit, long offset) {
+        List<Object> all = new ArrayList<>(fromArgs);
+        all.addAll(args);
         all.addAll(orderArgs);
         all.add(limit);
         all.add(offset);
-        List<Long> ids = jdbc.queryForList(ID_SELECT + "p.id" + ID_FROM + "WHERE " + where + " ORDER BY " + orderBy
+        List<Long> ids = jdbc.queryForList(select + "p.id" + from + "WHERE " + where + " ORDER BY " + orderBy
                 + " LIMIT ? OFFSET ?", Long.class, all.toArray());
         return byIds(ids);
     }
